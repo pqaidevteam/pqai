@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>PQAI | Search</title>
+		<link rel="stylesheet" href="fontawesome/all.css">
+		{{> usual_header_stuff}}
+		<script type="text/javascript" src="echarts/echarts.js"></script>
+		<style type="text/css">
+			sup {
+				font-size: 60%;
+				top: -0.9em;
+			}
+			.visited {
+				color: purple !important;
+			}
+			.gauge-container {
+				width: 80%;
+				margin: 0 auto;
+				display: block;
+				max-width: 200px;
+			}
+			.gauge {
+				max-width: 300px;
+			}
+			.gauge-segment {
+				background-color: lightgray;
+				display: inline-block;
+				margin: 0px;
+				padding: 0px;
+				border: 0;
+				height: 30px;
+			}
+			.segment-0 {
+				background-color: #fa2d08;
+				width: 30%;
+			}
+			.segment-1 {
+				background-color: #f7c20e;
+				width: 40%;
+			}
+			.segment-2 {
+				background-color: #809507;
+				width: 30%;
+			}
+			.gauge-segment.legend {
+				background-color: transparent !important;
+				font-family: sans-serif;
+				font-size: smaller;
+				color: #2c82c9;
+				border: 1px solid #2c82c9;
+				border-bottom: none;
+				text-align: center;
+				height: 10px;
+			}
+			#gauge-text {
+				font-family: sans-serif;
+				color: #2c82c9;
+			}
+			.gauge-segment.legend:first-child {
+				border-right: none;
+			}
+			.gauge-segment.legend:last-child {
+				border-left: none;
+			}
+			#gauge-pointer {
+				position: relative;
+				left: 200px;
+				top: 2px;
+			}
+			.curtain {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				z-index: 200;
+				background-color: #f4f7fc;
+			}
+			#tech-domain-input {
+				color: var(--offwhite);
+				font-size:12;
+				background-color:transparent;
+				border:none;
+				padding: 0;
+			}
+			.custom-select:focus {
+				border: none;
+				box-shadow: none;
+			}
+		</style>
+	</head>
+	<body>
+		<section>
+			<div id='input-pane'>
+				<div class="container py-3">
+					<div class="row">
+						<div class="col-md-2"></div>
+						<div class="col-md-8">
+							<img src="images/att-logo-white.png" class='logo mb-3 mt-3' alt="AT&T">
+							<h2 class='pqai-logo mb-5'>Patent Quality through AI<sup>beta</sup></h2>
+							<div class="input-group">
+								<input type="text" id="user-text-input" class="form-control" placeholder="Start typing...">
+								<div class="input-group-append">
+									<button class="btn btn-light" type="button" id="trigger-search-btn">
+										<i class="fa fa-search"></i>
+									</button>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-9">
+									<select class="custom-select" id="tech-domain-input">
+									  <option value="H04W" selected>DB: Wireless Communication Networks</option>
+									  <option value="G06T">DB: Image Processing</option>
+									  <option value="G06N">DB: Artificial Intelligence</option>
+									  <option value="Y02E">DB: Renewable Energy</option>
+									</select>
+								</div>
+								<div class="col-md-3">
+									<div class="form-group">
+									  <button class="btn btn-transparent dropdown-toggle ml-2" type="button" style="color:var(--offwhite);font-size:12" id="calendar-btn" data-toggle="dropdown">
+									  	No date restriction
+									    <!-- <i class="fa fa-calendar"></i> -->
+									  </button>
+									  <div class="dropdown-menu" style="padding: 10px 20px">
+										<span id="date-filter-label">Cut-off date</span><input type="text" class="form-control form-control-sm" id="cutoff-date-input" placeholder="YYYY-MM-DD" style="display: inline-block; font-family: sans-serif;">
+										<a href="#" id="apply-date-filter-btn">Apply</a>
+									  </div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="col-md-2"></div>
+					</div>
+					<div class="row">
+						<div class="col-md-2"></div>
+						<div class="col-md-8 hidden" id="options-pane">
+							<button class="btn btn-sm btn-outline-secondary" type="button" id="download-report-btn">
+								<i class="fa fa-download"></i> Download report
+							</button>
+							<button class="btn btn-sm btn-outline-secondary" type="button" id="toggle-charts-btn">
+								<i class="fa fa-line-chart"></i> Hide charts
+							</button>
+							<button class="btn btn-sm btn-outline-secondary" type="button" id="toggle-abstracts-btn">
+								<i class="fa fa-adjust"></i> Show abstracts
+							</button>
+						</div>
+						<div class="col-md-2"></div>
+					</div>
+				</div>
+			</div>
+			<div class="container">
+				<div class="row" id="charts-pane">
+					<div class="curtain"></div>
+					<div class="col-lg-4 mt-3">
+						<div class="card chart-card">
+						  <div class="card-body">
+						    <h5 class="card-title">O-Score</h5>
+						    <div id="chart-a" style="width:100%; height:250px; display:block; margin: 0 auto;">
+						    	<div class="linear-gauge-container">
+						    		<div id="gauge-text"></div>
+						    	  <div class="pointer-container">
+						    	    <img id="gauge-pointer" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAJCAIAAACJ2loDAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TtaVUHOxQxCFDdbIgfuGoVShChVArtOpgcumH0KQhaXFxFFwLDn4sVh1cnHV1cBUEwQ8QF1cnRRcp8X9JoUWMB8f9eHfvcfcOEBplplldo4CmV810MiFmcyti4BUhRBFEDyZlZhmzkpSC5/i6h4+vd3Ge5X3uz9Gr5i0G+ETiGWaYVeJ14qnNqsF5nzjCSrJKfE48YtIFiR+5rrj8xrnosMAzI2YmPUccIRaLHax0MCuZGvEEcUzVdMoXsi6rnLc4a+Uaa92TvzCc15eXuE5zEEksYBESRCioYQNlVBGnVSfFQpr2Ex7+AccvkUsh1wYYOeZRgQbZ8YP/we9urcL4mJsUTgDdL7b9MQQEdoFm3ba/j227eQL4n4Erve2vNIDpT9LrbS12BPRtAxfXbU3ZAy53gOiTIZuyI/lpCoUC8H5G35QD+m+B0KrbW2sfpw9AhrpK3QAHh8BwkbLXPN4d7Ozt3zOt/n4AY/VyoWOKwJMAAAAJcEhZcwAALiMAAC4jAXilP3YAAAAHdElNRQfjChgICR0/ziJ1AAAAGXRFWHRDb21tZW50AENyZWF0ZWQgd2l0aCBHSU1QV4EOFwAAAI9JREFUGNN1yrEJxCAYxfHvCmvHyQTZQrBzCSFDCAELd7DLErpAOquUVgFBhHdFjiSXO1/5f7/XNE3zPFN/SinKOQ/D0BOc823bCECMsYe89wAIAABr7a+QUtZaL1RKEUI80Lqux/tBAFJKjLFTOOfO60IAlmU5xDiO+77/R601rTURhRDu/QsByDkbYx7xDUxwqKG/gFUNAAAAAElFTkSuQmCC" alt="\/" />
+						    	  </div>
+						    	  <div class="gauge">
+						    	    <div class="gauge-segment segment-0">&nbsp;</div><div class="gauge-segment segment-1">&nbsp;</div><div class="gauge-segment segment-2">&nbsp;</div>
+						    	  </div>
+						    	  <div class="gauge" style="margin-top: 5px;">
+						    	  	<div class="gauge-segment segment-0 legend">Low</div><div class="gauge-segment segment-1 legend">Medium</div><div class="gauge-segment segment-2 legend">High</div>
+						    	  </div>
+						    	</div>
+						    </div>
+						    <p class="card-text">A high originality score indicates that your ideas seems unique with respect to the patents results from this search.</p>
+						    <!-- <a href="#" class="btn btn-primary">Know more</a> -->
+						  </div>
+						</div>
+					</div>
+					<div class="col-lg-4 mt-3">
+						<div class="card chart-card" style="width: 100%;">
+						  <div class="card-body">
+						    <h5 class="card-title">Filing trend</h5>
+						    <div id="chart-b" style="width:100%; height:250px; display:block; margin: 0 auto;"></div>
+						    <p class="card-text">The filing trend is indicative of the relative number of patents that have been filed on ideas related to yours in recent years.</p>
+						    <!-- <a href="#" class="btn btn-primary">Know more</a> -->
+						  </div>
+						</div>
+					</div>
+					<div class="col-lg-4 mt-3">
+						<div class="card chart-card" style="width: 100%;">
+						  <div class="card-body">
+						    <h5 class="card-title">Key assignees</h5>
+						    <div id="chart-c" style="width:100%; height:250px; display:block; margin: 0 auto;"></div>
+						    <p class="card-text">Key assignees are those patent holders (companies or inventors) that have maximum number of patents related to your idea.</p>
+						    <!-- <a href="#" class="btn btn-primary">Know more</a> -->
+						  </div>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12 mt-3" id="output-pane">
+						<!-- automatically populated -->
+					</div>
+				</div>
+			</div>
+		</section>
+	</body>
+</html>
+<script type="text/javascript" src="bootstrap-4.3.1/js/popper.min.js"></script>
+<script type="text/javascript" src="bootstrap-4.3.1/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+	
+	var autoTypeEnabled = true;
+	var currentQuery = null;
+	var currentStats = null;
+	var currentResults = [];
+	var currentDateFilter = null;
+	var resultsLoadingInProgress = false;
+	var chartsDisabled = false;
+	var showOptions = false;
+	var chartA;
+	var chartB;
+	var chartC;
+	var gaugeWidth;
+	var visitedPatents = {};
+
+	var defaultPalette = [
+		'#003f5c', '#444e86', '#955196',
+		'#dd5182', '#ff6e54', '#ffa600',
+		'#666666', '#999999', '#BBBBBB'
+	];
+
+	$(document).ready(function () {
+		if (autoTypeEnabled) {
+			startAutoTyping(function (done) {
+				$('#trigger-search-btn').click();
+			});
+		} else {
+			$('#user-text-input').focus();
+		}
+		initializeCharts();
+		hideCharts();
+		$('#calendar-btn').dropdown();
+		gaugeWidth = $('.gauge').width();
+	});
+
+	function initializeCharts() {
+		var w = $('#chart-a').width();
+		var aspectRatio = 4/3;
+		var f = 1 / aspectRatio;
+		w *= f;
+		$('#chart-a').css('height', (w + 'px'));
+		$('#chart-b').css('height', (w + 'px'));
+		$('#chart-c').css('height', (w + 'px'));
+		// chartA = echarts.init(document.getElementById('chart-a'));
+		chartB = echarts.init(document.getElementById('chart-b'));
+		chartC = echarts.init(document.getElementById('chart-c'));
+	}
+
+	function callMediator(parameters, callback) {
+		if (typeof parameters == 'string') {
+			parameters = { cmd: parameters }
+		}
+		$.post('mediator', parameters, function (response) {
+			if (!response.error) {
+				callback(response);
+			} else {
+				handleError(response);
+			}
+		});
+	}
+
+	function handleError(err) {
+		if (err.redirectAddress) {
+			window.location = err.redirectAddress;
+		} else if (err.message) {
+			alert(err.message);
+		} else {
+			console.log(err);	
+		}
+		return false;
+	}
+
+	function startAutoTyping(callback) {
+		var demoQuery = "wireless charging using magnetic induction";
+		
+		var targetInput = $('#user-text-input');
+		targetInput.focus();
+		
+		var autoTypingRunning = true;
+
+		// IIFE
+		setTimeout(function () {
+			if (targetInput.val().length == 0) {
+				autoType(demoQuery, targetInput, function () {
+					autoTypeRunning = false;
+					callback(true)
+				});
+			} else {
+				callback(true);
+			}
+		}, 1200);
+
+		function autoType (msg, targetInput, callback) {
+			var MIN_DELAY = 30;
+			var VARIATION = 50;
+
+			var chars = msg.split('');
+			chars.reverse();
+
+			(function _typeChar() {
+				var newText = targetInput.val() + chars.pop();
+				targetInput.val(newText);
+
+				if (chars.length == 0) {
+					return callback();
+				}
+				
+				var delay = MIN_DELAY + parseInt(Math.random()*VARIATION);
+				setTimeout(_typeChar, delay)
+			}());
+		}
+	}
+
+	$(document).on('click', '#trigger-search-btn', function (e) {
+		var query = readUserQuery();
+		var queryType = getQueryType(query);
+		var techDomain = getSelectedTechDomain();
+
+		if (resultsLoadingInProgress) {
+			return alert('Please wait while results are loading.');
+		}
+		if (!query) {
+			return alert('Please enter a query.');
+		}
+		clearOutput();
+		currentQuery = query;
+		currentQueryType = queryType;
+		resultsLoadingInProgress = true;
+		showLoading();
+		hideCharts();
+		if (queryType == 'text') {
+			getStats(query, techDomain, function (done) {
+				triggerSearch(query, techDomain);
+			});
+		} else {
+			triggerSearch(query, techDomain);
+		}
+	});
+
+	$(document).on('keyup', '#user-text-input', function (e) {
+		if (e.keyCode == 13) {
+			e.preventDefault();
+			$('#trigger-search-btn').click();
+		}
+	});
+
+	$(document).on('change', '#tech-domain-input', function(e) {
+		var query = readUserQuery();
+		if (query.length) {
+			$('#trigger-search-btn').click();
+		}
+	});
+
+	function readUserQuery() {
+		var query = $('#user-text-input').val().trim();
+		return query.length ? query : null;
+	}
+
+	function getSelectedTechDomain() {
+		return $('#tech-domain-input').val();
+	}
+
+	function getQueryType(query) {
+		if (query.match(/^US\d+[AB]\d?$/)) {
+			return 'patent';
+		} else {
+			return 'text'
+		}
+	}
+
+	function triggerSearch(query, techDomain="H04W") {
+		query = query.trim();
+		
+		let cmd;
+		if (query.match(/^US\d+[AB]\d?$/)) {
+			cmd = 'search-by-patent'
+		} else {
+			cmd = 'search-by-query'
+		}
+		
+		callMediator({
+			cmd, query, techDomain, cutoffDate: currentDateFilter
+		}, function (results) {
+			clearOutput();
+			currentResults = results;
+
+			if (currentDateFilter) {
+				var cutoff = new Date(currentDateFilter);
+				currentResults = currentResults.filter(function(res) {
+					var d = new Date(res.filingDate);
+					return (d <= cutoff);
+				});
+			}
+			$('#output-pane').append(
+				'<p>'
+				+ 'Showing top results'
+				+ ((currentDateFilter) ? ' (with date filter)' : '')
+				+ ((currentResults[0].confidence) ? '. Confidence level: <b>' + currentResults[0].confidence.toUpperCase() + '</b>' : '')
+				+ '</p>'
+			);
+			displayResults();
+		});
+	}
+
+	function hideCharts() {
+		$('#charts-pane').slideUp();
+	}
+
+	function hideChartsQuick() {
+		$('#charts-pane').css('display', 'none');
+	}
+
+	function showCharts() {
+		$('.curtain').addClass('hidden');
+		$('#charts-pane').slideDown();
+	}
+
+	function getStats(query, techDomain, callback) {
+		if (chartsDisabled) {
+			return callback(true);
+		}
+		callMediator({
+			cmd: 'get-stats',
+			query,
+			techDomain
+		}, function (stats) {
+			currentStats = stats;
+			updateCharts(stats);
+			callback(true);
+		});
+	}
+
+	function clearOutput() {
+		$('#output-pane').empty();
+	}
+
+	var loadMoreBtnHtml = '<button class="btn btn-md btn-default mb-3" id="load-more-btn">Load more results</button>';
+	function displayResults() {
+
+		results = currentResults.splice(0, 10);
+		results = results.filter(function (e) { return e.title });
+
+		var output = $('#output-pane');
+		$('#load-more-btn').remove();
+		runInBatch(results, function (res, callback) {
+			var html = '<div class="card mb-3"><div class="card-body">';
+			var pn = res.publicationNumber;
+			if (visitedPatents[pn]) {
+				html += '<div class="card-title"><h5 class="res-title visited" data-pn="' + pn + '">' + res.title + '</h5></div>';
+			} else {
+				html += '<div class="card-title"><h5 class="res-title" data-pn="' + pn + '">' + res.title + '</h5></div>';
+			}
+			
+			var externalLink = getGoogleLink(pn);
+			var date = normalizeDate(res.filingDate);
+			date = '<span class="mr-3">' + date + '</span>';
+			var assignee = '<span class="mr-3">' + (res.assignee ? res.assignee : 'N/A') + '</span>';
+			var moreLikeThisBtn = '<a href="#" class="more-like-this-btn mr-3" data-pn="' + pn + '">Show more like this<a/>';
+			var arr = [
+				assignee,
+				date,
+				externalLink,
+				moreLikeThisBtn
+			];
+			html += '<p class="card-text res-bib">' + arr.join(' ') + '</p>';
+			if (currentQueryType == 'patent') {
+				snippet = res.abstract;
+				html += '<p class="card-text res-snippet">' + snippet + '</p>';
+				html += '</div></div>';
+				output.append(html);
+				return callback();
+			}
+			getSnippet(pn, currentQuery, function(snippet) {
+				html += '<p class="card-text res-snippet">' + snippet + '</p>';
+				html += '</div></div>';
+				output.append(html);
+				callback();
+			});
+		}, function (arr) {
+			// done
+			output.append(loadMoreBtnHtml);
+			if (currentResults.length == 0) {
+				$('#load-more-btn').attr('disabled', 'disabled');
+				$('#load-more-btn').text('End of list.')
+			}
+			hideLoading();
+			resultsLoadingInProgress = false;
+			if (showOptions) {
+				$('#options-pane').slideDown();
+			}
+		});
+	}
+
+	function getSnippet(pn, query, callback) {
+		callMediator({
+			cmd: 'get-snippet',
+			publicationNumber: pn,
+			query: query
+		}, function (snippet) {
+			var arr = snippet.split('<br>');
+			var html = "";
+			arr.forEach(function (e) {
+				html += '<p class="card-text res-snippet">' + e + '</p>';
+			});
+			callback(html);
+		});
+	}
+
+	$(document).on('click', '#load-more-btn', function(e) {
+		if (currentResults.length > 0) {
+			displayResults();
+		} else {
+			alert("No more results to show.");
+		}
+	});
+
+	$(document).on('click', '.res-title', function(e) {
+		var pn = $(this).attr('data-pn');
+		visitedPatents[pn] = true;
+		$(this).addClass('visited');
+		var url = 'https://patents.google.com/patent/' + pn;
+		openInNewTab(url);
+	});
+
+	$(document).on('click', '.ext-link', function(e) {
+		var pn = $(this).attr('data-pn');
+		visitedPatents[pn] = true;
+	});
+
+	$(document).on('click', '.more-like-this-btn', function(e) {
+		var publicationNumber = $(this).attr('data-pn');
+		$('#user-text-input').val(publicationNumber);
+		$('#trigger-search-btn').click();
+	});
+
+	function getGoogleLink(pn) {
+		var url = 'https://patents.google.com/patent/' + pn;
+		var link = '<a href="' + url + '" target="_blank" class="mr-3 ext-link" data-pn="' + pn + '"">' + pn + '</a/>';
+		return link;
+	}
+
+	function normalizeDate(string) {
+		if (typeof string !== 'string') {
+			return string;
+		}
+		var months = [
+			'_', 'Jan', 'Feb', 'Mar', 'Apr',
+			'May', 'Jun', 'Jul', 'Aug',
+			'Sep', 'Oct', 'Nov', 'Dec'
+		];
+		if (string.match(/^\d\d\d\d\-\d\d\-\d\d$/)) {
+			var yyyy_mm_dd = string;
+			var mm = parseInt(yyyy_mm_dd.substr(5, 7));
+			var yyyy = parseInt(string.substr(0, 4));
+		} else if (string.match(/^\d\d?\/\d\d?\/\d{4}$/)) {
+			var len = string.length;
+			var mm = parseInt(string.match(/^\d+/)[0]);
+			var yyyy = parseInt(string.substr(len-4, len));
+		}
+
+		var month = months[mm];
+		var normalized = month + ' ' + yyyy;
+
+		return normalized;
+	}
+
+	function loadSnippets() {
+		if (!currentQuery) {
+			return;
+		}
+		var pns = $('.snippet-placeholder').toArray().map(function (e) {
+			return $(e).attr('id');
+		});
+
+		runInBatch(pns, function (pn, callback) {
+			callMediator({
+				cmd: 'get-snippet',
+				publicationNumber: pn,
+				query: currentQuery
+			}, function (snippet) {
+				var targetElement = $('#' + pn);
+				targetElement.replaceWith('<p class="res-snippet">' + snippet + '</p>');
+				callback();
+			});
+		}, function (arr) {
+			// done
+		});
+	}
+
+	function runInBatch(arr, mid, end) {
+		if (!Array.isArray(arr) || typeof mid !== 'function' || typeof end !== 'function') return end(null);
+		var sum = arr.length;
+		var interim = [];
+		var arr = arr.map(function (e) { return e; });
+		var threads = 0;
+		var maxThreads = 4;
+		(function _execute() {
+			if (!arr.length)
+				return;
+			threads++;
+			mid(arr.shift(), function (result) {
+				threads--;
+				interim.push(result);
+				if (arr.length === 0 && sum-arr.length-interim.length === 0)
+					return end(interim);
+				while (threads < maxThreads && arr.length)
+					_execute();
+			});
+		}());
+	}
+
+	function triggerLoaders() {
+		var states = [
+			'Loading snippet',
+			'Loading snippet.',
+			'Loading snippet..',
+			'Loading snippet...'
+		];
+		(function _trigger() {
+			var loaders = $('.snippet-placeholder').toArray();
+			if (loaders.length == 0) {
+				return;
+			} else {
+				loaders.forEach(function (loader) {
+					var currText = $(loader).text().trim();
+					var currState = states.indexOf(currText);
+					var nextState = (currState + 1) % states.length;
+					var nextText = states[nextState];
+					$(loader).text(nextText);
+				});
+				setTimeout(_trigger, 300);
+			}
+		}());
+	}
+
+	$(document).on('mouseenter', '.res', function (e) {
+		var res = $(this);
+		res.find('.hidden').addClass('waiting-to-show');
+		setTimeout(function () {
+			var els = res.find('.hidden.waiting-to-show');
+			if (els.length > 0) {
+				res.find('.hidden.waiting-to-show').fadeIn();
+				res.find('.hidden.waiting-to-show').removeClass('waiting-to-show');
+			}
+		}, 500);
+	});
+
+	$(document).on('mouseleave', '.res', function (e) {
+		var res = $(this);
+		res.find('.hidden.waiting-to-show').removeClass('waiting-to-show');
+		res.find('.hidden').fadeOut();
+	});
+
+	function openInNewTab(url) {
+		var win = window.open(url, '_blank');
+		win.focus();
+	}
+
+	function showLoading() {
+		var html = '<div class="spinner-border spinner-border-sm" role="status">'
+  				+ '<span class="sr-only">Loading...</span>'
+				+ '</div>';
+		$('#trigger-search-btn').html(html);
+	}
+
+	function hideLoading() {
+		var html = '<i class="fa fa-search"></i>';
+		$('#trigger-search-btn').html(html);
+	}
+
+	function showAssigneeChart(stats) {
+		var chartData = [];
+		for (var assignee in stats.assigneeStats) {
+			chartData.push({
+				name: assignee,
+				value: stats.assigneeStats[assignee]
+			});
+		}
+		var option = {
+		    tooltip: {
+		        trigger: 'item',
+		        formatter: "{b}: {d}%"
+		    },
+		    title: {
+            	show: true,
+            	text: 'Assignees',
+            	left: 'center',
+            	top: 'middle',
+            	textStyle: {
+            		fontSize: 15,
+            		fontFamily: 'PT Sans',
+            		fontWeight: 'normal'
+            	}
+            },
+		    series: [
+		        {
+		            name:'Owners',
+		            type:'pie',
+		            radius: ['50%', '70%'],
+		            avoidLabelOverlap: false,
+		            hoverAnimation: false,
+		            color: defaultPalette,
+		            label: {
+		                normal: {
+		                    show: true,
+		                    position: 'right',
+		                    textStyle: {
+		                    	fontSize: 10
+		                    }
+		                },
+		                emphasis: {
+		                    show: true,
+		                    textStyle: {
+		                        fontSize: 12,
+		                        fontWeight: 'bold'
+		                    }
+		                }
+		            },
+		            labelLine: {
+		                normal: {
+		                    show: true,
+		                    length: 10,
+		                    length2: 10,
+		                    smooth: true
+		                }
+		            },
+		            data: chartData
+		        }
+		    ]
+		};
+		chartC.setOption(option);
+	}
+
+	function showOriginalityScore(stats) {
+		var oScore = stats.oScore;
+		var oClass = '';
+		if (oScore <=30) {
+			oClass = 'Low';
+		} else if (oScore > 30 && oScore < 70) {
+			oClass = 'Medium';
+		} else {
+			oClass = 'High';
+		}
+		$('#gauge-text').text('Originality score: ' + oClass);
+		
+		var dx = 6;
+		var x = (0.01 * oScore * gaugeWidth) - dx;
+		$('#gauge-pointer').css('left', x + 'px');
+		console.log(oScore, oClass, x, dx);
+
+		var L = $('#chart-a').height();
+		var l = $('.linear-gauge-container').height();
+		var pt = 0.4*(L-l);
+		$('.linear-gauge-container').css('padding-top', pt + 'px');
+	}
+
+	function showFilingTrend(stats) {
+		var xData = [];
+		var yData = [];
+		for (var year in stats.yearStats) {
+			xData.push(year);
+			yData.push(stats.yearStats[year])
+		}
+		var option = {
+			xAxis: {
+		        type: 'category',
+		        data: xData,
+		        name: 'Year',
+		        nameLocation: 'center',
+		        nameGap: 20,
+		        axisLine: {
+		        	lineStyle: {
+		        		width: 2,
+		        		color: '#2C82C9'
+		        	}
+		        }
+		    },
+		    yAxis: {
+		        type: 'value',
+		        name: 'Patents %',
+		        nameLocation: 'end',
+		        axisLine: {
+		        	lineStyle: {
+		        		width: 2,
+		        		color: '#2C82C9'
+		        	}
+		        }
+		    },
+		    series: [{
+		        data: yData,
+		        type: 'line',
+		        smooth: true
+		    }],
+		    itemStyle: {
+		    	color: '#2C82C9'
+		    },
+		    lineStyle: {
+		    	color: '#2C82C9'
+		    },
+		    areaStyle: {
+		    	color: '#DDD'
+		    },
+		    grid: {
+		    	show: false
+		    }
+		};
+		chartB.setOption(option);
+	}
+	
+
+	$(window).resize(function(){
+  		initializeCharts();
+  		updateCharts(currentStats);
+	});
+
+	function updateCharts(stats) {
+		showAssigneeChart(stats);
+		showFilingTrend(stats);
+		showCharts();
+		showOriginalityScore(stats);
+	}
+
+	$(document).on('click', '#download-report-btn, #toggle-abstracts-btn, #toggle-charts-btn', function (e) {
+		alert('Work in progress.');
+	});
+
+	$(document).on('click', '#apply-date-filter-btn', function (e) {
+		var date = $('#cutoff-date-input').val();
+		if (!date) {
+			currentDateFilter = null;
+			return;
+		}
+		$('#calendar-btn').text("before " + date)
+		if (!date.match(/^\d{4}\-\d{2}\-\d{2}$/)) {
+			return alert("Invalid date.");
+		}
+		currentDateFilter = date;
+		$('#trigger-search-btn').click();
+	});
+
+</script>

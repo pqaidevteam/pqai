@@ -1,0 +1,9 @@
+__pycache__
+/node_modules/
+/rough.js
+/rough.py
+/tmp*
+/models/
+*.pyc
+/indexes/
+/build/
