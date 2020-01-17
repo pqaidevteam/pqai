@@ -1,2 +1,11 @@
-client = MongoClient('localhost', 27017)
-mongo_coll = client.pqai.fulltext
+from pymongo import MongoClient
+
+from config.config import mongo_url, mongo_port, mongo_dbname, mongo_collname
+
+client = MongoClient(mongo_url, mongo_port)
+coll = client[mongo_dbname][mongo_collname]
+
+def get_patent_data (pn):
+	query = { 'publicationNumber': pn }
+	patent_data = coll.find_one(query)
+	return patent_data
