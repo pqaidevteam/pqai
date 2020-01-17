@@ -1,8 +1,8 @@
 from pymongo import MongoClient
 
-from config.config import mongo_url, mongo_port, mongo_dbname, mongo_collname
+from config.config import mongo_host, mongo_port, mongo_dbname, mongo_collname
 
-client = MongoClient(mongo_url, mongo_port)
+client = MongoClient(mongo_host, mongo_port)
 coll = client[mongo_dbname][mongo_collname]
 
 def get_patent_data (pn):
