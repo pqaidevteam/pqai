@@ -2,7 +2,7 @@
 from flask import request
 from flask_api import FlaskAPI, status, exceptions
 from core.vectorizer import vectorize
-from core.indexes import AnnoyIndex
+from core.index import Index
 
 app = FlaskAPI(__name__)
 
