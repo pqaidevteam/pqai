@@ -7,22 +7,36 @@ from core.index import Index
 app = FlaskAPI(__name__)
 
 
-def base64_to_utf8(b64str):
+def b64decode(b64str):
     import base64
-    return base64.b64decode(b64query).decode('utf-8')
+    return base64.b64decode(b64str).decode('utf-8')
 
 
-@app.route('/indexes/<indexid>/patents/', methods=['GET'])
-def search_in_index(indexid):
+@app.route('/indexes/<index_id>/patents/', methods=['GET'])
+def search_index (index_id):
     n = request.args.get('n', 10, int)
-    pn = request.args.get('pn', '')
-    b64query = request.args.get('q', '')
-    query = base64_to_utf8(b64query)
-    query_vector = vectorize(query)
-    index = Index(indexid)
-    vector_ids = index.find_similar(query_vector)
-    pns = [index.resolve_id(i) for i in vector_ids]
-    return pns, status.HTTP_200_OK
+    pn = request.args.get('pn', '', str)
+    b64query = request.args.get('q', '', str)
+    query = b64decode(b64query)
+
+    if not pn and not query:
+        return 'No search criteria in request.', status.HTTP_400_BAD_REQUEST
+    if pn and query:
+        return 'Invalid search criteria.', status.HTTP_400_BAD_REQUEST
+    if pn:
+        query_vector = vectorize(pn)
+    if query:
+        query_vector = vectorize(query)
+
+    index = Index(index_id)
+    matches = index.find_similar(query_vector, n)
+    doc_ids = index.resolve_item_ids(matches)
+    return doc_ids, status.HTTP_200_OK
+
+
+@app.route('/patents/<pn>/snippet/', methods=['GET'])
+def get_snippet(pn):
+    return { snippet: True }, status.HTTP_200_OK
 
 
 #     pn = request.data

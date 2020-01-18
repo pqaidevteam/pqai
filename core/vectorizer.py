@@ -8,41 +8,6 @@ from config.config import models_dir
 from core.db import get_patent_data
 
 
-def tokenize (text):
-    """Break a text into words.
-
-    The text is transformed into lowercase and then all sequence
-    of alphanumeric characters are returned.
-    
-    Args:
-        text (str): Text to be tokenized
-    
-    Returns:
-        list: Words in lowercase
-    """
-    words = re.findall(r'\w+', text.lower())
-    return words if words is not None else []
-
-
-def freq2coef (freq):
-    """Calculate word weight given its document frequency.
-
-    Word weight is high (nearly 1.0) for rare words and low for
-    common words like 'the' and 'of'.
-    
-    Args:
-        freq (int): Document frequency of the word.
-    
-    Returns:
-        float: Word weight in range (0.0, 1.0)
-    """
-    a = 0.015
-    n = freq
-    N = word_freq['the'] + 1
-    p = n / N
-    return a/(a+p)
-
-
 # Variables used for cpc vectorization
 cpc_list_file = models_dir + 'cpc_vectors_256d.items.json'
 cpc_vecs_file = models_dir + 'cpc_vectors_256d.npy'
@@ -120,7 +85,7 @@ def vectorize (item):
     
     elif isinstance(item, dict):
         if 'abstract' in item and 'cpcs' in item:
-            return patent2vec(item)
+            return patent2vec(item, use_cpcs=False)
     
     elif isinstance(item, str):
         return text2vec(item)
@@ -156,32 +121,37 @@ def pn2vec (pn):
             `None` when patent number is not found in the database
     """
     patent_data = get_patent_data(pn)
-    return patent2vec(patent_data)
+    return patent2vec(patent_data, use_cpcs=False)
 
 
-def patent2vec (patent):
+def patent2vec (patent, use_cpcs=True):
     """Return a vector representation of patent on the basis of its
         abstract and CPCs.
     
     Args:
-        patent_data (dict): Patent data in the form of a dictionary.
+        patent (dict): Patent data as a dictionary.
             Must two fields: `abstract` and `cpcs`. The former must be
             a string and the latter an array.
+        use_cpcs (bool, optional): Whether to append an average CPC
+            vector
     
     Returns:
-        numpy.ndarray: One-dimenstional vector representation of patent.
+        numpy.ndarray: One-dimensional vector representation of patent. 
     """
     if type(patent) is not dict:
         return None
-    if 'abstract' not in patent or 'cpcs' not in patent:
-        return None
-
+    
+    if 'abstract' not in patent: return None
+    if type(patent['abstract']) is not str: return None
     text = patent['abstract']
-    cpcs = patent['cpcs']
-    if type(text) is not str or type(cpcs) is not list:
-        return None
-
     text_vec = text2vec(text)
+
+    if use_cpcs is False:
+        return text_vec
+
+    if 'cpcs' not in patent: return None
+    if type(patent['cpcs']) is not list: return None
+    cpcs = patent['cpcs']
     cpc_vecs = [cpc2vec(cpc) for cpc in cpcs]
     avg_cpc_vec = np.average(np.array(cpc_vecs), axis=0)
     return np.concatenate((text_vec, avg_cpc_vec))
@@ -225,4 +195,38 @@ def text2vec (text, unique=False, remove_pc=False):
     matrix = remove_first_pc(matrix) if remove_pc else matrix 
     vec = np.average(matrix, axis=0)
     return vec
+
+
+def tokenize (text):
+    """Break a text into words.
+
+    The text is transformed into lowercase and then all sequence
+    of alphanumeric characters are returned.
     
+    Args:
+        text (str): Text to be tokenized
+    
+    Returns:
+        list: Words in lowercase
+    """
+    words = re.findall(r'\w+', text.lower())
+    return words if words is not None else []
+
+
+def freq2coef (freq):
+    """Calculate word weight given its document frequency.
+
+    Word weight is high (nearly 1.0) for rare words and low for
+    common words like 'the' and 'of'.
+    
+    Args:
+        freq (int): Document frequency of the word.
+    
+    Returns:
+        float: Word weight in range (0.0, 1.0)
+    """
+    a = 0.015
+    n = freq
+    N = word_freq['the'] + 1
+    p = n / N
+    return a/(a+p)
