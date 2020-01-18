@@ -8,12 +8,23 @@ from config.config import models_dir
 from core.db import get_patent_data
 
 
-def tokenize(text):
+def tokenize (text):
+    """Break a text into words.
+
+    The text is transformed into lowercase and then all sequence
+    of alphanumeric characters are returned.
+    
+    Args:
+        text (str): Text to be tokenized
+    
+    Returns:
+        list: Words in lowercase
+    """
     words = re.findall(r'\w+', text.lower())
     return words if words is not None else []
 
 
-def freq2coef(freq):
+def freq2coef (freq):
     """Calculate word weight given its document frequency.
 
     Word weight is high (nearly 1.0) for rare words and low for
@@ -40,7 +51,19 @@ cpc_dims = None
 cpc_list = None
 cpc_dict = None
 
-def init_cpc_vecs():
+# Variables used for text vectorization
+word_vecs_file = models_dir + 'glove-We.npy'
+word_list_file = models_dir + 'glove-vocab.json'
+word_freq_file = models_dir + 'dfs.json'
+word_vecs = None
+word_list = None
+word_dims = None
+word_dict = None
+word_freq = None
+word_coef = None
+
+
+def init_cpc_vecs ():
     """Read cpc vectors and cpc codes from the disk. Initialize other
         variables used for cpc vectorization.
     """
@@ -54,18 +77,7 @@ def init_cpc_vecs():
     cpc_dict = {cpc:i for (i, cpc) in enumerate(cpc_list)}
 
 
-# Variables used for text vectorization
-word_vecs_file = models_dir + 'glove-We.npy'
-word_list_file = models_dir + 'glove-vocab.json'
-word_freq_file = models_dir + 'dfs.json'
-word_vecs = None
-word_list = None
-word_dims = None
-word_dict = None
-word_freq = None
-word_coef = None
-
-def init_word_vecs():
+def init_word_vecs ():
     """Read word list and word vectors codes from disk. Initialize other
         variables used for text vectorization.
     """

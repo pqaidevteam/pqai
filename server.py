@@ -19,7 +19,7 @@ def search_in_index(indexid):
     b64query = request.args.get('q', '')
     query = base64_to_utf8(b64query)
     query_vector = vectorize(query)
-    index = AnnoyIndex(indexid)
+    index = Index(indexid)
     vector_ids = index.find_similar(query_vector)
     pns = [index.resolve_id(i) for i in vector_ids]
     return pns, status.HTTP_200_OK
