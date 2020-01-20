@@ -1,13 +1,14 @@
 import numpy as np
 from annoy import AnnoyIndex
 import json
+from os.path import isfile
 
 from config.config import indexes_dir
 
 index_ids = ['H04W', 'G06T', 'G06N', 'Y02E']
-indexes = {}
+loaded_indexes = {}
 
-def init_index(index_id):
+def get_index(index_id):
     """Load the .ann and .items.json file for the index.
 
     Employs lazy loading. Indexes are loaded when they are required to
@@ -18,23 +19,25 @@ def init_index(index_id):
         index_id (str): Index identifier; the name with which the .ann
             file is saved.
     """
-    ann_file = indexes_dir + index_id + '.ann'
-    items_file = indexes_dir + index_id + '.ann.items.json'
-    items_list = json.load(open(items_file, 'r'))
-    annoy_index = AnnoyIndex(256, metric='angular')
-    annoy_index.load(ann_file)
+    if type(index_id) is not str:
+        return None
 
-    global indexes
-    indexes[index_id] = {
-        'index_id': index_id,
-        'vector_index': annoy_index,
-        'items_list': items_list
-    }
+    if index_id in loaded_indexes:
+        return loaded_indexes[index_id]
+
+    index_file = f"{indexes_dir}{index_id}.ann"
+    items_file = f"{indexes_dir}{index_id}.ann.items.json"
+    if not (isfile(index_file) or isfile(items_file)):
+        return None
+
+    index = Index(index_file, items_file)
+    loaded_indexes[index_id] = index
+    return index
 
 
 class Index():
 
-    """An annoy index along with suitable names for its items.
+    """An annoy index along with identifiers for its items.
     
     Attributes:
         index_id (str): Index's name, e.g., 'H04W'
@@ -43,29 +46,32 @@ class Index():
             details, check https://github.com/spotify/annoy
     """
     
-    def __init__(self, index_id):
+    def __init__(self, ann_file, json_file):
         """Load an index's data into the memory if not already loaded
             and return a pointer to it.
         
         Args:
             index_id (str): Index's name, e.g., 'H04W'
         """
-        if index_id not in indexes: init_index(index_id)
-        self.index_id = index_id
-        self.vector_index = indexes[index_id]['vector_index']
-        self.items_list = indexes[index_id]['items_list']
+        self.index = AnnoyIndex(256, metric='angular')
+        self.index.load(ann_file)
+        self.n_items = self.index.get_n_items()
+        self.items = json.load(open(json_file, 'r'))
 
-    def __getitem__(self, i):
+    def __getitem__(self, value):
         """Return vector for the i-th item.
         
         Args:
-            i (int): Item index. If number of items in the index are N,
-                0 < i < N
+            i (int or str): Item number if `int`, item name if `str`.
         
         Returns:
-            numpy.ndarray: Item vector.
+            numpy.ndarray: Item vector
         """
-        return self.vector_index.get_item_vector(i)
+        i = value if type(i) is int else self.items.index(value)
+        if -1 < i < self.n_items:
+            return self.index.get_item_vector(i)
+        else:
+            return None
 
     def find_similar_to_vector (self, query_vec, n=10, dist=False):
         """Summary
@@ -82,10 +88,13 @@ class Index():
             list: Similar items as a list of item ids (if dist=False),
                 or tuples (item_id, distance) if dist=True.
         """
-        index = self.vector_index
-        ids, dists = index.get_nns_by_vector(query_vec, n, -1, True)
-        N = len(ids)
-        return ids if not dist else [(ids[i], dist[i]) for i in range(N)]
+        ids, dists = self.index.get_nns_by_vector(query_vec, n, -1, True)
+        
+        if dist: # include distances with ids
+            ids = [(ids[i], dist[i]) for i in range(len(ids))]
+
+        doc_ids = self.resolve_item_ids(ids)
+        return doc_ids
 
     def find_similar_to_item (self, i, n=10, dist=False):
         """Return items similar to the i-th item in the index in a
@@ -145,7 +154,7 @@ class Index():
             str: The identification for the item stored in the index's
                 items list, e.g., a patent number.
         """
-        return self.items_list[i]
+        return self.items[i]
 
     def resolve_item_ids (self, arr):
         """Summary

@@ -2,35 +2,36 @@
 from flask import request
 from flask_api import FlaskAPI, status, exceptions
 from core.vectorizer import vectorize
-from core.index import Index
+from core.indexes import get_index
 
 app = FlaskAPI(__name__)
 
+@app.route('/documents/', methods=['GET'])
+def search_index ():
+    index_id = request.args.get('idx', '', str)
+    num_results = request.args.get('n', 10, int)
+    doc_id = request.args.get('pn', '', str)
+    query = request.args.get('q', '', str)
 
-def b64decode(b64str):
-    import base64
-    return base64.b64decode(b64str).decode('utf-8')
-
-
-@app.route('/indexes/<index_id>/patents/', methods=['GET'])
-def search_index (index_id):
-    n = request.args.get('n', 10, int)
-    pn = request.args.get('pn', '', str)
-    b64query = request.args.get('q', '', str)
-    query = b64decode(b64query)
-
-    if not pn and not query:
+    if not index_id:
+        return 'No index specified for search.', status.HTTP_400_BAD_REQUEST
+    if not (doc_id or query):
         return 'No search criteria in request.', status.HTTP_400_BAD_REQUEST
-    if pn and query:
+    if doc_id and query:
         return 'Invalid search criteria.', status.HTTP_400_BAD_REQUEST
-    if pn:
-        query_vector = vectorize(pn)
-    if query:
-        query_vector = vectorize(query)
+    if doc_id and not query:
+        query = doc_id
 
-    index = Index(index_id)
-    matches = index.find_similar(query_vector, n)
-    doc_ids = index.resolve_item_ids(matches)
+    query_vec = vectorize(query)
+    if query_vec is None:
+        return 'Problematic query.', status.HTTP_500_INTERNAL_SERVER_ERROR
+    index = get_index(index_id)
+    if index is None:
+        return 'Index not found.', status.HTTP_500_INTERNAL_SERVER_ERROR
+    doc_ids = index.find_similar(query_vec, num_results)
+    if doc_ids is None:
+        return 'Error while searching.', status.HTTP_500_INTERNAL_SERVER_ERROR
+    
     return doc_ids, status.HTTP_200_OK
 
 
