@@ -89,12 +89,10 @@ class Index():
                 or tuples (item_id, distance) if dist=True.
         """
         ids, dists = self.index.get_nns_by_vector(query_vec, n, -1, True)
-        
+        doc_ids = [self.resolve_item_id(i) for i in ids]
         if dist: # include distances with ids
-            ids = [(ids[i], dist[i]) for i in range(len(ids))]
-
-        doc_ids = self.resolve_item_ids(ids)
-        return doc_ids
+            doc_ids = [(doc_ids[i], dist[i]) for i in range(len(ids))]
+        return self.uniq(doc_ids)
 
     def find_similar_to_item (self, i, n=10, dist=False):
         """Return items similar to the i-th item in the index in a
@@ -111,10 +109,11 @@ class Index():
             list: Similar items as a list of item ids (if dist=False),
                 or tuples (item_id, distance) if dist=True.
         """
-        index = self.vector_index
-        ids, dists = index.get_nns_by_item(i, n, -1, True)
-        N = len(ids)
-        return ids if not dist else [(ids[j], dist[j]) for j in range(N)]
+        ids, dists = self.index.get_nns_by_item(i, n, -1, True)
+        doc_ids = [self.resolve_item_id(i) for i in ids]
+        if dist: # include distances with ids
+            doc_ids = [(doc_ids[i], dist[i]) for i in range(len(ids))]
+        return self.uniq(doc_ids)
 
     def find_similar (self, value, n=10, dist=False):
         """Find n items similar to a vector or the i-th item.
@@ -156,19 +155,26 @@ class Index():
         """
         return self.items[i]
 
-    def resolve_item_ids (self, arr):
-        """Summary
+    def uniq (self, arr):
+        """Return a list of unique elements while preserving the order.
+
+        If the elements are tuples, the first element is compared for
+        duplicacy.
         
         Args:
-            arr (list): List of item ids or tuples (item_id, dist)
+            arr (list): A list of primitives or tuples
         
         Returns:
-            str: The identification for the item stored in the index's
-                items list, e.g., a patent number.
+            list: A list of unique elements.
         """
-        if type(arr[0]) is int:
-            return [self.resolve_item_id(i) for i in arr]
-        elif type(arr[0]) is tuple and len(arr[0]) == 2:
-            return [(self.resolve_item_id(i), dist) for (i, dist) in arr]
+        unique = [arr[0]]
+        if type(arr[0]) is tuple:
+            for i in range(1, len(arr)):
+                if arr[i][0] != unique[-1][0]:
+                    unique.append(arr[i])
         else:
-            return None
+            for i in range(1, len(arr)):
+                if arr[i] != unique[-1]:
+                    unique.append(arr[i])
+        return unique
+

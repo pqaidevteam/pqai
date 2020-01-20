@@ -35,7 +35,7 @@ def search_index ():
     return doc_ids, status.HTTP_200_OK
 
 
-@app.route('/patents/<pn>/snippet/', methods=['GET'])
+@app.route('/snippets/', methods=['GET'])
 def get_snippet(pn):
     return { snippet: True }, status.HTTP_200_OK
 
