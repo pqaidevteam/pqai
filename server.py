@@ -3,6 +3,8 @@ from flask import request
 from flask_api import FlaskAPI, status, exceptions
 from core.vectorizer import vectorize
 from core.indexes import get_index
+from core.snippet import generate_snippet
+from core.highlighter import highlight
 
 app = FlaskAPI(__name__)
 
@@ -37,7 +39,13 @@ def search_index ():
 
 @app.route('/snippets/', methods=['GET'])
 def get_snippet(pn):
-    return { snippet: True }, status.HTTP_200_OK
+    query = request.args.get('q', '', str)
+    pn = request.args.get('pn', '', str)
+    if not (pn or query):
+        return 'Document id or query invalid.', status.HTTP_400_BAD_REQUEST
+    text = db.get_full_text(pn)
+    snippet = generate_snippet(query, text, vectorize, highlight)
+    return snippet, status.HTTP_200_OK
 
 
 #     pn = request.data
@@ -98,16 +106,16 @@ def get_snippet(pn):
 
 # @app.route('/snippet/', methods=['POST'])
 # def get_snippet():
-#     query = request.form['query']
-#     pn = request.form['pn']
-#     doc = mongo_coll.find_one({ 'publicationNumber': pn });
-#     abstract = doc['abstract']
-#     claims = '\n'.join(doc['claims'])
-#     desc = doc['description']
-#     desc = re.sub(r"\n+(?=[^A-Z])", ' ', desc)
-#     text = '\n'.join([abstract, claims, desc])
-#     snippet = generate_snippet(query, text, encode, highlight)
-#     return snippet
+    # query = request.form['query']
+    # pn = request.form['pn']
+    # doc = mongo_coll.find_one({ 'publicationNumber': pn });
+    # abstract = doc['abstract']
+    # claims = '\n'.join(doc['claims'])
+    # desc = doc['description']
+    # desc = re.sub(r"\n+(?=[^A-Z])", ' ', desc)
+    # text = '\n'.join([abstract, claims, desc])
+    # snippet = generate_snippet(query, text, encode, highlight)
+    # return snippet
 
 
 # def confidence_score(vectors):
