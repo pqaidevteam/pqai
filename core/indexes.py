@@ -91,7 +91,7 @@ class Index():
         ids, dists = self.index.get_nns_by_vector(query_vec, n, -1, True)
         doc_ids = [self.resolve_item_id(i) for i in ids]
         if dist: # include distances with ids
-            doc_ids = [(doc_ids[i], dist[i]) for i in range(len(ids))]
+            doc_ids = list(zip(doc_ids, dists))
         return self.uniq(doc_ids)
 
     def find_similar_to_item (self, i, n=10, dist=False):
@@ -112,7 +112,7 @@ class Index():
         ids, dists = self.index.get_nns_by_item(i, n, -1, True)
         doc_ids = [self.resolve_item_id(i) for i in ids]
         if dist: # include distances with ids
-            doc_ids = [(doc_ids[i], dist[i]) for i in range(len(ids))]
+            doc_ids = list(zip(doc_ids, dists))
         return self.uniq(doc_ids)
 
     def find_similar (self, value, n=10, dist=False):
