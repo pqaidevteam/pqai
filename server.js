@@ -1,20 +1,11 @@
 'use strict';
 
-/*
-	General Modules
-*/
 const express = require('express');
 const hbs = require('hbs');
 const compression = require('compression');
+const axios = require('axios');
 const bodyParser = require('body-parser');
-const _ = require('lodash');
 
-/*
-	Custom modules
-*/
-const enhancer = require('./core/enhancer.js');
-const searcher = require('./core/searcher.js');
-const snippet = require('./core/snippet.js');
 const stats = require('./core/stats.js');
 
 const app = express();
@@ -41,55 +32,49 @@ app.get('/search', function (req, res) {
 
 app.post('/mediator', function (req, res) {
 	let cmd = req.body.cmd;
-	if (cmd == 'expand-query') {
+	if (cmd == 'search-by-patent' || cmd == 'search-by-query') {
 		let query = req.body.query;
-		enhancer.enhance(query, eq => {
-			if (typeof eq !== 'string') {
-				res.send(error('Server error.'));
-			} else {
-				res.send(eq);
-			}
-		});
-	} else if (cmd == 'search-by-patent') {
-		let pn = req.body.query;
 		let indexId = req.body.techDomain;
-		if (!pn.match(/^US\d{7,8}[AB]\d?$/)) {
-			res.send(error('Invalid patent number.'));
-			return;
+		let url = 'http://localhost:5000/documents/'
+		let params = {
+			q: query, idx: indexId, n: 10, cnfd: 1, bib: 1, snip: 1, dist: 1
 		}
-		searcher.searchByPatent(pn, indexId, results => {
-			if (!Array.isArray(results)) {
-				res.send(error('An error occurred. Please check your input.'));
-			} else {
-				res.send(results);
-			}
-		});
-	} else if (cmd == 'search-by-query') {
-		let query = req.body.query;
-		let indexId = req.body.techDomain;
-		searcher.searchByQuery(query, indexId, results => {
-			if (!Array.isArray(results)) {
-				res.send(error('An error occurred. Please check your input.'));
-			} else {
-				res.send(results);
-			}
-		});
+		axios.get(url, { params })
+			.then(response => res.send(response.data))
+			.catch(err => res.send(error('Error occurred.')))
+	
+	
 	} else if (cmd == 'get-snippet') {
 		let query = req.body.query;
 		let publicationNumber = req.body.publicationNumber;
-		snippet.getSnippet(publicationNumber, query, snippet => {
-			res.send(snippet);
-		});
+		
+		let url = 'http://localhost:5000/snippets/'
+		let params = { q: query, pn: publicationNumber }
+		axios.get(url, { params })
+			.then(response => res.send(response.data))
+			.catch(err => res.send(error('Error occurred.')))
+
 	} else if (cmd == 'get-stats') {
 		let query = req.body.query;
 		let indexId = req.body.techDomain;
-		stats.getStats(query, indexId, results => {
-			if (results.assigneeStats) {
-				res.send(results);
-			} else {
-				res.send(error('Error in getting stats.'));
-			}
-		});
+		let url = 'http://localhost:5000/documents/'
+		let params = {
+			q: query, idx: indexId, n: 100, bib: 1
+		}
+		axios.get(url, { params })
+			.then(response => {
+				let docs = response.data;
+				let result = {}
+				result.assigneeStats = stats.getAssigneeStats(docs);
+				result.yearStats = stats.getYearStats(docs);
+				result.oScore = stats.getOScore(docs);
+				res.send(result)
+			})
+			.catch(err => {
+				console.log(err);
+				res.send(error('Error occurred.'))
+			})
+
 	} else {
 		res.send(error('Invalid request.'));
 	}

@@ -14,11 +14,13 @@ def get_patent_data (pn):
 def get_full_text (pn):
 	import re
 	patent = get_patent_data(pn)
-	if patent is None:
-		return None
-
-	abst, clms, desc = itemgetter('abstract', 'claims', 'description')(patent)
-	clms = '\n'.join(clms)
+	abstract = patent['abstract']
+	claims = '\n'.join(patent['claims'])
+	desc = patent['description']
 	desc = re.sub(r"\n+(?=[^A-Z])", ' ', desc)
-	text = '\n'.join([abst, clms, desc])
+	text = '\n'.join([abstract, claims, desc])
 	return text
+
+def get_cpcs (pn):
+	patent = get_patent_data(pn)
+	return patent.get('cpcs') if patent is not None else None

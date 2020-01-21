@@ -470,19 +470,22 @@
 				moreLikeThisBtn
 			];
 			html += '<p class="card-text res-bib">' + arr.join(' ') + '</p>';
-			if (currentQueryType == 'patent') {
-				snippet = res.abstract;
-				html += '<p class="card-text res-snippet">' + snippet + '</p>';
-				html += '</div></div>';
-				output.append(html);
-				return callback();
-			}
-			getSnippet(pn, currentQuery, function(snippet) {
-				html += '<p class="card-text res-snippet">' + snippet + '</p>';
-				html += '</div></div>';
-				output.append(html);
-				callback();
-			});
+			html += '<p class="card-text res-snippet">' + res.snippet + '</p>';
+			output.append(html);
+			callback()
+			// if (currentQueryType == 'patent') {
+			// 	snippet = res.abstract;
+			// 	html += '<p class="card-text res-snippet">' + snippet + '</p>';
+			// 	html += '</div></div>';
+			// 	output.append(html);
+			// 	return callback();
+			// }
+			// getSnippet(pn, currentQuery, function(snippet) {
+			// 	html += '<p class="card-text res-snippet">' + snippet + '</p>';
+			// 	html += '</div></div>';
+			// 	output.append(html);
+			// 	callback();
+			// });
 		}, function (arr) {
 			// done
 			output.append(loadMoreBtnHtml);

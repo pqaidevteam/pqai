@@ -1,17 +1,6 @@
 'use strict'
 
-let searcher = require('./searcher.js');
 let cleaner = require('./assignee-cleaner.js');
-
-function getStats (query, indexId, callback) {
-	let stats = {};
-	searcher.getLongList(query, indexId, docs => {
-		stats.assigneeStats = getAssigneeStats(docs);
-		stats.yearStats = getYearStats(docs);
-		stats.oScore = getOScore(docs);
-		callback(stats);
-	});
-}
 
 function getOScore(docs) {
 	let O_score = parseInt((docs[0].distance/1.3)*100);
@@ -73,5 +62,7 @@ function _dist(arr) {
 }
 
 module.exports = {
-	getStats
+	getAssigneeStats,
+	getOScore,
+	getYearStats
 }

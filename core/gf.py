@@ -17,6 +17,16 @@ stopword_dict = {}
 for word in stopword_list:
     stopword_dict[word] = 1
 
+def calc_confidence_score(vectors):
+    norms_squared = 0.00001 + (vectors * vectors).sum(axis=1, keepdims=True)
+    sims = np.dot(vectors, vectors.T) / norms_squared
+    std = np.std(sims.sum(axis=1, keepdims=False))
+    if std < 25:
+        return 'High'
+    elif std > 25 and std < 35:
+        return 'Medium'
+    else:
+        return 'Low'
 
 def is_cpc_code (item):
     if not isinstance(item, str):

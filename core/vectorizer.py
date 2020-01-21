@@ -129,7 +129,7 @@ class SIFTextVectorizer:
             words = re.findall(r'\w+', text.lower())
             return words if words is not None else []
 
-        def embed (self, text, unique=False, remove_pc=False):
+        def embed (self, text, unique=True, remove_pc=False):
             """Return a vector representation of text.
             
             Args:
@@ -143,10 +143,14 @@ class SIFTextVectorizer:
             words = self.tokenize(text)
             if len(words) is 0:
                 return self.gray
-            words = list(set(words)) if unique else words
+            if unique:
+                words = list(set(words))
             idxs = [self.lut[w] for w in words if w in self.lut]
+            if len(idxs) is 0:
+                return self.gray
             matrix = np.array([self.vecs[i]*self.sifs[i] for i in idxs])
-            matrix = self.remove_first_pc(matrix) if remove_pc else matrix 
+            if remove_pc:
+                matrix = self.remove_first_pc(matrix) 
             vec = np.average(matrix, axis=0)
             return vec
 

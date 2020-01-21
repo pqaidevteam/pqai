@@ -1,19 +1,17 @@
-
 import re
 import json
-
-import os
-__dirname = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-import sys
-sys.path.append(__dirname + '/core/')
-import gf
-from gf import is_generic
-from sent2vec import embed
 import numpy as np
 
-dictionary = json.load(open(__dirname + '/models/glove-dictionary.json'))
-l_vocab = json.load(open(__dirname + '/models/glove-vocab.lemmas.json'))
-l_variations = json.load(open(__dirname + '/models/glove-dictionary.variations.json'))
+from config.config import models_dir
+import core.gf
+from core.gf import is_generic
+from core.vectorizer import SIFTextVectorizer
+
+embed = SIFTextVectorizer().__getitem__
+
+dictionary = json.load(open(models_dir + 'glove-dictionary.json'))
+l_vocab = json.load(open(models_dir + 'glove-vocab.lemmas.json'))
+l_variations = json.load(open(models_dir + 'glove-dictionary.variations.json'))
 
 def variations(word):
 	if not word in dictionary:

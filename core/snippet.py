@@ -1,7 +1,11 @@
 import numpy as np
-import gf
 from random import randrange
 import re
+import core.gf as gf
+from core.highlighter import highlight as highlighter_fn
+
+from core.vectorizer import SIFTextVectorizer
+encoder_fn = SIFTextVectorizer().embed
 
 def last_few_words(sent):
     num_words = randrange(5, 10)
@@ -24,78 +28,19 @@ def first_few_words(sent):
         i += 1
     return ' ' + sent[0:i] + '...'
 
-
-def generate_snippet_(query, text, encoder_fn, highlighter=None):
-	sents = gf.get_sentences(text)
-	sents = [sent for sent in sents if len(sent) > 50]
-	sent_vecs = encoder_fn(sents)
-	# sent_vecs = sent_vecs / np.linalg.norm(sent_vecs, ord=2, axis=1, keepdims=True)
-	
-	query_vec = encoder_fn(query)
-	# query_vec /= np.linalg.norm(query_vec)
-	query_vec = query_vec.reshape(256, 1)
-	
-	sim_scores = np.matmul(sent_vecs, query_vec).flatten()
-
-	# sort indexes in decreasing order of similarity
-	idx_sorted = list(sim_scores.argsort()[::-1])
-	
-	denscending_scores = [sim_scores[i] for i in idx_sorted]
-
-	n_max = 1   # no. of sentences to keep in the snippet
-	
-	
-	query_words = re.findall(r'[a-z]+', query.lower())
-	yet_to_find = re.findall(r'[a-z]+', query.lower())
-
-	snippets = []
-	while len(snippets)<n_max and len(idx_sorted) > 0 and len(yet_to_find) > 0:
-		i = idx_sorted.pop(0)
-		core_snippet = sents[i]
-		if core_snippet[-1] == '.':  # a proper sentence
-			if highlighter:
-				hlt_sent, found = highlighter(query_words, sents[i])
-				newfound = 0
-				for word in found:
-					if word in yet_to_find:
-						yet_to_find.pop(yet_to_find.index(word))
-						newfound += 1
-				if (len(snippets) > 0 and newfound == 0):
-					continue					
-			else:
-				hlt_sent = sents[i]
-			snippet = '<span class="snippet">' + hlt_sent + '</span>'
-			before = ''
-			after = ''
-			if i > 0:
-				before = '...' + last_few_words(sents[i-1])
-				before = '<span class="before">' + before + '</span>'
-			if len(re.findall(r'\s+', snippet)) > 85:
-				snippet = re.search(r'(\S+\s){,80}', snippet).group().strip()
-				after = '...'
-			elif i+1 < len(sents):
-				after = first_few_words(sents[i+1]) + '...'
-				after = '<span class="after">' + after + '</span>'
-			snippet = ' '.join([before, snippet, after])
-			snippets.append(snippet)
-	full_snippet = '<br>'.join(snippets)
-	return full_snippet
-
-
-def generate_snippet(query, text, encoder_fn, highlighter=None):
+def extract_snippet(query, text, htl_on=True):
 	sents = valid_sentences(text)
-	idx = best_sent_for(query, sents, encoder_fn)
+	idx = best_sent_for(query, sents)
 	best_sent = sents[idx]
 
 	before = last_few_words(sents[idx-1]) if idx > 0 else ''
 	after = first_few_words(sents[idx+1]) if idx+1 < len(sents) else ''
-	center, _ = highlighter(query, best_sent) if highlighter else best_sent
-
+	center = highlighter_fn(query, best_sent)[0] if htl_on else best_sent
 	snippet = before + center + after
 	return snippet
 
 
-def best_sent_for(query, sents, encoder_fn):
+def best_sent_for(query, sents):
 	words = list(set(re.findall(r'[a-z]+', query.lower())))
 	words = [word for word in words if not gf.is_generic(word)]
 	qvecs = np.array([encoder_fn(word) for word in words])
