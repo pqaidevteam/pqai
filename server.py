@@ -2,7 +2,7 @@
 from flask import request
 import numpy as np
 from flask_api import FlaskAPI, status, exceptions
-from core.vectorizer import vectorize, CPCVectorizer, SIFTextVectorizer
+from core.vectorizer import vectorize, CPCVectorizer
 from core.indexes import get_index
 from core.snippet import extract_snippet
 from core.highlighter import highlight
@@ -82,10 +82,6 @@ def search_index ():
     return results, status.HTTP_200_OK
 
 
-
-
-
-
 @app.route('/snippets/', methods=['GET'])
 def get_snippet():
     query = request.args.get('q', '', str)
@@ -100,80 +96,6 @@ def get_snippet():
         query = query
     )
     return response, status.HTTP_200_OK
-
-
-#     pn = request.data
-#     tupl = get_index_by_id(indexid)
-#     if tupl is None:
-#         return json.dumps([])
-#     patent_index, patent_list = tupl
-#     n = 200  # number of results
-#     plain_str = base64.b64decode(b64str).decode('utf-8')
-#     vector = encode(plain_str)
-#     sims, dists = patent_index.get_nns_by_vector(vector, int(n*1.5), 100000, True)
-#     sims = [[patent_list[n], dists[i]] for i, n in enumerate(sims)]
-#     sims = n_unique(sims, n)
-#     return json.dumps(sims)
-
-
-# # Find similar patents
-# @app.route('/simpats/<indexid>/<b64str>', methods=['GET'])
-# def simpats(b64str, indexid):
-#     tupl = get_index_by_id(indexid)
-#     if tupl is None:
-#         return json.dumps([])
-#     patent_index, patent_list = tupl
-#     n = 100  # number of results
-#     sp = base64.b64decode(b64str).decode('utf-8')   # subject patent
-#     if not sp in patent_list:
-#         return json.dumps([])
-#     m = patent_list.index(sp)
-#     vecs = []
-#     while patent_list[m] == sp:                     # to cover all sentences
-#         vecs.append(patent_index.get_item_vector(m))
-#         m += 1
-#     vecs = np.array(vecs)
-#     resultant = vecs.sum(axis=0)
-#     sims, dists = patent_index.get_nns_by_vector(resultant, 150, 100000, True)
-#     sims = [[patent_list[n], dists[i]] for i, n in enumerate(sims)]
-#     sims = n_unique(sims, n)
-#     return json.dumps(sims)
-
-
-# # Temporary route for benchmarking purposes
-# @app.route('/longlist/<indexid>/<b64str>', methods=['GET'])
-# def benchmark(b64str, indexid):
-#     tupl = get_index_by_id(indexid)
-#     if tupl is None:
-#         return json.dumps([])
-#     patent_index, patent_list = tupl
-#     N = 100  # number of results
-#     plain_str = base64.b64decode(b64str).decode('utf-8')
-#     print(plain_str);
-#     vector = encode(plain_str)
-#     sims, dists = patent_index.get_nns_by_vector(vector, 200, 100000, True)
-#     sims = [[patent_list[n], dists[i]] for i, n in enumerate(sims)]
-#     sims = n_unique(sims, N)
-#     print(len(sims));
-#     return json.dumps(sims)
-
-
-# @app.route('/snippet/', methods=['POST'])
-# def get_snippet():
-    # query = request.form['query']
-    # pn = request.form['pn']
-    # doc = mongo_coll.find_one({ 'publicationNumber': pn });
-    # abstract = doc['abstract']
-    # claims = '\n'.join(doc['claims'])
-    # desc = doc['description']
-    # desc = re.sub(r"\n+(?=[^A-Z])", ' ', desc)
-    # text = '\n'.join([abstract, claims, desc])
-    # snippet = extract_snippet(query, text, encode, highlight)
-    # return snippet
-
-# @app.route('/confidence/', methods=['POST'])
-# def confidence():
-    
 
 
 if __name__ == '__main__':

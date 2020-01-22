@@ -177,4 +177,3 @@ class Index():
                 if arr[i] != unique[-1]:
                     unique.append(arr[i])
         return unique
-
