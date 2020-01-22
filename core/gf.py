@@ -35,7 +35,7 @@ def calc_confidence_score(vecs):
 
     # 2d matrix where element i,j is cosine similarity between
     # vectors i and j
-    sims = np.dot(vectors, vectors.T) / norms_squared
+    sims = np.dot(vecs, vecs.T) / norms_squared
     
     # calculate the standard deviation of cosine similarities
     std = np.std(sims.sum(axis=1, keepdims=False))
