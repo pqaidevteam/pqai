@@ -43,7 +43,6 @@ app.post('/mediator', function (req, res) {
 			.then(response => res.send(response.data))
 			.catch(err => res.send(error('Error occurred.')))
 	
-	
 	} else if (cmd == 'get-snippet') {
 		let query = req.body.query;
 		let publicationNumber = req.body.publicationNumber;

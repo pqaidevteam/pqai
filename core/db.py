@@ -21,6 +21,7 @@ def get_full_text (pn):
 	text = '\n'.join([abstract, claims, desc])
 	return text
 
+
 def get_cpcs (pn):
 	patent = get_patent_data(pn)
 	return patent.get('cpcs') if patent is not None else None
