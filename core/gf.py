@@ -155,3 +155,25 @@ def cosine_dist(a, b):
     """
     dot = np.dot(a, b)
     return dot/(np.linalg.norm(a) * np.linalg.norm(b)) if dot != 0.0 else 0.0
+
+
+def tokenize(text, lowercase=True, alphanums=False):
+    """Get tokens (words) from given text.
+    
+    Args:
+        text (str): Text to be tokenized (expects English text).
+        lowercase (bool, optional): Whether the text should be
+            lowercased before tokenization.
+        alphanums (bool, optional): Whether words that contain numbers
+            e.g., "3D" should be considered.
+    
+    Returns:
+        list: Array of tokens.
+    """
+    if lowercase:
+        matches = re.findall(r'\b[a-z]+\b', text.lower())
+    else:
+        matches = re.findall(r'\b[a-z]+\b', text)
+    if not matches:
+        return []
+    return matches
