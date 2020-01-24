@@ -21,51 +21,6 @@ def variations(word):
 		return l_variations[lemma]
 
 
-def highlight_(words, text):
-	highlighted = set([])
-	for word in words:
-		if is_generic(word):
-			highlighted.add(word)
-			continue
-		synonyms = gf.synonyms(word, 5)
-		synonyms = [syn for syn in synonyms if not is_generic(word)]
-		for syn in synonyms:
-			pattern = r'\b(' + '|'.join(variations(syn)) + r')\b'
-			replacement = '<dGn9zx>\\1</dGn9zx>'
-			if (re.search(pattern, text)):
-				highlighted.add(word)
-				text = re.sub(pattern, replacement, text, count=1, flags=re.IGNORECASE)
-	pattern = r'dGn9zx'
-	replacement = 'strong'
-	text = re.sub(pattern, replacement, text)
-	return (text, list(highlighted))
-
-def highlight__(words, text):
-	query = ' '.join(words)
-	qvec = embed(query)
-	terms = list(set(re.findall(r'[a-z]+', text.lower())))
-	tvecs = [embed(term) for term in terms]
-	sims = np.zeros(len(tvecs))
-	for i, tvec in enumerate(tvecs):
-		sims[i] = gf.cosine_dist(tvec, qvec)
-	pos = sims.argsort()[::-1]
-	to_highlight = []
-	for j in pos:
-		if sims[j] > 0.5 and len(to_highlight) < 5:
-			term = terms[j]
-			if not is_generic(term):
-				to_highlight.append(term)
-
-	replacement = '<dGn9zx>\\1</dGn9zx>'
-	for term in to_highlight:
-		pattern = r'\b(' + term + r')\b'
-		text = re.sub(pattern, replacement, text, count=1, flags=re.IGNORECASE)
-	pattern = r'dGn9zx'
-	replacement = 'strong'
-	text = re.sub(pattern, replacement, text)
-	return (text, to_highlight)
-
-
 def highlight(query, text):
 	words = list(set(re.findall(r'[a-z]+', query.lower())))
 	terms = list(set(re.findall(r'[a-z]+', text.lower())))
