@@ -68,12 +68,15 @@ def to_feature_vector (text, dictionary):
     return vector
 
 
-def predict_subclasses (text, n=5):
+def predict_subclasses (text, n=5, limitTo=None):
 	"""Find relevant CPC technology subclasses for a given text snippet. 
 	
 	Args:
 	    text (str): Input text.
 	    n (int, optional): Number of subclasses to return.
+	    limitTo (list, optional): Predict subclasses only from the given
+	    	list (intended for cases when you want to limit prediction
+	    	to a specific set of classes)
 	
 	Returns:
 	    list: Array of subclass codes, most relevant first.
@@ -82,5 +85,13 @@ def predict_subclasses (text, n=5):
 		load_model()
 	x = to_feature_vector(text, features_dict)
 	y_pred = loaded_model.predict(np.array([x]))[0]
-	subclasses = [targets[i] for i in np.argsort(y_pred)[::-1][:5]]
-	return subclasses
+
+	# sort subclasses in descending order of relevancy
+	subclasses = [targets[i] for i in np.argsort(y_pred)[::-1]]
+
+	if type(limitTo) is list and len(limitTo) > 0:
+		subclasses = [subclass for subclass in subclasses
+						if subclass in limitTo]
+
+	# return top-n
+	return subclasses[:n]

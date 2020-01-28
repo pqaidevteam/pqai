@@ -13,7 +13,15 @@ dictionary = json.load(open(models_dir + 'glove-dictionary.json'))
 l_vocab = json.load(open(models_dir + 'glove-vocab.lemmas.json'))
 l_variations = json.load(open(models_dir + 'glove-dictionary.variations.json'))
 
-def variations(word):
+def variations (word):
+	"""Get syntactic variations of a word.
+	
+	Args:
+	    word (str): The word, e.g., "creating"
+	
+	Returns:
+	    list: Variations, e.g., ["create", "created", "creates", ... ]
+	"""
 	if not word in dictionary:
 		return [word]
 	else:
@@ -21,7 +29,19 @@ def variations(word):
 		return l_variations[lemma]
 
 
-def highlight(query, text):
+def highlight (query, text):
+	"""Given a query, highlight some relevant words in the given text
+	snippet which would help user judge the relevancy of the snippet for
+	the given query. 
+	
+	Args:
+	    query (str): Query
+	    text (str): Snippet of text.
+	
+	Returns:
+	    str: Snippet with relevant words wrapped in <strong></strong>
+	    	tags (to show as html).
+	"""
 	words = list(set(re.findall(r'[a-z]+', query.lower())))
 	terms = list(set(re.findall(r'[a-z]+', text.lower())))
 

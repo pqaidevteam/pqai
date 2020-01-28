@@ -2,6 +2,7 @@ from core.snippet import extract_snippet
 from core.vectorizer import SIFTextVectorizer
 from core.db import get_full_text, get_patent_data
 from core.indexes import get_index
+from core.subclass_predictor import predict_subclasses
 
 
 def test_text_embedding():
@@ -34,3 +35,13 @@ def test_search():
     results = index.find_similar(embed(query), dist=False)
     overlap = set(results).intersection(set(expected))
     assert overlap
+
+
+def test_subclass_predictor():
+    query = "wireless networks"
+    preds = predict_subclasses(query)
+    assert preds[0] == 'H04W'
+
+    preds = predict_subclasses(query, limitTo=['H02J', 'H04L'])
+    assert preds[0] == 'H04L'
+
