@@ -73,7 +73,6 @@ app.post('/mediator', function (req, res) {
 				console.log(err);
 				res.send(error('Error occurred.'))
 			})
-
 	} else {
 		res.send(error('Invalid request.'));
 	}

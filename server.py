@@ -4,10 +4,12 @@ import numpy as np
 from flask_api import FlaskAPI, status, exceptions
 from core.vectorizer import vectorize, CPCVectorizer
 from core.indexes import get_index
+from core.indexes import index_ids as available_indexes
 from core.snippet import extract_snippet
 from core.highlighter import highlight
 from core import db
 from core.gf import calc_confidence_score
+from core.subclass_predictor import predict_subclasses
 
 app = FlaskAPI(__name__)
 
@@ -34,6 +36,15 @@ def search_index ():
     query_vec = vectorize(query)
     if query_vec is None:
         return 'Problematic query.', status.HTTP_500_INTERNAL_SERVER_ERROR
+    
+    """
+    If automatic index selection mode is enabled, predit `index_id`
+    on the basis of query. Since indexes correspond to CPC subclasses,
+    the predicted subclass codes act as indexes.
+    """ 
+    if index_id == 'auto':
+        index_id = predict_subclasses(query, 1, available_indexes)[0]
+    
     index = get_index(index_id)
     if index is None:
         return 'Index not found.', status.HTTP_500_INTERNAL_SERVER_ERROR
