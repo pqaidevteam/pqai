@@ -40,8 +40,8 @@ app.post('/mediator', function (req, res) {
 			q: query, idx: indexId, n: 10, cnfd: 1, bib: 1, snip: 1, dist: 1
 		}
 		axios.get(url, { params })
-			.then(response => res.send(response.data))
-			.catch(err => res.send(error('Error occurred.')))
+			.then(response => res.status(200).send(response.data))
+			.catch(err => res.status(500).send(error('Error occurred.')))
 	
 	} else if (cmd == 'get-snippet') {
 		let query = req.body.query;
@@ -50,8 +50,8 @@ app.post('/mediator', function (req, res) {
 		let url = 'http://localhost:5000/snippets/'
 		let params = { q: query, pn: publicationNumber }
 		axios.get(url, { params })
-			.then(response => res.send(response.data))
-			.catch(err => res.send(error('Error occurred.')))
+			.then(response => res.status(200).send(response.data))
+			.catch(err => res.status(500).send(error('Error occurred.')))
 
 	} else if (cmd == 'get-stats') {
 		let query = req.body.query;
@@ -67,14 +67,14 @@ app.post('/mediator', function (req, res) {
 				result.assigneeStats = stats.getAssigneeStats(docs);
 				result.yearStats = stats.getYearStats(docs);
 				result.oScore = stats.getOScore(docs);
-				res.send(result)
+				res.status(200).send(result);
 			})
 			.catch(err => {
 				console.log(err);
-				res.send(error('Error occurred.'))
+				res.status(500).send(error('Error occurred.'))
 			})
 	} else {
-		res.send(error('Invalid request.'));
+		res.status(400).send(error('Invalid request.'));
 	}
 });
 
