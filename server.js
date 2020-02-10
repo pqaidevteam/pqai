@@ -62,7 +62,7 @@ app.post('/mediator', function (req, res) {
 		}
 		axios.get(url, { params })
 			.then(response => {
-				let docs = response.data;
+				let docs = response.data.results;
 				let result = {}
 				result.assigneeStats = stats.getAssigneeStats(docs);
 				result.yearStats = stats.getYearStats(docs);

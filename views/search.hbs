@@ -388,9 +388,9 @@
 		
 		callMediator({
 			cmd, query, techDomain, cutoffDate: currentDateFilter
-		}, function (results) {
+		}, function (response) {
 			clearOutput();
-			currentResults = results;
+			currentResults = response.results;
 
 			if (currentDateFilter) {
 				var cutoff = new Date(currentDateFilter);
@@ -399,11 +399,16 @@
 					return (d <= cutoff);
 				});
 			}
+
+			var selectedTechDomain = $('#tech-domain-input').val();
+			var selectedOrPredicted = selectedTechDomain == 'auto' ? 'predicted' : 'selected'
+			
 			$('#output-pane').append(
 				'<p>'
-				+ 'Showing top results'
+				+ 'Top results from ' + selectedOrPredicted + ' tech-domain '
+				+ '<b>' + $('option[value=' + response.index + ']').text().split(":")[1].trim() + '</b><br>'
 				+ ((currentDateFilter) ? ' (with date filter)' : '')
-				+ ((currentResults[0].confidence) ? '. Confidence level: <b>' + currentResults[0].confidence.toUpperCase() + '</b>' : '')
+				+ ((currentResults[0].confidence) ? 'Confidence level: <b>' + currentResults[0].confidence.toUpperCase() + '</b>' : '')
 				+ '</p>'
 			);
 			displayResults();

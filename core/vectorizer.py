@@ -55,7 +55,7 @@ class CPCVectorizer:
             Returns:
                 numpy.ndarray: Description
             """
-            if [cpc for cpc in cpcs if cpc in self.lut] is None:
+            if not [cpc for cpc in cpcs if cpc in self.lut]:
                 return self.gray
             cpc_vecs = [self[cpc] for cpc in cpcs if cpc in self.lut]
             avg_cpc_vec = np.average(np.array(cpc_vecs), axis=0)

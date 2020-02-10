@@ -62,7 +62,7 @@ def search_index ():
     else:
         results = [{'publicationNumber': doc_id} for doc_id, dist in hits]
 
-    # Add confidence score to results if needed
+    # Add confidence score to results if requested
     # It is calculated on the basis of results' CPCs; if their vectors'
     # variance is low, score is high and vice versa
     if include_confidence_val:
@@ -73,7 +73,7 @@ def search_index ():
         for result in results:
             result['confidence'] = confidence_score
 
-    # Add bibliography details to results if needed
+    # Add bibliography details to results if requested
     if include_bib_details:
         for result in results:
             patent = db.get_patent_data(result['publicationNumber'])
@@ -90,7 +90,13 @@ def search_index ():
             snippet = extract_snippet(query, text)
             result['snippet'] = snippet
 
-    return results, status.HTTP_200_OK
+    response = {
+        'results': results,
+        'query': query,
+        'index': index_id
+    }
+
+    return response, status.HTTP_200_OK
 
 
 @app.route('/snippets/', methods=['GET'])
