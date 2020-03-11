@@ -30,6 +30,10 @@ app.get('/search', function (req, res) {
 	res.render('search');
 });
 
+app.get('/b68ccabe63f8059a52604f1e6fd2e5ba', function (req, res) {
+	res.render('about');
+});
+
 app.post('/mediator', function (req, res) {
 	let cmd = req.body.cmd;
 	if (cmd == 'search-by-patent' || cmd == 'search-by-query') {
@@ -89,7 +93,7 @@ function error(msg) {
 	Run
 */
 
-const PORT = 8080
+const PORT = 5601
 app.listen(PORT, function () {
 	console.log('Server running on port', PORT);
 });

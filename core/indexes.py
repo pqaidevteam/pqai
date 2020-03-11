@@ -5,7 +5,27 @@ from os.path import isfile
 
 from config.config import indexes_dir
 
-index_ids = ['H04W', 'G06T', 'G06N', 'Y02E']
+index_ids = [
+    'G01B', 'G03G', 'G07B', 'G21B', 'H02H', 'H04R', 'Y02D', 'G01R',
+    'G06D', 'G10B', 'H01H', 'H03J', 'G01C', 'G03H', 'G07C', 'G21C',
+    'H02J', 'H04S', 'Y02E', 'G01S', 'G06E', 'G10C', 'H01J', 'H03K',
+    'G01D', 'G04B', 'G07D', 'G21D', 'H02K', 'H04W', 'G01T', 'G06F',
+    'G10D', 'H01K', 'H03L', 'G01F', 'G04C', 'G07F', 'G21F', 'H02M',
+    'Y02P', 'G01V', 'G06G', 'G10F', 'H01L', 'H03M', 'H05B', 'G01G',
+    'G04D', 'G07G', 'G21G', 'H02N', 'Y02T', 'G01W', 'G06J', 'G10G',
+    'H01M', 'H04B', 'H05C', 'G01H', 'G04F', 'G08B', 'G21H', 'H02P',
+    'Y02W', 'G02B', 'G06K', 'G10H', 'H01P', 'H04H', 'H05F', 'G01J',
+    'G04G', 'G08C', 'G21J', 'H02S', 'Y04S', 'G02C', 'G06M', 'G10K',
+    'H01Q', 'H04J', 'H05G', 'G01K', 'G04R', 'G08G', 'G21K', 'H03B',
+    'Y10S', 'G02F', 'G06N', 'G10L', 'H01R', 'H04K', 'H05H', 'G01L',
+    'G05B', 'G09B', 'G21Y', 'H03C', 'Y10T', 'G03B', 'G06N', 'G11B',
+    'H01S', 'H04L', 'H05K', 'G01M', 'G05D', 'G09C', 'H01B', 'H03D',
+    'G03C', 'G06Q', 'G11C', 'H01T', 'H04M', 'Y02A', 'G01N', 'G05F',
+    'G09D', 'H01C', 'H03F', 'G03D', 'G06T', 'G12B', 'H02B', 'H04N',
+    'Y02B', 'G01P', 'G05G', 'G09F', 'H01F', 'H03G', 'G03F', 'G06T',
+    'G16H', 'H02G', 'H04Q', 'Y02C', 'G01Q', 'G06C', 'G09G', 'H01G',
+    'H03H']
+
 loaded_indexes = {}
 
 def get_index(index_id):
@@ -26,7 +46,7 @@ def get_index(index_id):
         return loaded_indexes[index_id]
 
     index_file = f"{indexes_dir}{index_id}.ann"
-    items_file = f"{indexes_dir}{index_id}.ann.items.json"
+    items_file = f"{indexes_dir}{index_id}.items.json"
     if not (isfile(index_file) or isfile(items_file)):
         return None
 

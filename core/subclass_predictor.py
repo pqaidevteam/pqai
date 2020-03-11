@@ -26,6 +26,7 @@ def load_model():
 	global features_dict
 	global targets
 	global targets_dict
+	global session
 
 	from keras.models import model_from_json
 
@@ -81,9 +82,12 @@ def predict_subclasses (text, n=5, limitTo=None):
 	Returns:
 	    list: Array of subclass codes, most relevant first.
 	"""
+	global loaded_model
+	
 	if not loaded_model:
 		load_model()
 	x = to_feature_vector(text, features_dict)
+
 	y_pred = loaded_model.predict(np.array([x]))[0]
 
 	# sort subclasses in descending order of relevancy

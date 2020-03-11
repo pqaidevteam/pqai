@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from operator import itemgetter
+import json
 
 from config.config import mongo_host, mongo_port, mongo_dbname, mongo_collname
 
@@ -19,8 +20,13 @@ def get_patent_data (pn):
 	    	`publicationNumber`, `filingDate`, `claims`, etc.
 	    	If the patent is not found, `None` is returned.
 	"""
-	query = { 'publicationNumber': pn }
-	patent_data = coll.find_one(query)
+	path = f'/home/ubuntu/lts/data/patents/{pn}.json'
+	with open(path) as file:
+		patent_data = json.load(file)
+
+	# query = { 'publicationNumber': pn }
+	# patent_data = coll.find_one(query)
+	
 	return patent_data
 
 
