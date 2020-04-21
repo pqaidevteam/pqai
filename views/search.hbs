@@ -423,13 +423,17 @@
 			latentQuery = '';
 
 			currentResults = response.results;
-
 			if (currentDateFilter) {
 				var cutoff = new Date(currentDateFilter);
 				currentResults = currentResults.filter(function(res) {
 					var d = new Date(res.filingDate);
 					return (d <= cutoff);
 				});
+			}
+
+			if (currentResults == 0) {
+				$('#output-pane').html('No results!');
+				return;
 			}
 
 			var selectedTechDomain = 'auto';
