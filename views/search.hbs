@@ -2,7 +2,6 @@
 <html lang="en">
 	<head>
 		<title>PQAI | Search</title>
-		<link rel="stylesheet" href="fontawesome/all.css">
 		{{> default_header_imports}}
 		<script type="text/javascript" src="echarts/echarts.js"></script>
 		<style type="text/css">
@@ -145,138 +144,7 @@
 								</div>
 							</div>
 							<div class="row">
-								<div class="col-md-9">
-									<select class="custom-select" id="tech-domain-input">
-									  <option value="auto" selected>DB: Auto-select</option>
-									  <option value="G01B">DB: Length measuring instruments</option>
-									  <option value="G01C">DB: Distance measuring devices</option>
-									  <option value="G01D">DB: Measurement devices</option>
-									  <option value="G01F">DB: Volume measuring devices</option>
-									  <option value="G01G">DB: Weight measuring devices</option>
-									  <option value="G01H">DB: Vibrometers</option>
-									  <option value="G01J">DB: Colorimeters, Pyrometers</option>
-									  <option value="G01K">DB: Thermometers</option>
-									  <option value="G01L">DB: Force sensors</option>
-									  <option value="G01M">DB: Structure testing instruments</option>
-									  <option value="G01N">DB: Material testing devices</option>
-									  <option value="G01P">DB: Speedometers</option>
-									  <option value="G01Q">DB: Scanning probe microscopes</option>
-									  <option value="G01R">DB: Electromagnetic sensors</option>
-									  <option value="G01S">DB: Radars/sonars</option>
-									  <option value="G01T">DB: Radiation sensors</option>
-									  <option value="G01V">DB: Geophysical sensors</option>
-									  <option value="G01W">DB: Meteorological sensors</option>
-									  <option value="G02B">DB: Optical devices</option>
-									  <option value="G02C">DB: Spectacles/contact lenses</option>
-									  <option value="G02F">DB: Active optical devices</option>
-									  <option value="G03B">DB: Cameras/projectors</option>
-									  <option value="G03C">DB: Photosensitive materials</option>
-									  <option value="G03D">DB: Exposed film treatment devices</option>
-									  <option value="G03F">DB: Photolithography</option>
-									  <option value="G03G">DB: Electrography/magnetography</option>
-									  <option value="G03H">DB: Holograms</option>
-									  <option value="G04B">DB: Clocks/watches</option>
-									  <option value="G04C">DB: Clocks/watches</option>
-									  <option value="G04F">DB: Timers</option>
-									  <option value="G04G">DB: Electronic timers</option>
-									  <option value="G04R">DB: Radio-controlled timers</option>
-									  <option value="G05B">DB: Control devices</option>
-									  <option value="G05D">DB: Mechanical controllers</option>
-									  <option value="G05F">DB: Electromagnetic controllers</option>
-									  <option value="G05G">DB: Control devices</option>
-									  <option value="G06F">DB: Computers</option>
-									  <option value="G06G">DB: Analog computers</option>
-									  <option value="G06K">DB: Data processing</option>
-									  <option value="G06N">DB: Unconventional computers</option>
-									  <option value="G06Q">DB: Special-purpose computing</option>
-									  <option value="G06T">DB: Image processing</option>
-									  <option value="G07B">DB: Ticketing systems</option>
-									  <option value="G07C">DB: Time registers</option>
-									  <option value="G07D">DB: Bills/coins handling machines</option>
-									  <option value="G07F">DB: Coin-freed machines</option>
-									  <option value="G07G">DB: Cash registers</option>
-									  <option value="G08B">DB: Alarm/signalling system</option>
-									  <option value="G08C">DB: Telemetry</option>
-									  <option value="G08G">DB: Traffic control</option>
-									  <option value="G09B">DB: Education apparatus</option>
-									  <option value="G09C">DB: Cryptography</option>
-									  <option value="G09F">DB: Display signs</option>
-									  <option value="G09G">DB: Display signs</option>
-									  <option value="G10C">DB: Musical instruments with keyboards</option>
-									  <option value="G10D">DB: String-based musical instruments</option>
-									  <option value="G10G">DB: Musical aids</option>
-									  <option value="G10H">DB: Electrophonic musical instruments</option>
-									  <option value="G10K">DB: Speakers </option>
-									  <option value="G10L">DB: Speech processing</option>
-									  <option value="G11B">DB: Data storage disks</option>
-									  <option value="G11C">DB: Solid state memory devices</option>
-									  <option value="G16H">DB: Healthcare informatics</option>
-									  <option value="G21B">DB: Fusion reactors</option>
-									  <option value="G21C">DB: Nuclear reactors</option>
-									  <option value="G21D">DB: Nuclear power plants</option>
-									  <option value="G21F">DB: Radiation shielding</option>
-									  <option value="G21G">DB: Isotope production</option>
-									  <option value="G21K">DB: Radiation handling devices</option>
-									  <option value="H01B">DB: Electric cables</option>
-									  <option value="H01C">DB: Electric resistors</option>
-									  <option value="H01F">DB: Magnetic devices</option>
-									  <option value="H01G">DB: Capacitors</option>
-									  <option value="H01H">DB: Electric switches</option>
-									  <option value="H01J">DB: Discharge tubes/lamps</option>
-									  <option value="H01K">DB: Electric incandescent lamps</option>
-									  <option value="H01L">DB: Semiconductor devices</option>
-									  <option value="H01M">DB: Batteries</option>
-									  <option value="H01P">DB: Optical fibers</option>
-									  <option value="H01Q">DB: Antennas</option>
-									  <option value="H01R">DB: Circuit boards</option>
-									  <option value="H01S">DB: Lasers</option>
-									  <option value="H01T">DB: Spark plugs</option>
-									  <option value="H02B">DB: Electric substations</option>
-									  <option value="H02G">DB: Electric cable installation</option>
-									  <option value="H02H">DB: Circuit breakers</option>
-									  <option value="H02J">DB: Electric grids</option>
-									  <option value="H02K">DB: Motors/generators</option>
-									  <option value="H02M">DB: Electric conversion devices</option>
-									  <option value="H02N">DB: Special electric machines</option>
-									  <option value="H02P">DB: Electric machine controllers</option>
-									  <option value="H02S">DB: Solar cells</option>
-									  <option value="H03B">DB: Oscillators</option>
-									  <option value="H03C">DB: Modulators</option>
-									  <option value="H03D">DB: Demodulators</option>
-									  <option value="H03F">DB: Amplifiers</option>
-									  <option value="H03G">DB: Amplification controllers</option>
-									  <option value="H03H">DB: Resonators</option>
-									  <option value="H03J">DB: Resonating circuit tuning</option>
-									  <option value="H03K">DB: Pulse modulation devices</option>
-									  <option value="H03L">DB: Waveform generators</option>
-									  <option value="H03M">DB: Signal encoders/decoders</option>
-									  <option value="H04B">DB: Signal transmission</option>
-									  <option value="H04H">DB: Broadcast communication</option>
-									  <option value="H04J">DB: Multiplex communication</option>
-									  <option value="H04K">DB: Secret communication</option>
-									  <option value="H04L">DB: Digital data communication</option>
-									  <option value="H04M">DB: Telephones</option>
-									  <option value="H04N">DB: Television</option>
-									  <option value="H04Q">DB: Communication relays</option>
-									  <option value="H04R">DB: Speakers/microphones</option>
-									  <option value="H04S">DB: Stereophonic systems</option>
-									  <option value="H04W">DB: Wireless communication</option>
-									  <option value="H05B">DB: Electric heaters</option>
-									  <option value="H05F">DB: Electrostatic machines</option>
-									  <option value="H05G">DB: X-ray machines</option>
-									  <option value="H05H">DB: Devices using plasma</option>
-									  <option value="H05K">DB: Printed circuit boards</option>
-									  <option value="Y02A">DB: Sustainable technology</option>
-									  <option value="Y02B">DB: Sustainable buildings</option>
-									  <option value="Y02D">DB: Sustainable information technology</option>
-									  <option value="Y02E">DB: Sustainable energy production</option>
-									  <option value="Y02P">DB: Sustainable manufacturing</option>
-									  <option value="Y02T">DB: Sustainable transportation</option>
-									  <option value="Y02W">DB: Wastewater treatment</option>
-									  <option value="Y04S">DB: Smart grids</option>
-									</select>
-								</div>
-								<div class="col-md-3">
+								<div class="col-md-12">
 									<div class="form-group">
 									  <button class="btn btn-transparent dropdown-toggle ml-2" type="button" style="color:var(--offwhite);font-size:12" id="calendar-btn" data-toggle="dropdown">
 									  	No date restriction
@@ -485,7 +353,7 @@
 	$(document).on('click', '#trigger-search-btn', function (e) {
 		var query = readUserQuery();
 		var queryType = getQueryType(query);
-		var techDomain = getSelectedTechDomain();
+		var techDomain = 'auto';
 
 		if (resultsLoadingInProgress) {
 			return alert('Please wait while results are loading.');
@@ -530,10 +398,6 @@
 		return query.length ? query : null;
 	}
 
-	function getSelectedTechDomain() {
-		return $('#tech-domain-input').val();
-	}
-
 	function getQueryType(query) {
 		if (query.match(/^US\d+[AB]\d?$/)) {
 			return 'patent';
@@ -542,7 +406,7 @@
 		}
 	}
 
-	function triggerSearch(query, techDomain="H04W") {
+	function triggerSearch(query, techDomain="auto") {
 		query = query.trim();
 		
 		let cmd;
@@ -568,13 +432,12 @@
 				});
 			}
 
-			var selectedTechDomain = $('#tech-domain-input').val();
+			var selectedTechDomain = 'auto';
 			var selectedOrPredicted = selectedTechDomain == 'auto' ? 'predicted' : 'selected'
 			
 			$('#output-pane').append(
 				'<p>'
-				+ 'Top results from ' + selectedOrPredicted + ' tech-domain '
-				+ '<b>' + $('option[value=' + response.index + ']').text().split(":")[1].trim() + '</b><br>'
+				+ 'Showing top 10 results. '
 				+ ((currentDateFilter) ? ' (with date filter)' : '')
 				+ ((currentResults[0].confidence) ? 'Confidence level: <b>' + currentResults[0].confidence.toUpperCase() + '</b>' : '')
 				+ '</p>'
