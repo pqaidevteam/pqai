@@ -135,24 +135,53 @@
 						<div class="col-md-8">
 							<!--<img src="images/att-logo-white.png" class='logo mb-3 mt-3' alt="AT&T">-->
 							<h2 class='pqai-logo mb-5'>Patent Quality through AI<sup>beta</sup></h2>
-							<div class="input-group">
-								<input type="text" id="user-text-input" class="form-control" placeholder="Start typing...">
-								<div class="input-group-append">
-									<button class="btn btn-light" type="button" id="trigger-search-btn">
-										<i class="fa fa-search"></i>
-									</button>
-								</div>
+
+							<div class="form-group">
+								<label
+									for="user-text-input"></label>
+								<textarea
+									class="form-control"
+									id="user-text-input"
+									cols="30"
+									rows="3"
+									style="background-color: #1b3842; resize: vertical;"
+									placeholder="Enter an invention description">
+								</textarea>
 							</div>
 							<div class="row">
-								<div class="col-md-12">
+								<div class="col-md-6">
+									<button
+										class="btn btn-light"
+										type="button"
+										id="trigger-search-btn">Submit</button>
+								</div>
+								<div class="col-md-6">
 									<div class="form-group">
-									  <button class="btn btn-transparent dropdown-toggle ml-2" type="button" style="color:var(--offwhite);font-size:12" id="calendar-btn" data-toggle="dropdown">
-									  	No date restriction
-									    <!-- <i class="fa fa-calendar"></i> -->
+									  <button
+									  	type="button"
+									  	class="btn btn-transparent dropdown-toggle ml-2"
+									  	id="calendar-btn"
+									  	data-toggle="dropdown"
+									  	style="color:var(--offwhite);font-size:12;float:right">
+										  	No date restriction
 									  </button>
-									  <div class="dropdown-menu" style="padding: 10px 20px">
-										<span id="date-filter-label">Cut-off date</span><input type="text" class="form-control form-control-sm" id="cutoff-date-input" placeholder="YYYY-MM-DD" style="display: inline-block; font-family: sans-serif;">
-										<a href="#" id="apply-date-filter-btn">Apply</a>
+									  <div
+									  	class="dropdown-menu"
+									  	style="padding: 10px 20px">
+												<span id="date-filter-label">
+													Cut-off date
+												</span>
+												<input
+													type="text"
+													class="form-control form-control-sm"
+													id="cutoff-date-input"
+													placeholder="YYYY-MM-DD"
+													style="display: inline-block; font-family: sans-serif;">
+												<a
+													href="#"
+													id="apply-date-filter-btn">
+														Apply
+												</a>
 									  </div>
 									</div>
 								</div>
@@ -373,20 +402,6 @@
 			});
 		} else {
 			triggerSearch(query, techDomain);
-		}
-	});
-
-	$(document).on('keyup', '#user-text-input', function (e) {
-		if (e.keyCode == 13) {
-			e.preventDefault();
-			$('#trigger-search-btn').click();
-		}
-	});
-
-	$(document).on('change', '#tech-domain-input', function(e) {
-		var query = readUserQuery();
-		if (query.length) {
-			$('#trigger-search-btn').click();
 		}
 	});
 
@@ -660,30 +675,6 @@
 		}());
 	}
 
-	function triggerLoaders() {
-		var states = [
-			'Loading snippet',
-			'Loading snippet.',
-			'Loading snippet..',
-			'Loading snippet...'
-		];
-		(function _trigger() {
-			var loaders = $('.snippet-placeholder').toArray();
-			if (loaders.length == 0) {
-				return;
-			} else {
-				loaders.forEach(function (loader) {
-					var currText = $(loader).text().trim();
-					var currState = states.indexOf(currText);
-					var nextState = (currState + 1) % states.length;
-					var nextText = states[nextState];
-					$(loader).text(nextText);
-				});
-				setTimeout(_trigger, 300);
-			}
-		}());
-	}
-
 	$(document).on('mouseenter', '.res', function (e) {
 		var res = $(this);
 		res.find('.hidden').addClass('waiting-to-show');
@@ -710,13 +701,12 @@
 	function showLoading() {
 		var html = '<div class="spinner-border spinner-border-sm" role="status">'
   				+ '<span class="sr-only">Loading...</span>'
-				+ '</div>';
+				+ '</div> Loading';
 		$('#trigger-search-btn').html(html);
 	}
 
 	function hideLoading() {
-		var html = '<i class="fa fa-search"></i>';
-		$('#trigger-search-btn').html(html);
+		$('#trigger-search-btn').html('Submit');
 	}
 
 	function showAssigneeChart(stats) {
