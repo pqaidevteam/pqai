@@ -82,6 +82,35 @@ app.post('/mediator', function (req, res) {
 	}
 });
 
+app.get('/datasets', function (req, res) {
+	res.render('datasets');
+});
+
+app.get('/datasets/:datasetName/:n', function (req, res) {
+	let datasetName = req.params.datasetName;
+	let n = parseInt(req.params.n);
+	let url = 'http://localhost:5000/datasets/'
+	let params = {
+		dataset: datasetName, n: n
+	}
+	axios.get(url, { params })
+		.then(response => {
+			let datapoint = response.data;
+			datapoint.similars.forEach(e => e.role = 'negative');
+			datapoint.citation.role = 'positive';
+			let r = parseInt(datapoint.similars.length * Math.random());
+			console.log('Random number', r);
+			datapoint.all = datapoint.similars.slice(0, r);
+			datapoint.all = datapoint.all.concat([datapoint.citation]);
+			datapoint.all = datapoint.all.concat(datapoint.similars.slice(r));
+			res.render('poc', { datapoint });
+		})
+		.catch(err => {
+			console.log(err);
+			res.status(500).send(error('Error occurred.'))
+		})
+});
+
 function error(msg) {
 	return {
 		error: true,

@@ -109,20 +109,8 @@
 					<li class="nav-item">
 						<a href="/about" class="nav-link">About</a>
 					</li>
-					<li class="nav-item dropdown">
-						<a
-							href="#"
-							class="nav-link dropdown-toggle"
-							id="navDatasetsDropdown"
-							role="button"
-							data-toggle="dropdown">
-								Datasets
-						</a>
-						<div class="dropdown-menu">
-							<a href="datasets/poc" class="dropdown-item">PoC</a>
-							<div class="dropdown-divider"></div>
-							<a href="#" class="dropdown-item">Under construction</a>
-						</div>
+					<li class="nav-item active">
+						<a href="/datasets" class="nav-link">Datasets</a>
 					</li>
 				</ul>
 			</div>
@@ -145,8 +133,7 @@
 									cols="30"
 									rows="3"
 									style="background-color: #1b3842; resize: vertical;"
-									placeholder="Enter an invention description">
-								</textarea>
+									placeholder="Enter an invention description"></textarea>
 							</div>
 							<div class="row">
 								<div class="col-md-6">
@@ -348,7 +335,8 @@
 
 		// IIFE
 		setTimeout(function () {
-			if (targetInput.val().length == 0) {
+			if (targetInput.val().trim().length == 0) {
+				targetInput.val('');
 				autoType(demoQuery, targetInput, function () {
 					autoTypeRunning = false;
 					callback(true)

@@ -8,6 +8,7 @@ from core.indexes import index_ids as available_indexes
 from core.snippet import extract_snippet
 from core.highlighter import highlight
 from core import db
+from core import datasets
 from core.gf import calc_confidence_score
 from core.subclass_predictor import predict_subclasses
 
@@ -113,6 +114,22 @@ def get_snippet():
         query = query
     )
     return response, status.HTTP_200_OK
+
+@app.route('/datasets/', methods=['GET'])
+def get_datapoint():
+    dataset = request.args.get('dataset', '', str)
+    n = request.args.get('n', 1, int)
+    if not dataset or n < 1:
+        return 'Invalid query.', status.HTTP_400_BAD_REQUEST
+
+    if dataset.lower() == 'poc':
+        poc = datasets.PoC()
+        datapoint = poc.get_datapoint(n,  fields=[
+            'publicationNumber', 'title', 'abstract'])
+    else:
+        datapoint = {}
+
+    return datapoint, status.HTTP_200_OK
 
 
 if __name__ == '__main__':

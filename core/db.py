@@ -7,26 +7,29 @@ from config.config import mongo_host, mongo_port, mongo_dbname, mongo_collname
 client = MongoClient(mongo_host, mongo_port)
 coll = client[mongo_dbname][mongo_collname]
 
-def get_patent_data (pn):
+def get_patent_data (pn, only_bib=False):
 	"""Retrieve all of the patent's data from the database.
 	
 	Args:
 	    pn (str): Publication number of the patent (with kind code).
 	    	Must be exact match with the publication number stored
 	    	in the database.
+	    only_bib (bool, optional): Return only bibliography or full text
+	    	including claims, description, etc.
+	    	(Getting only the bibliography is faster.)
 	
 	Returns:
 	    dict: The patent data, keys are patent fields, e.g.,
 	    	`publicationNumber`, `filingDate`, `claims`, etc.
 	    	If the patent is not found, `None` is returned.
 	"""
-	path = f'/home/ubuntu/lts/data/patents/{pn}.json'
-	with open(path) as file:
-		patent_data = json.load(file)
-
-	# query = { 'publicationNumber': pn }
-	# patent_data = coll.find_one(query)
-	
+	if only_bib:
+		query = { 'publicationNumber': pn }
+		patent_data = coll.find_one(query)
+	else:
+		path = f'/home/ubuntu/lts/data/patents/{pn}.json'
+		with open(path) as file:
+			patent_data = json.load(file)
 	return patent_data
 
 
