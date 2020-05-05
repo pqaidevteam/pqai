@@ -2,7 +2,7 @@
 from flask import request
 import numpy as np
 from flask_api import FlaskAPI, status, exceptions
-from core.vectorizer import vectorize, CPCVectorizer
+from core.vectorizer import vectorize, CPCVectorizer, DistilBERTVectorizer, SIFTextVectorizer
 from core.indexes import get_index
 from core.indexes import index_ids as available_indexes
 from core.snippet import extract_snippet, map_elements_to_text
@@ -128,8 +128,10 @@ def get_mapping():
 
     ref_data = db.get_patent_data(ref)
     target_text = ref_data['description']
-    arr_vectorize = lambda arr: [vectorize(x) for x in arr]
-    
+    # arr_vectorize = DistilBERTVectorizer().embed_arr
+    embed = SIFTextVectorizer().embed
+    arr_vectorize = lambda X: [embed(x) for x in X]
+
     mapping = map_elements_to_text (elements, target_text, arr_vectorize)
     return mapping, status.HTTP_200_OK
 

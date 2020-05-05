@@ -6,16 +6,75 @@ from sklearn.decomposition import TruncatedSVD
 from core.gf import is_cpc_code, is_patent_number
 from config.config import models_dir
 from core.db import get_patent_data
+from sentence_transformers import SentenceTransformer
 
 
 # Files needed for cpc vectorization
 cpc_list_file = models_dir + 'cpc_vectors_256d.items.json'
 cpc_vecs_file = models_dir + 'cpc_vectors_256d.npy'
 
-# Files needed for text vectorization
+# Files needed for SIF text vectorization
 word_vecs_file = models_dir + 'glove-We.npy'
 word_list_file = models_dir + 'glove-vocab.json'
 word_freq_file = models_dir + 'dfs.json'
+
+# for DistilBERTVectorizer
+distilbert_model_path = models_dir + 'vectorizer_distilbert_poc/'
+
+class DistilBERTVectorizer:
+
+    """ Singleton class used for vectorizing text spans using the
+        DistilBERT model fine-tuned on the STS dataset and then PoC
+        dataset.
+    """
+    
+    class __impl:
+        def __init__(self, path):
+            self.model_dir = path
+            self.model = None
+
+        def load (self):
+            self.model = SentenceTransformer(self.model_dir)
+
+        def embed (self, text):
+            """Vectorize a text span.
+            
+            Args:
+                text (str): Text to be vectorized
+            
+            Returns:
+                numpy.ndarray: 1D numpy vector
+            """
+            if self.model is None:
+                self.load()
+            vec = self.model.encode([text])[0]
+            return vec
+
+        def embed_arr (self, texts):
+            """Vectorize a list of text spans (more efficient than
+                repeatedly calling `self.embed`)
+            
+            Args:
+                texts (lists): Texts to be vectorized
+            
+            Returns:
+                numpy.ndarray: Matrix where rows are text vectors
+            """
+            if self.model is None:
+                self.load()
+            vecs = np.array(self.model.encode(texts))
+            return vecs
+
+    __instance = __impl(distilbert_model_path)
+
+    def __getattr__(self, attr):
+        return getattr(self.__instance, attr)
+
+    def __setattr__(self, attr, value):
+        return setattr(self.__instance, attr, value)
+
+    def __getitem__(self, key):
+        return self.__instance.__getitem__(key)
 
 
 class CPCVectorizer:
@@ -211,7 +270,7 @@ def vectorize (item):
             return patent2vec(item, use_cpcs=False)
     
     elif isinstance(item, str):
-        return SIFTextVectorizer().embed(item)
+        return DistilBERTVectorizer().embed(item)
 
     else:
         return None
@@ -252,8 +311,7 @@ def patent2vec (patent, use_cpcs=True):
     if 'abstract' not in patent: return None
     if type(patent['abstract']) is not str: return None
     text = patent['abstract']
-    vectorizer = SIFTextVectorizer()
-    text_vec = vectorizer.embed(text)
+    text_vec = vectorize(text)
 
     if use_cpcs is False:
         return text_vec

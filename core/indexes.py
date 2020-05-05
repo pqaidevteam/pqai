@@ -4,6 +4,7 @@ import json
 from os.path import isfile
 
 from config.config import indexes_dir
+DIMS = 768
 
 index_ids = [
     'G01B', 'G03G', 'G07B', 'G21B', 'H02H', 'H04R', 'Y02D', 'G01R',
@@ -45,7 +46,7 @@ def get_index(index_id):
     if index_id in loaded_indexes:
         return loaded_indexes[index_id]
 
-    index_file = f"{indexes_dir}{index_id}.ann"
+    index_file = f"{indexes_dir}{index_id}.abs.ann"
     items_file = f"{indexes_dir}{index_id}.items.json"
     if not (isfile(index_file) or isfile(items_file)):
         return None
@@ -73,7 +74,7 @@ class Index():
         Args:
             index_id (str): Index's name, e.g., 'H04W'
         """
-        self.index = AnnoyIndex(256, metric='angular')
+        self.index = AnnoyIndex(DIMS, metric='angular')
         self.index.load(ann_file)
         self.n_items = self.index.get_n_items()
         self.items = json.load(open(json_file, 'r'))

@@ -118,10 +118,10 @@ def map_elements_to_text (elements, target_text, encoder_fn):
     	gf.normalize_rows(element_vectors), gf.normalize_cols(sent_vectors.T))
     
     sent_idxs = cosine_sims.argmax(axis=1)
-    
+
     mappings = [{
                     'element': elements[i],
                     'mapping': target_sentences[sent_idxs[i]],
-                    'similarity': cosine_sims[i][sent_idxs[i]]
+                    'similarity': float(cosine_sims[i][sent_idxs[i]])
                 } for i in range(len(elements))]
     return mappings
