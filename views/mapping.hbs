@@ -1,0 +1,19 @@
+
+<table class="table table-responsive table-inverse mapping-table">
+	<thead>
+		<tr>
+			<th style='text-align: left'>Query elements</th>
+			<th style='text-align: left'>Reference text</th>
+			<th style='text-align: left'>Similarity</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{#each mappings}}
+		<tr>
+			<td style='vertical-align: top'>{{this.element}}</td>
+			<td style='vertical-align: top'>{{this.mapping}}</td>
+			<td style='vertical-align: top'>{{floatToPercentage this.similarity}}%</td>
+		</tr>
+		{{/each}}
+	</tbody>
+</table>

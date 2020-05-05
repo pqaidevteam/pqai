@@ -8,3 +8,4 @@ __pycache__
 /indexes/
 /build/
 /public/images/*
+/indexes*/

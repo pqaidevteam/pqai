@@ -91,3 +91,37 @@ def valid_sentences(text):
 	sents = gf.get_sentences(text)
 	sents = [sent for sent in sents if len(sent) > 50]
 	return sents
+
+
+def map_elements_to_text (elements, target_text, encoder_fn):
+    """Find sentences in target_text that are semantically most similar
+        to claim elements.
+    
+    Args:
+        elements (list): List of claim element strings (e.g. preamble)
+        target_text (str): Text to which mapping is to be done, e.g.,
+        	description of a patent reference.
+        encoder_fn (method): The vectorizer function; it should accept
+        	a list of strings and return a list of vectors, aka sentence
+        	embedding function.
+    
+    Returns:
+        list: list of dictionaries with keys `element`, `mapping`, and
+        	`similarity`
+    """
+    element_vectors = np.array(encoder_fn(elements))
+
+    target_sentences = gf.get_sentences(target_text)
+    sent_vectors = np.array(encoder_fn(target_sentences))
+    
+    cosine_sims = np.dot(
+    	gf.normalize_rows(element_vectors), gf.normalize_cols(sent_vectors.T))
+    
+    sent_idxs = cosine_sims.argmax(axis=1)
+    
+    mappings = [{
+                    'element': elements[i],
+                    'mapping': target_sentences[sent_idxs[i]],
+                    'similarity': cosine_sims[i][sent_idxs[i]]
+                } for i in range(len(elements))]
+    return mappings

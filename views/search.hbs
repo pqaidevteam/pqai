@@ -507,29 +507,19 @@
 			date = '<span class="mr-3">' + date + '</span>';
 			var assignee = '<span class="mr-3">' + (res.assignee ? res.assignee : 'N/A') + '</span>';
 			var moreLikeThisBtn = '<a href="#" class="more-like-this-btn mr-3" data-pn="' + pn + '">Show more like this<a/>';
+			var elementWiseMappingBtn = '<a href="#" class="element-wise-mapping-btn mr-3" data-pn="' + pn + '">Element-wise mapping<a/>';
 			var arr = [
 				assignee,
 				date,
 				externalLink,
-				moreLikeThisBtn
+				moreLikeThisBtn,
+				elementWiseMappingBtn,
 			];
-			html += '<p class="card-text res-bib">' + arr.join(' ') + '</p>';
+			html += '<p class="card-text res-bib">' + arr.slice(0, 3).join(' ') + '</p>';
 			html += '<p class="card-text res-snippet">' + res.snippet + '</p>';
+			html += '<p class="card-text res-bib">' + arr.slice(3).join(' ') + '</p>';
 			output.append(html);
-			callback()
-			// if (currentQueryType == 'patent') {
-			// 	snippet = res.abstract;
-			// 	html += '<p class="card-text res-snippet">' + snippet + '</p>';
-			// 	html += '</div></div>';
-			// 	output.append(html);
-			// 	return callback();
-			// }
-			// getSnippet(pn, currentQuery, function(snippet) {
-			// 	html += '<p class="card-text res-snippet">' + snippet + '</p>';
-			// 	html += '</div></div>';
-			// 	output.append(html);
-			// 	callback();
-			// });
+			callback();
 		}, function (arr) {
 			// done
 			output.append(loadMoreBtnHtml);
@@ -585,6 +575,25 @@
 		var publicationNumber = $(this).attr('data-pn');
 		latentQuery = $(this).closest('.card-body').find('p.res-snippet').text()
 		$('#trigger-search-btn').click();
+	});
+
+	$(document).on('click', '.element-wise-mapping-btn', function(e) {
+		e.preventDefault();
+		var thisCard = $(this).closest('.card');
+		console.log(thisCard.find('.mapping-table').length);
+		if (thisCard.find('.mapping-table').length) {
+			thisCard.find('.mapping-table').remove();
+			return;
+		}
+		var ref = $(this).attr('data-pn');
+		var query = readUserQuery();
+		callMediator({
+			cmd: 'get-element-wise-mapping',
+			ref: ref,
+			query: query
+		}, function (claimChartHTML) {
+			$(thisCard).children('.card-body').append(claimChartHTML);
+		});
 	});
 
 	function getGoogleLink(pn) {

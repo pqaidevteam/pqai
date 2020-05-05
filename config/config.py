@@ -2,7 +2,7 @@
 from pathlib import Path
 
 base_dir = str((Path(__file__).parent / '../').resolve())
-indexes_dir = base_dir + '/indexes/'
+indexes_dir = base_dir + '/indexes_sif/'
 models_dir = base_dir + '/models/'
 mongo_host = 'localhost'
 mongo_port = 27017

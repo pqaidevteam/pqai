@@ -5,11 +5,11 @@ from flask_api import FlaskAPI, status, exceptions
 from core.vectorizer import vectorize, CPCVectorizer
 from core.indexes import get_index
 from core.indexes import index_ids as available_indexes
-from core.snippet import extract_snippet
+from core.snippet import extract_snippet, map_elements_to_text
 from core.highlighter import highlight
 from core import db
 from core import datasets
-from core.gf import calc_confidence_score
+from core.gf import calc_confidence_score, get_paragraphs
 from core.subclass_predictor import predict_subclasses
 
 app = FlaskAPI(__name__)
@@ -114,6 +114,25 @@ def get_snippet():
         query = query
     )
     return response, status.HTTP_200_OK
+
+
+
+@app.route('/mappings/', methods=['GET'])
+def get_mapping():
+    query = request.args.get('q', '', str)
+    ref = request.args.get('ref', '', str)
+    if not (ref or query):
+        return 'Reference or query invalid.', status.HTTP_400_BAD_REQUEST
+    
+    elements = get_paragraphs(query)
+
+    ref_data = db.get_patent_data(ref)
+    target_text = ref_data['description']
+    arr_vectorize = lambda arr: [vectorize(x) for x in arr]
+    
+    mapping = map_elements_to_text (elements, target_text, arr_vectorize)
+    return mapping, status.HTTP_200_OK
+
 
 @app.route('/datasets/', methods=['GET'])
 def get_datapoint():

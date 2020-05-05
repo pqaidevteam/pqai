@@ -16,7 +16,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.set('view engine', 'hbs');
 app.set('views', __dirname + '/views');
 hbs.registerPartials(__dirname + '/views/partials');
-
+hbs.registerHelper('floatToPercentage', function (floatVal) {
+	let f = parseFloat(floatVal);
+	return parseInt(100*f);
+})
 
 /*
 	Routes
@@ -77,6 +80,14 @@ app.post('/mediator', function (req, res) {
 				console.log(err);
 				res.status(500).send(error('Error occurred.'))
 			})
+	} else if (cmd == 'get-element-wise-mapping') {
+		let ref = req.body.ref;
+		let query = req.body.query;
+		let url = 'http://localhost:5000/mappings/';
+		let params = { q: query, ref: ref }
+		axios.get(url, { params })
+			.then(response => res.render('mapping', {mappings: response.data}))
+			.catch(err => res.status(500).send(error('Error occurred.')))
 	} else {
 		res.status(400).send(error('Invalid request.'));
 	}

@@ -140,7 +140,7 @@ def get_paragraphs(text):
     Returns:
         list: Paragraphs.
     """
-    return re.split("\n+", text)
+    return [s.strip() for s in re.split("\n+", text) if s.strip()]
 
 
 def cosine_dist(a, b):
@@ -177,3 +177,10 @@ def tokenize(text, lowercase=True, alphanums=False):
     if not matches:
         return []
     return matches
+
+
+def normalize_rows(M):
+    return M / np.sqrt(np.sum(M*M, axis=1, keepdims=True))
+
+def normalize_cols(M):
+    return M / np.sqrt(np.sum(M*M, axis=0, keepdims=True))
