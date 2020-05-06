@@ -3,7 +3,7 @@ import re
 import json
 
 from config.config import models_dir
-from core.gf import tokenize
+from core.utils import tokenize
 
 model_file = models_dir + 'pmbl2subclass.json'
 weights_file = models_dir + 'pmbl2subclass.h5'

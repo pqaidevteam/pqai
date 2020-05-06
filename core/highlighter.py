@@ -3,8 +3,8 @@ import json
 import numpy as np
 
 from config.config import models_dir
-import core.gf
-from core.gf import is_generic
+import core.utils
+from core.utils import is_generic
 from core.vectorizer import SIFTextVectorizer
 
 embed = SIFTextVectorizer().__getitem__

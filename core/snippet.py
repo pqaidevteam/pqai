@@ -1,7 +1,7 @@
 import numpy as np
 from random import randrange
 import re
-import core.gf as gf
+from core import utils
 from core.highlighter import highlight as highlighter_fn
 
 from core.vectorizer import SIFTextVectorizer
@@ -42,14 +42,14 @@ def extract_snippet(query, text, htl_on=True):
 
 def best_sent_for(query, sents):
 	words = list(set(re.findall(r'[a-z]+', query.lower())))
-	words = [word for word in words if not gf.is_generic(word)]
+	words = [word for word in words if not utils.is_generic(word)]
 	qvecs = np.array([encoder_fn(word) for word in words])
 	qvecs = qvecs / np.linalg.norm(qvecs, ord=2, axis=1, keepdims=True)
 
 	sent_scores = np.zeros(len(sents))
 	for s, sent in enumerate(sents):
 		terms = list(set(re.findall(r'[a-z]+', sent.lower())))
-		terms = [term for term in terms if not gf.is_generic(term)]
+		terms = [term for term in terms if not utils.is_generic(term)]
 		tvecs = np.array([encoder_fn(term) for term in terms])
 		
 		# to handle the special case where all words in the
@@ -83,12 +83,12 @@ def best_sent_for(query, sents):
 
 	best_idx = np.argmax(sent_scores)
 	terms = list(set(re.findall(r'[a-z]+', sents[best_idx].lower())))
-	terms = [term for term in terms if not gf.is_generic(term)]
+	terms = [term for term in terms if not utils.is_generic(term)]
 	return best_idx
 
 
 def valid_sentences(text):
-	sents = gf.get_sentences(text)
+	sents = utils.get_sentences(text)
 	sents = [sent for sent in sents if len(sent) > 50]
 	return sents
 
@@ -111,11 +111,11 @@ def map_elements_to_text (elements, target_text, encoder_fn):
     """
     element_vectors = np.array(encoder_fn(elements))
 
-    target_sentences = gf.get_sentences(target_text)
+    target_sentences = utils.get_sentences(target_text)
     sent_vectors = np.array(encoder_fn(target_sentences))
     
     cosine_sims = np.dot(
-    	gf.normalize_rows(element_vectors), gf.normalize_cols(sent_vectors.T))
+    	utils.normalize_rows(element_vectors), utils.normalize_cols(sent_vectors.T))
     
     sent_idxs = cosine_sims.argmax(axis=1)
 

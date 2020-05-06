@@ -9,7 +9,7 @@ from core.snippet import extract_snippet, map_elements_to_text
 from core.highlighter import highlight
 from core import db
 from core import datasets
-from core.gf import calc_confidence_score, get_paragraphs
+from core.utils import calc_confidence_score, get_paragraphs
 from core.subclass_predictor import predict_subclasses
 
 app = FlaskAPI(__name__)

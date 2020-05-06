@@ -3,7 +3,7 @@ import numpy as np
 import json
 from sklearn.decomposition import TruncatedSVD
 
-from core.gf import is_cpc_code, is_patent_number
+from core.utils import is_cpc_code, is_patent_number
 from config.config import models_dir
 from core.db import get_patent_data
 from sentence_transformers import SentenceTransformer

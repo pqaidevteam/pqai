@@ -184,3 +184,8 @@ def normalize_rows(M):
 
 def normalize_cols(M):
     return M / np.sqrt(np.sum(M*M, axis=0, keepdims=True))
+
+
+def remove_claim_number(claim_text):
+    # TO DO: Write code for removing the number
+    return claim_text
