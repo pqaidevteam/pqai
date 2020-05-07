@@ -10,7 +10,7 @@ from core.highlighter import highlight
 from core import db
 from core import datasets
 from core.utils import calc_confidence_score, get_paragraphs
-from core.subclass_predictor import predict_subclasses
+from core import searcher
 
 app = FlaskAPI(__name__)
 
@@ -39,18 +39,15 @@ def search_index ():
         return 'Problematic query.', status.HTTP_500_INTERNAL_SERVER_ERROR
     
     """
-    If automatic index selection mode is enabled, predit `index_id`
-    on the basis of query. Since indexes correspond to CPC subclasses,
-    the predicted subclass codes act as indexes.
+    If automatic index selection mode is enabled by setting `index_id`
+    to `auto`, indexes will be predicted
     """ 
-    if index_id == 'auto':
-        index_id = predict_subclasses(query, 1, available_indexes)[0]
+    indexes = None if index_id == 'auto' else [index_id]
+    try:
+        hits = searcher.search(query, num_results, indexes)
+    except:
+        return 'Error while searching.', status.HTTP_500_INTERNAL_SERVER_ERROR 
     
-    index = get_index(index_id)
-    if index is None:
-        return 'Index not found.', status.HTTP_500_INTERNAL_SERVER_ERROR
-    
-    hits = index.find_similar(query_vec, num_results, dist=True)
     if hits is None:
         return 'Error while searching.', status.HTTP_500_INTERNAL_SERVER_ERROR
     

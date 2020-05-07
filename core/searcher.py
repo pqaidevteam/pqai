@@ -7,7 +7,8 @@ from core.subclass_predictor import predict_subclasses
 
 N_INDEXES_TO_SEARCH = 3
 
-def search_by_patent_number (pn, n=10, before=None, after=None):
+
+def search_by_patent_number (pn, n=10, indexes=None, before=None, after=None):
 	patent_data = db.get_patent_data(pn)
 	if not patent_data:
 		raise Exception(f'Patent number {pn} missing in database.')
@@ -16,19 +17,19 @@ def search_by_patent_number (pn, n=10, before=None, after=None):
 	
 	first_claim = patent_data['claims'][0]
 	claim_text = utils.remove_claim_number(first_claim)
-	return search_by_text_query(claim_text, n, before, after)
+	return search_by_text_query(claim_text, n, indexes, before, after)
 
 
-def search_by_text_query (query_text, n=10, before=None, after=None):
-	selected_indexes = predict_subclasses(
-									query_text,
-									N_INDEXES_TO_SEARCH,
-									AVAILABLE_INDEXES)
+def search_by_text_query (query_text, n=10, indexes=None, before=None, after=None):
+	if not (type(indexes) == list and len(indexes) > 0):
+		indexes = predict_subclasses(query_text,
+								N_INDEXES_TO_SEARCH,
+								AVAILABLE_INDEXES)
 
 	query_vector = vectorize(query_text)
 
 	results = []
-	for index_id in selected_indexes:
+	for index_id in indexes:
 		index = get_index(index_id)
 		res = index.find_similar(query_vector, n, dist=True)
 		results += res
@@ -38,9 +39,9 @@ def search_by_text_query (query_text, n=10, before=None, after=None):
 	return results[:n]
 
 
-def search (value, n=10, before=None, after=None):
+def search (value, n=10, indexes=None, before=None, after=None):
 	if utils.is_patent_number(value):
-		return search_by_patent_number(value, n, before, after)
+		return search_by_patent_number(value, n, indexes, before, after)
 	else:
-		return search_by_text_query(value, n, before, after)
+		return search_by_text_query(value, n, indexes, before, after)
 
