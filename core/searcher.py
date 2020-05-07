@@ -4,18 +4,42 @@ from core.indexes import index_ids as AVAILABLE_INDEXES
 from core.indexes import get_index
 from core.vectorizer import vectorize
 from core.subclass_predictor import predict_subclasses
+from dateutil.parser import parse as parse_date
 
 N_INDEXES_TO_SEARCH = 3
+MAX_RESULTS_LIMIT = 100
+
+
+def is_published_before (before, pn):
+	if before is None:
+		return True
+	date = db.get_patent_data(pn)['publicationDate']
+	return parse_date(before) > parse_date(date)
+
+
+def is_published_after (after, pn):
+	if after is None:
+		return True
+	date = db.get_patent_data(pn)['publicationDate']
+	return parse_date(after) < parse_date(date)
+
+
+def filter_by_date (results, before, after):
+	return [result for result in results
+				if is_published_before(before, result[0])
+				and is_published_after(after, result[0])]
+
+def filter_family_members (results):
+	return [results[0]] + [results[i] for i in range(1,len(results))
+							if results[i][1] != results[i-1][1]]
 
 
 def search_by_patent_number (pn, n=10, indexes=None, before=None, after=None):
-	patent_data = db.get_patent_data(pn)
-	if not patent_data:
-		raise Exception(f'Patent number {pn} missing in database.')
-	if not patent_data.get('claims'):
-		raise Exception(f'Claims for {pn} missing in database.')
-	
-	first_claim = patent_data['claims'][0]
+	try:
+		first_claim = db.get_first_claim(pn)
+	except:
+		raise Exception(f'Claim cannot be retrieved for {pn}')
+
 	claim_text = utils.remove_claim_number(first_claim)
 	return search_by_text_query(claim_text, n, indexes, before, after)
 
@@ -28,14 +52,21 @@ def search_by_text_query (query_text, n=10, indexes=None, before=None, after=Non
 
 	query_vector = vectorize(query_text)
 
+	m = n
 	results = []
-	for index_id in indexes:
-		index = get_index(index_id)
-		res = index.find_similar(query_vector, n, dist=True)
-		results += res
+	while len(results) < n and m <= MAX_RESULTS_LIMIT:
+		results = []
+		for index_id in indexes:
+			index = get_index(index_id)
+			res = index.find_similar(query_vector, m, dist=True)
+			results += res
 
-	SCORE = 1
-	results.sort(key=lambda x: x[SCORE])
+		DIST_IDX = 1
+		results.sort(key=lambda x: x[DIST_IDX])
+		results = filter_by_date(results, before, after)
+		results = filter_family_members(results)
+		m *= 2
+	
 	return results[:n]
 
 

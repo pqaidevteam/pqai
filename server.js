@@ -42,9 +42,19 @@ app.post('/mediator', function (req, res) {
 	if (cmd == 'search-by-patent' || cmd == 'search-by-query') {
 		let query = req.body.query;
 		let indexId = req.body.techDomain;
-		let url = 'http://localhost:5000/documents/'
+		let before = req.body.before;
+		let after = req.body.after;
+		let url = 'http://localhost:5000/documents/';
 		let params = {
-			q: query, idx: indexId, n: 10, cnfd: 1, bib: 1, snip: 1, dist: 1
+			q: query,
+			idx: indexId,
+			before: before,
+			after: after,
+			n: 10,
+			cnfd: 1,
+			bib: 1,
+			snip: 1,
+			dist: 1
 		}
 		axios.get(url, { params })
 			.then(response => res.status(200).send(response.data))

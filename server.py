@@ -20,10 +20,14 @@ def search_index ():
     index_id = request.args.get('idx', '', str)
     doc_id = request.args.get('pn', '', str)
     query = request.args.get('q', '', str)
+    before = request.args.get('before', '', str)
+    after = request.args.get('after', '', str)
     include_confidence_val = request.args.get('cnfd', 0, int)
     include_bib_details = request.args.get('bib', 0, int)
     include_distances = request.args.get('dist', 1, int)
     include_snippets = request.args.get('snip', 0, int)
+
+    print(dict(num_results = num_results, index_id = index_id))
 
     if not index_id:
         return 'No index specified for search.', status.HTTP_400_BAD_REQUEST
@@ -43,8 +47,10 @@ def search_index ():
     to `auto`, indexes will be predicted
     """ 
     indexes = None if index_id == 'auto' else [index_id]
+    before = before if before else None
+    after = after if after else None
     try:
-        hits = searcher.search(query, num_results, indexes)
+        hits = searcher.search(query, num_results, indexes, before, after)
     except:
         return 'Error while searching.', status.HTTP_500_INTERNAL_SERVER_ERROR 
     
@@ -93,7 +99,7 @@ def search_index ():
         'query': query,
         'index': index_id
     }
-
+    print(f'Serving {len(results)} results.')
     return response, status.HTTP_200_OK
 
 

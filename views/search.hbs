@@ -420,7 +420,11 @@
 		}
 		
 		callMediator({
-			cmd, query, techDomain, cutoffDate: currentDateFilter
+			cmd,
+			query,
+			techDomain,
+			before: currentDateFilter,
+			after: ''
 		}, function (response) {
 			clearOutput();
 			latentQuery = '';
