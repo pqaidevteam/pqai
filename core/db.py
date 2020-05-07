@@ -75,3 +75,17 @@ def get_cpcs (pn):
 	if patent is None:
 		return None
 	return patent.get('cpcs') if patent is not None else None
+
+
+def get_claims (pn):
+	patent_data = get_patent_data(pn)
+	if not patent_data:
+		raise Exception(f'Patent number {pn} missing in database.')
+	if not patent_data.get('claims'):
+		raise Exception(f'Claims for {pn} missing in database.')
+	return patent_data.get('claims')
+
+
+def get_first_claim (pn):
+	first_claim = get_claims(pn)[0]
+	return first_claim

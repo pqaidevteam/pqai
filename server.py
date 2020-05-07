@@ -9,7 +9,7 @@ from core.snippet import extract_snippet, map_elements_to_text
 from core.highlighter import highlight
 from core import db
 from core import datasets
-from core.utils import calc_confidence_score, get_paragraphs
+from core import utils
 from core import searcher
 
 app = FlaskAPI(__name__)
@@ -67,7 +67,7 @@ def search_index ():
         doc_ids = [doc_id for doc_id, dist in hits]
         cpcs = [db.get_cpcs(doc_id) for doc_id in doc_ids]
         vecs = np.array([CPCVectorizer().embed(arr) for arr in cpcs if arr])
-        confidence_score = calc_confidence_score(vecs)
+        confidence_score = utils.calc_confidence_score(vecs)
         for result in results:
             result['confidence'] = confidence_score
 
@@ -121,7 +121,10 @@ def get_mapping():
     if not (ref or query):
         return 'Reference or query invalid.', status.HTTP_400_BAD_REQUEST
     
-    elements = get_paragraphs(query)
+    if utils.is_patent_number(query): 
+        elements = utils.get_elements(db.get_first_claim(query))
+    else:
+        elements = utils.get_elements(query)
 
     ref_data = db.get_patent_data(ref)
     target_text = ref_data['description']
@@ -129,7 +132,7 @@ def get_mapping():
     embed = SIFTextVectorizer().embed
     arr_vectorize = lambda X: [embed(x) for x in X]
 
-    mapping = map_elements_to_text (elements, target_text, arr_vectorize)
+    mapping = map_elements_to_text(elements, target_text, arr_vectorize)
     return mapping, status.HTTP_200_OK
 
 

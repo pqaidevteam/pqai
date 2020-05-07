@@ -189,3 +189,7 @@ def normalize_cols(M):
 def remove_claim_number(claim_text):
     # TO DO: Write code for removing the number
     return claim_text
+
+
+def get_elements (text):
+    return get_paragraphs(text)
