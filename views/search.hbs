@@ -123,7 +123,6 @@
 						<div class="col-md-8">
 							<!--<img src="images/att-logo-white.png" class='logo mb-3 mt-3' alt="AT&T">-->
 							<h2 class='pqai-logo mb-5'>Patent Quality through AI<sup>beta</sup></h2>
-
 							<div class="form-group">
 								<label
 									for="user-text-input"></label>
@@ -133,16 +132,34 @@
 									cols="30"
 									rows="3"
 									style="background-color: #1b3842; resize: vertical;"
-									placeholder="Enter an invention description"></textarea>
+									placeholder="Pick an example from the below dropdown menu, or enter an invention description, a claim, or a patent number (US only)"></textarea>
 							</div>
 							<div class="row">
-								<div class="col-md-6">
+								<div class="col-md-8">
 									<button
 										class="btn btn-light"
 										type="button"
-										id="trigger-search-btn">Submit</button>
+										id="trigger-search-btn">
+										Submit
+									</button>
+									<div
+										class="dropdown open ml-2"
+										style="display: inline-block">
+										<button
+											class="btn btn-transparent dropdown-toggle"
+											type="button"
+											id="example-select-btn"
+											data-toggle="dropdown"
+											style="color:var(--offwhite); font-size:12; text-align:left; border: 1px solid var(--offwhite)">
+											Pick an example
+										</button>
+										<div
+											class="dropdown-menu"
+											id="example-queries">
+										</div>
+									</div>
 								</div>
-								<div class="col-md-6">
+								<div class="col-md-4">
 									<div class="form-group">
 									  <button
 									  	type="button"
@@ -155,20 +172,20 @@
 									  <div
 									  	class="dropdown-menu"
 									  	style="padding: 10px 20px">
-												<span id="date-filter-label">
-													Cut-off date
-												</span>
-												<input
-													type="text"
-													class="form-control form-control-sm"
-													id="cutoff-date-input"
-													placeholder="YYYY-MM-DD"
-													style="display: inline-block; font-family: sans-serif;">
-												<a
-													href="#"
-													id="apply-date-filter-btn">
-														Apply
-												</a>
+											<span id="date-filter-label">
+												Cut-off date
+											</span>
+											<input
+												type="text"
+												class="form-control form-control-sm"
+												id="cutoff-date-input"
+												placeholder="YYYY-MM-DD"
+												style="display: inline-block; font-family: sans-serif;">
+											<a
+												href="#"
+												id="apply-date-filter-btn">
+													Apply
+											</a>
 									  </div>
 									</div>
 								</div>
@@ -252,8 +269,25 @@
 <script type="text/javascript" src="bootstrap-4.3.1/js/popper.min.js"></script>
 <script type="text/javascript" src="bootstrap-4.3.1/js/bootstrap.min.js"></script>
 <script type="text/javascript">
+
+	var examples = [
+		{
+			id: 'ex1',
+			query: 'An automated cooking system that minimizes food wastage.\n'
+				+ 'It predicts the customer inflow based on historical data.\n'
+				+ 'It prepares ingredients according to the predicted number of customers.',
+			label: 'Reducing food wastage at restaurant using customer prediction'
+		},
+		{
+			id: 'ex2',
+			query: 'A system for preparing minutes of meeting.\n'
+				+ 'A voice recognition system is trained to recognize voice of different persons.\n'
+				+ 'A voice-to-text system records the dialog and converts it to text.\n'
+				+ 'A combining system associates a person with each dialog element.',
+			label: 'Meeting transcription system'
+		}
+	]
 	
-	var autoTypeEnabled = true;
 	var currentQuery = null;
 	var currentStats = null;
 	var currentResults = [];
@@ -275,17 +309,27 @@
 	];
 
 	$(document).ready(function () {
-		if (autoTypeEnabled) {
-			startAutoTyping(function (done) {
-				$('#trigger-search-btn').click();
-			});
-		} else {
-			$('#user-text-input').focus();
-		}
+		populateExamples();
+		$('#user-text-input').focus();
 		initializeCharts();
 		hideCharts();
 		$('#calendar-btn').dropdown();
 		gaugeWidth = $('.gauge').width();
+	});
+
+	function populateExamples() {
+		examples.forEach(function (example) {
+			$('#example-queries').append(
+				'<a class="dropdown-item example-query" data-query="' + btoa(example.query) + '" href="#">' + example.label + '</a>'
+			)
+		})
+	}
+
+	$(document).on('click', '.example-query', function(e) {
+		e.preventDefault();
+		var b64query = $(this).attr('data-query');
+		var query = atob(b64query);
+		$('#user-text-input').val(query);
 	});
 
 	function initializeCharts() {
@@ -323,48 +367,6 @@
 			console.log(err);	
 		}
 		return false;
-	}
-
-	function startAutoTyping(callback) {
-		var demoQuery = "wireless charging using magnetic induction";
-		
-		var targetInput = $('#user-text-input');
-		targetInput.focus();
-		
-		var autoTypingRunning = true;
-
-		// IIFE
-		setTimeout(function () {
-			if (targetInput.val().trim().length == 0) {
-				targetInput.val('');
-				autoType(demoQuery, targetInput, function () {
-					autoTypeRunning = false;
-					callback(true)
-				});
-			} else {
-				callback(true);
-			}
-		}, 1200);
-
-		function autoType (msg, targetInput, callback) {
-			var MIN_DELAY = 30;
-			var VARIATION = 50;
-
-			var chars = msg.split('');
-			chars.reverse();
-
-			(function _typeChar() {
-				var newText = targetInput.val() + chars.pop();
-				targetInput.val(newText);
-
-				if (chars.length == 0) {
-					return callback();
-				}
-				
-				var delay = MIN_DELAY + parseInt(Math.random()*VARIATION);
-				setTimeout(_typeChar, delay)
-			}());
-		}
 	}
 
 	$(document).on('click', '#trigger-search-btn', function (e) {
