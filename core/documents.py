@@ -92,9 +92,18 @@ class Document:
 	@property
 	def owner (self):
 		if self.type == 'patent':
-			return self.data['assignees'][0]
+			if not self.data.get('assignees'):
+				return 'Assignee N/A'
+			elif not self.data.get('assignees')[0].strip():
+				return 'Assignee N/A'
+			else:
+				return self.data['assignees'][0]
 		elif self.type == 'npl':
-			return utils.get_faln([e['name'] for e in self.data['authors']])
+			if not self.data['authors']:
+				return 'Author N/A'
+			else:
+				names = [e['name'] for e in self.data['authors']]
+				return utils.get_faln(names)
 		else:
 			return None
 
