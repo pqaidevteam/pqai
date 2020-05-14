@@ -45,3 +45,25 @@ def test_subclass_predictor():
     preds = predict_subclasses(query, limitTo=['H02J', 'H04L'])
     assert preds[0] == 'H04L'
 
+
+from core.documents import Document
+def test_document_module():
+    pn = 'US10112730B2'
+    doc = Document(pn)
+    
+    assert doc.is_patent() == True
+    assert doc.is_npl() == False
+    assert doc.type == 'patent'
+    assert doc.title.strip()[-len('purposes'):] == 'purposes'
+    assert doc.abstract.strip()[-len('vehicles.')] == 'vehicles.'
+    assert doc.publication_date == '2018-10-30'
+    assert doc.publication_id == 'US10112730B2'
+    assert doc.www_link == 'https://patents.google.com/patent/US10112730B2'
+    assert doc.is_published_before('2018-10-31') == True
+    assert doc.is_published_before('2018-10-30') == False
+    assert doc.is_published_before('2018-10-29') == False
+    assert doc.is_published_after('2018-10-29') == True
+    assert doc.is_published_after('2018-10-30') == False
+    assert doc.is_published_after('2018-10-31') == False
+    assert doc.is_published_between('2018-10-29', '2018-10-31') == True
+    assert doc.owner == 'Deutsches Zentrum fur Luft- und Raumfahrt eV'

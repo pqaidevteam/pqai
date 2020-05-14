@@ -193,3 +193,21 @@ def remove_claim_number(claim_text):
 
 def get_elements (text):
     return get_paragraphs(text)
+
+
+def get_external_link(pn):
+    return f'https://patents.google.com/patent/{pn}/en'
+
+
+def get_faln(authors):
+    # faln = first author's last name
+    name = authors[0]
+    if ',' in name:                         # Doe, John
+        faln = re.findall(r'\w+', name)[0]
+    else:                                   # John Doe
+        faln = re.findall(r'\w+', name)[-1]
+    if len(authors) > 1:
+        return faln + ' et al.'
+    else:
+        return faln
+

@@ -2,7 +2,7 @@
 from flask import request
 import numpy as np
 from flask_api import FlaskAPI, status, exceptions
-from core.vectorizer import vectorize, CPCVectorizer, DistilBERTVectorizer, SIFTextVectorizer
+from core.vectorizer import SIFTextVectorizer
 from core.indexes import get_index
 from core.indexes import index_ids as available_indexes
 from core.snippet import extract_snippet, map_elements_to_text
@@ -11,6 +11,7 @@ from core import db
 from core import datasets
 from core import utils
 from core import searcher
+from core.documents import Document
 
 app = FlaskAPI(__name__)
 
@@ -18,88 +19,37 @@ app = FlaskAPI(__name__)
 def search_index ():
     num_results = request.args.get('n', 10, int)
     index_id = request.args.get('idx', '', str)
-    doc_id = request.args.get('pn', '', str)
     query = request.args.get('q', '', str)
     before = request.args.get('before', '', str)
     after = request.args.get('after', '', str)
-    include_confidence_val = request.args.get('cnfd', 0, int)
-    include_bib_details = request.args.get('bib', 0, int)
-    include_distances = request.args.get('dist', 1, int)
     include_snippets = request.args.get('snip', 0, int)
-
-    print(dict(num_results = num_results, index_id = index_id))
-
-    if not index_id:
-        return 'No index specified for search.', status.HTTP_400_BAD_REQUEST
-    if not (doc_id or query):
-        return 'No search criteria in request.', status.HTTP_400_BAD_REQUEST
-    if doc_id and query:
-        return 'Invalid search criteria.', status.HTTP_400_BAD_REQUEST
-    if doc_id and not query:
-        query = doc_id
-
-    query_vec = vectorize(query)
-    if query_vec is None:
-        return 'Problematic query.', status.HTTP_500_INTERNAL_SERVER_ERROR
     
-    """
-    If automatic index selection mode is enabled by setting `index_id`
-    to `auto`, indexes will be predicted
-    """ 
+    # If automatic index selection mode is enabled by setting
+    # `index_id` to `auto`, indexes will be predicted
     indexes = None if index_id == 'auto' else [index_id]
+
     before = before if before else None
     after = after if after else None
+    
     try:
-        hits = searcher.search(query, num_results, indexes, before, after)
-    except:
+        results = searcher.search(query, num_results, indexes, before, after)
+    except Exception as e:
+        print(repr(e))
         return 'Error while searching.', status.HTTP_500_INTERNAL_SERVER_ERROR 
     
-    if hits is None:
+    if results is None:
         return 'Error while searching.', status.HTTP_500_INTERNAL_SERVER_ERROR
-    
-    # The results array will carry one `dict` per result. Depending on
-    # the fields requested by the client, data will be added to the
-    # dictionaries
-    if include_distances:
-        results = [{'publicationNumber': doc_id, 'distance': dist}
-                    for doc_id, dist in hits]
-    else:
-        results = [{'publicationNumber': doc_id} for doc_id, dist in hits]
-
-    # Add confidence score to results if requested
-    # It is calculated on the basis of results' CPCs; if their vectors'
-    # variance is low, score is high and vice versa
-    if include_confidence_val:
-        doc_ids = [doc_id for doc_id, dist in hits]
-        cpcs = [db.get_cpcs(doc_id) for doc_id in doc_ids]
-        vecs = np.array([CPCVectorizer().embed(arr) for arr in cpcs if arr])
-        confidence_score = utils.calc_confidence_score(vecs)
-        for result in results:
-            result['confidence'] = confidence_score
-
-    # Add bibliography details to results if requested
-    if include_bib_details:
-        for result in results:
-            patent = db.get_patent_data(result['publicationNumber'])
-            for field in ('title', 'abstract', 'filingDate'):
-                result[field] = patent[field]
-            if not patent.get('applicants'):
-                result['assignee'] = ''
-            else:
-                result['assignee'] = patent['applicants'][0]
 
     if include_snippets:
         for result in results:
-            text = db.get_full_text(result['publicationNumber'])
-            snippet = extract_snippet(query, text)
-            result['snippet'] = snippet
+            snippet = extract_snippet(query, result.full_text)
+            result.snippet = snippet
 
     response = {
-        'results': results,
+        'results': [result.to_json() for result in results],
         'query': query,
         'index': index_id
     }
-    print(f'Serving {len(results)} results.')
     return response, status.HTTP_200_OK
 
 
@@ -109,10 +59,11 @@ def get_snippet():
     pn = request.args.get('pn', '', str)
     if not (pn or query):
         return 'Document id or query invalid.', status.HTTP_400_BAD_REQUEST
-    text = db.get_full_text(pn)
-    snippet = extract_snippet(query, text)
+    
+    doc = Document(pn)
+    snippet = extract_snippet(query, doc.full_text)
     response = dict(
-        publicationNumber = pn,
+        publication_id = pn,
         snippet = snippet,
         query = query
     )

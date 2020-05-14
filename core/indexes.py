@@ -2,6 +2,7 @@ import numpy as np
 from annoy import AnnoyIndex
 import json
 from os.path import isfile
+from core.vectorizer import vectorize
 
 from config.config import indexes_dir
 DIMS = 768
@@ -46,7 +47,7 @@ def get_index(index_id):
     if index_id in loaded_indexes:
         return loaded_indexes[index_id]
 
-    index_file = f"{indexes_dir}{index_id}.abs.ann"
+    index_file = f"{indexes_dir}{index_id}.ann"
     items_file = f"{indexes_dir}{index_id}.items.json"
     if not (isfile(index_file) or isfile(items_file)):
         return None
@@ -198,3 +199,20 @@ class Index():
                 if arr[i] != unique[-1]:
                     unique.append(arr[i])
         return unique
+
+    def run_text_query(self, query, n=10, dist=True):
+        """Search with a text query.
+        
+        Args:
+            query (str): Query
+            n (int, optional): Number of results to return
+            dist (bool, optional): Whether distances (similarities) are
+                to be returned along with result ids.
+        
+        Returns:
+            list: Similar items as a list of item ids (if dist=False),
+                or tuples (item_id, distance) if dist=True.
+        """
+        query_vector = vectorize(query)
+        results = self.find_similar(query_vector, n, True)
+        return results

@@ -2,10 +2,12 @@ from pymongo import MongoClient
 from operator import itemgetter
 import json
 
-from config.config import mongo_host, mongo_port, mongo_dbname, mongo_collname
+from config.config import mongo_host, mongo_port
+from config.config import mongo_dbname, mongo_pat_coll, mongo_npl_coll
 
 client = MongoClient(mongo_host, mongo_port)
-coll = client[mongo_dbname][mongo_collname]
+pat_coll = client[mongo_dbname][mongo_pat_coll]
+npl_coll = client[mongo_dbname][mongo_npl_coll]
 
 def get_patent_data (pn, only_bib=False):
 	"""Retrieve all of the patent's data from the database.
@@ -25,13 +27,12 @@ def get_patent_data (pn, only_bib=False):
 	"""
 	if only_bib:
 		query = { 'publicationNumber': pn }
-		patent_data = coll.find_one(query)
+		patent_data = pat_coll.find_one(query)
 	else:
 		path = f'/home/ubuntu/lts/data/patents/{pn}.json'
 		with open(path) as file:
 			patent_data = json.load(file)
 	return patent_data
-
 
 def get_full_text (pn):
 	r"""Return abstract, claims, and description of the patent as a
@@ -89,3 +90,10 @@ def get_claims (pn):
 def get_first_claim (pn):
 	first_claim = get_claims(pn)[0]
 	return first_claim
+
+
+def get_document (doc_id):
+	if len(doc_id) == 40:
+		return npl_coll.find_one({ 'id': doc_id })
+	else:
+		return pat_coll.find_one({ 'publicationNumber': doc_id })

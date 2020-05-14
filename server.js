@@ -51,14 +51,16 @@ app.post('/mediator', function (req, res) {
 			before: before,
 			after: after,
 			n: 10,
-			cnfd: 1,
-			bib: 1,
-			snip: 1,
-			dist: 1
+			snip: 1
 		}
 		axios.get(url, { params })
-			.then(response => res.status(200).send(response.data))
-			.catch(err => res.status(500).send(error('Error occurred.')))
+		.then(response => {
+			res.render('result_list', { data: response.data });
+		})
+		.catch(err => {
+			console.log(err);
+			res.status(500).send(error('Error occurred.'));
+		})
 	
 	} else if (cmd == 'get-snippet') {
 		let query = req.body.query;
@@ -67,37 +69,38 @@ app.post('/mediator', function (req, res) {
 		let url = 'http://localhost:5000/snippets/'
 		let params = { q: query, pn: publicationNumber }
 		axios.get(url, { params })
-			.then(response => res.status(200).send(response.data))
-			.catch(err => res.status(500).send(error('Error occurred.')))
+		.then(response => res.status(200).send(response.data))
+		.catch(err => res.status(500).send(error('Error occurred.')))
 
 	} else if (cmd == 'get-stats') {
 		let query = req.body.query;
 		let indexId = req.body.techDomain;
 		let url = 'http://localhost:5000/documents/'
 		let params = {
-			q: query, idx: indexId, n: 100, bib: 1
+			q: query, idx: indexId, n: 100
 		}
 		axios.get(url, { params })
-			.then(response => {
-				let docs = response.data.results;
-				let result = {}
-				result.assigneeStats = stats.getAssigneeStats(docs);
-				result.yearStats = stats.getYearStats(docs);
-				result.oScore = stats.getOScore(docs);
-				res.status(200).send(result);
-			})
-			.catch(err => {
-				console.log(err);
-				res.status(500).send(error('Error occurred.'))
-			})
+		.then(response => {
+			let docs = response.data.results;
+			console.log(docs)
+			let result = {}
+			result.assigneeStats = stats.getAssigneeStats(docs);
+			result.yearStats = stats.getYearStats(docs);
+			result.oScore = stats.getOScore(docs);
+			res.status(200).send(result);
+		})
+		.catch(err => {
+			console.log(err);
+			res.status(500).send(error('Error occurred.'))
+		})
 	} else if (cmd == 'get-element-wise-mapping') {
 		let ref = req.body.ref;
 		let query = req.body.query;
 		let url = 'http://localhost:5000/mappings/';
 		let params = { q: query, ref: ref }
 		axios.get(url, { params })
-			.then(response => res.render('mapping', {mappings: response.data}))
-			.catch(err => res.status(500).send(error('Error occurred.')))
+		.then(response => res.render('mapping', {mappings: response.data}))
+		.catch(err => res.status(500).send(error('Error occurred.')))
 	} else {
 		res.status(400).send(error('Invalid request.'));
 	}

@@ -7,4 +7,5 @@ models_dir = base_dir + '/models/'
 mongo_host = 'localhost'
 mongo_port = 27017
 mongo_dbname = 'pqai'
-mongo_collname = 'bibliography'
+mongo_pat_coll = 'bibliography'
+mongo_npl_coll = 'npl'

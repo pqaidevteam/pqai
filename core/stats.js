@@ -33,13 +33,13 @@ function isUniversity (assigneeName) {
 }
 
 function getOScore(docs) {
-	let O_score = parseInt((docs[0].distance/1.3)*100);
+	let O_score = parseInt((docs[0].score/1.3)*100);
 	return O_score;
 }
 
 function getYearStats(docs) {
-	docs = docs.filter(e => typeof e.filingDate == 'string');
-	let years = docs.map(e => e.filingDate).map(
+	docs = docs.filter(e => typeof e.publication_date == 'string');
+	let years = docs.map(e => e.publication_date).map(
 		e => e.match(/\d{4}/)
 	);
 	return _yearDist(years);
@@ -56,8 +56,8 @@ function getYearStats(docs) {
 }
 
 function getAssigneeStats(docs) {
-	docs = docs.filter(e => typeof e.assignee == 'string');
-	let assignees = docs.map(e => e.assignee).map(e => clean(e));
+	docs = docs.filter(e => typeof e.owner == 'string');
+	let assignees = docs.map(e => e.owner).map(e => clean(e));
 	return _assigneeDist(assignees);
 
 	function _assigneeDist (arr, max=6) {

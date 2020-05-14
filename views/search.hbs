@@ -427,35 +427,13 @@
 			techDomain,
 			before: currentDateFilter,
 			after: ''
-		}, function (response) {
+		}, function (html) {
 			clearOutput();
 			latentQuery = '';
-
-			currentResults = response.results;
-			if (currentDateFilter) {
-				var cutoff = new Date(currentDateFilter);
-				currentResults = currentResults.filter(function(res) {
-					var d = new Date(res.filingDate);
-					return (d <= cutoff);
-				});
-			}
-
-			if (currentResults == 0) {
-				$('#output-pane').html('No results!');
-				return;
-			}
-
-			var selectedTechDomain = 'auto';
-			var selectedOrPredicted = selectedTechDomain == 'auto' ? 'predicted' : 'selected'
+			$('#output-pane').html(html);
 			
-			$('#output-pane').append(
-				'<p>'
-				+ 'Showing top 10 results. '
-				+ ((currentDateFilter) ? ' (with date filter)' : '')
-				+ ((currentResults[0].confidence) ? 'Confidence level: <b>' + currentResults[0].confidence.toUpperCase() + '</b>' : '')
-				+ '</p>'
-			);
-			displayResults();
+			resultsLoadingInProgress = false;
+			hideLoading();
 		});
 	}
 
@@ -492,54 +470,6 @@
 	}
 
 	var loadMoreBtnHtml = '<button class="btn btn-md btn-default mb-3" id="load-more-btn">Load more results</button>';
-	function displayResults() {
-
-		results = currentResults.splice(0, 10);
-		results = results.filter(function (e) { return e.title });
-
-		var output = $('#output-pane');
-		$('#load-more-btn').remove();
-		runInBatch(results, function (res, callback) {
-			var html = '<div class="card mb-3"><div class="card-body">';
-			var pn = res.publicationNumber;
-			if (visitedPatents[pn]) {
-				html += '<div class="card-title"><h5 class="res-title visited" data-pn="' + pn + '">' + res.title + '</h5></div>';
-			} else {
-				html += '<div class="card-title"><h5 class="res-title" data-pn="' + pn + '">' + res.title + '</h5></div>';
-			}
-			
-			var externalLink = getGoogleLink(pn);
-			var date = normalizeDate(res.filingDate);
-			date = '<span class="mr-3">' + date + '</span>';
-			var assignee = '<span class="mr-3">' + (res.assignee ? res.assignee : 'N/A') + '</span>';
-			var moreLikeThisBtn = '<a href="#" class="more-like-this-btn mr-3" data-pn="' + pn + '">Show more like this<a/>';
-			var elementWiseMappingBtn = '<a href="#" class="element-wise-mapping-btn mr-3" data-pn="' + pn + '">Element-wise mapping<a/>';
-			var arr = [
-				assignee,
-				date,
-				externalLink,
-				moreLikeThisBtn,
-				elementWiseMappingBtn,
-			];
-			html += '<p class="card-text res-bib">' + arr.slice(0, 3).join(' ') + '</p>';
-			html += '<p class="card-text res-snippet">' + res.snippet + '</p>';
-			html += '<p class="card-text res-bib">' + arr.slice(3).join(' ') + '</p>';
-			output.append(html);
-			callback();
-		}, function (arr) {
-			// done
-			output.append(loadMoreBtnHtml);
-			if (currentResults.length == 0) {
-				$('#load-more-btn').attr('disabled', 'disabled');
-				$('#load-more-btn').text('End of list.')
-			}
-			hideLoading();
-			resultsLoadingInProgress = false;
-			if (showOptions) {
-				$('#options-pane').slideDown();
-			}
-		});
-	}
 
 	function getSnippet(pn, query, callback) {
 		callMediator({

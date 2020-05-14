@@ -1,0 +1,36 @@
+{{#each data.results}}
+	<div class="card mb-3">
+		<div class="card-body">
+			<div class="card-title">
+				<h5 class="res-title" data-pn="{{ this.id }}">
+					{{ this.title }}
+				</h5>
+			</div>
+			<p class="card-text res-bib">
+				<span class="mr-3">{{ this.owner }}</span>
+				<span class="mr-3">{{ this.publication_date }}</span>
+				<a href="{{ this.www_link }}"
+					target="_blank"
+					class="mr-3 ext-link"
+					data-pn="{{ this.id }}">
+					{{ this.publication_id }}
+				</a>
+			</p>
+			<p class="card-text res-snippet">
+				{{{ this.snippet }}}
+			</p>
+			<p class="card-text res-bib">
+				<a href="#"
+					class="more-like-this-btn mr-3"
+					data-pn="{{ this.id }}">
+					Show more like this
+				</a>
+				<a href="#"
+					class="element-wise-mapping-btn mr-3"
+					data-pn="{{ this.id }}">
+					Element-wise mapping
+				</a>
+			</p>
+		</div>
+	</div>
+{{/each}}
