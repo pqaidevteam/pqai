@@ -83,8 +83,8 @@ def get_mapping():
     else:
         elements = utils.get_elements(query)
 
-    ref_data = db.get_patent_data(ref)
-    target_text = ref_data['description']
+    doc = Document(ref)
+    target_text = doc.full_text
     # arr_vectorize = DistilBERTVectorizer().embed_arr
     embed = SIFTextVectorizer().embed
     arr_vectorize = lambda X: [embed(x) for x in X]
