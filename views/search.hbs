@@ -286,27 +286,36 @@
 				+ 'A combining system associates a person with each dialog element.',
 			label: 'Meeting transcription system'
 		}
-	]
-	
-	var currentQuery = null;
-	var currentStats = null;
-	var currentResults = [];
-	var currentDateFilter = null;
-	var resultsLoadingInProgress = false;
-	var chartsDisabled = true;
-	var showOptions = false;
-	var chartA;
-	var chartB;
-	var chartC;
-	var gaugeWidth;
-	var visitedPatents = {};
-	var latentQuery = '';
+	];
 
-	var defaultPalette = [
+	var app = {
+		config: {},
+		state: {}
+	}
+
+	app.config.chartsDisabled = true;
+	app.config.loadMappings = 1;
+	app.config.showOptions = false;
+	app.config.palette = [
 		'#003f5c', '#444e86', '#955196',
 		'#dd5182', '#ff6e54', '#ffa600',
 		'#666666', '#999999', '#BBBBBB'
 	];
+
+	app.state.query = null;
+	app.state.stats = null;
+	app.state.results = [];
+	app.state.pointer = -1;
+	app.state.dateFilterBefore = null;
+	app.state.loading = false;
+	app.state.bookmarks = [];
+	app.state.visited = {};
+	app.state.latentQuery = '';
+
+	var chartA;
+	var chartB;
+	var chartC;
+	var gaugeWidth;
 
 	$(document).ready(function () {
 		populateExamples();
@@ -374,16 +383,16 @@
 		var queryType = getQueryType(query);
 		var techDomain = 'auto';
 
-		if (resultsLoadingInProgress) {
+		if (app.state.loading) {
 			return alert('Please wait while results are loading.');
 		}
 		if (!query) {
 			return alert('Please enter a query.');
 		}
 		clearOutput();
-		currentQuery = query;
-		currentQueryType = queryType;
-		resultsLoadingInProgress = true;
+		app.state.query = query;
+		app.state.queryType = queryType;
+		app.state.loading = true;
 		showLoading();
 		hideCharts();
 		if (queryType == 'text') {
@@ -397,8 +406,8 @@
 
 	function readUserQuery() {
 		var query = $('#user-text-input').val().trim();
-		if (latentQuery) {
-			query = [query, latentQuery].join(' ');
+		if (app.state.latentQuery) {
+			query = [query, app.state.latentQuery].join(' ');
 		}
 		return query.length ? query : null;
 	}
@@ -425,14 +434,14 @@
 			cmd,
 			query,
 			techDomain,
-			before: currentDateFilter,
-			after: ''
+			before: app.state.dateFilterBefore,
+			after: '',
+			mappings: app.config.loadMappings
 		}, function (html) {
 			clearOutput();
-			latentQuery = '';
+			app.state.latentQuery = '';
 			$('#output-pane').html(html);
-			
-			resultsLoadingInProgress = false;
+			app.state.loading = false;
 			hideLoading();
 		});
 	}
@@ -451,7 +460,7 @@
 	}
 
 	function getStats(query, techDomain, callback) {
-		if (chartsDisabled) {
+		if (app.config.chartsDisabled) {
 			return callback(true);
 		}
 		callMediator({
@@ -459,7 +468,7 @@
 			query,
 			techDomain
 		}, function (stats) {
-			currentStats = stats;
+			app.state.stats = stats;
 			updateCharts(stats);
 			callback(true);
 		});
@@ -487,7 +496,7 @@
 	}
 
 	$(document).on('click', '#load-more-btn', function(e) {
-		if (currentResults.length > 0) {
+		if (app.state.results.length > 0) {
 			displayResults();
 		} else {
 			alert("No more results to show.");
@@ -496,7 +505,7 @@
 
 	$(document).on('click', '.res-title', function(e) {
 		var pn = $(this).attr('data-pn');
-		visitedPatents[pn] = true;
+		app.state.visited[pn] = true;
 		$(this).addClass('visited');
 		var url = 'https://patents.google.com/patent/' + pn;
 		openInNewTab(url);
@@ -504,12 +513,12 @@
 
 	$(document).on('click', '.ext-link', function(e) {
 		var pn = $(this).attr('data-pn');
-		visitedPatents[pn] = true;
+		app.state.visited[pn] = true;
 	});
 
 	$(document).on('click', '.more-like-this-btn', function(e) {
 		var publicationNumber = $(this).attr('data-pn');
-		latentQuery = $(this).closest('.card-body').find('p.res-snippet').text()
+		app.state.latentQuery = $(this).closest('.card-body').find('p.res-snippet').text()
 		$('#trigger-search-btn').click();
 	});
 
@@ -564,7 +573,7 @@
 	}
 
 	function loadSnippets() {
-		if (!currentQuery) {
+		if (!app.state.query) {
 			return;
 		}
 		var pns = $('.snippet-placeholder').toArray().map(function (e) {
@@ -575,7 +584,7 @@
 			callMediator({
 				cmd: 'get-snippet',
 				publicationNumber: pn,
-				query: currentQuery
+				query: app.state.query
 			}, function (snippet) {
 				var targetElement = $('#' + pn);
 				targetElement.replaceWith('<p class="res-snippet">' + snippet + '</p>');
@@ -673,7 +682,7 @@
 		            radius: ['50%', '70%'],
 		            avoidLabelOverlap: false,
 		            hoverAnimation: false,
-		            color: defaultPalette,
+		            color: app.config.palette,
 		            label: {
 		                normal: {
 		                    show: true,
@@ -783,8 +792,11 @@
 	
 
 	$(window).resize(function(){
+		if (app.config.chartsDisabled) {
+			return;
+		}
   		initializeCharts();
-  		updateCharts(currentStats);
+  		updateCharts(app.state.stats);
 	});
 
 	function updateCharts(stats) {
@@ -801,14 +813,14 @@
 	$(document).on('click', '#apply-date-filter-btn', function (e) {
 		var date = $('#cutoff-date-input').val();
 		if (!date) {
-			currentDateFilter = null;
+			app.state.dateFilterBefore = null;
 			return;
 		}
 		$('#calendar-btn').text("before " + date)
 		if (!date.match(/^\d{4}\-\d{2}\-\d{2}$/)) {
 			return alert("Invalid date.");
 		}
-		currentDateFilter = date;
+		app.state.dateFilterBefore = date;
 		$('#trigger-search-btn').click();
 	});
 
