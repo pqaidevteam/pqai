@@ -44,6 +44,7 @@ app.post('/mediator', function (req, res) {
 		let indexId = req.body.techDomain;
 		let before = req.body.before;
 		let after = req.body.after;
+		let responseType = req.body.responseType || 'html';
 		let url = 'http://localhost:5000/documents/';
 		let params = {
 			q: query,
@@ -55,7 +56,11 @@ app.post('/mediator', function (req, res) {
 		}
 		axios.get(url, { params })
 		.then(response => {
-			res.render('result_list', { data: response.data });
+			if (responseType == 'json') {
+				res.send(response.data)
+			} else {
+				res.render('result_list', { data: response.data });
+			}
 		})
 		.catch(err => {
 			console.log(err);
