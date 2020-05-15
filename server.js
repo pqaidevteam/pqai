@@ -6,6 +6,7 @@ const compression = require('compression');
 const axios = require('axios');
 const bodyParser = require('body-parser');
 
+const processor = require('./core/processor.js');
 const stats = require('./core/stats.js');
 
 const app = express();
@@ -44,23 +45,49 @@ app.post('/mediator', function (req, res) {
 		let indexId = req.body.techDomain;
 		let before = req.body.before;
 		let after = req.body.after;
-		let responseType = req.body.responseType || 'html';
+		let n = req.body.n || 10;
+		let mappings = req.body.mappings || -1;
+		let n_mappings = (mappings == -1) ? n : mappings;
+
 		let url = 'http://localhost:5000/documents/';
 		let params = {
 			q: query,
 			idx: indexId,
 			before: before,
 			after: after,
-			n: 10,
-			snip: 1
+			n: n,
+			snip: 0
 		}
+
 		axios.get(url, { params })
 		.then(response => {
-			if (responseType == 'json') {
-				res.send(response.data)
-			} else {
-				res.render('result_list', { data: response.data });
-			}
+			processor.run(
+				response.data.results.slice(0, n_mappings),
+				(result, callback) => {
+					let url = 'http://localhost:5000/mappings/';
+					let params = { q: query, ref: result.id }
+					
+					axios.get(url, { params })
+					.then(response => {
+						result.mapping = response.data;
+
+						app.render('mapping', { result }, (err, html) => {
+							result.mappingHTML = err ? null : html;
+							callback();
+						})
+					}).catch(err => {
+						// console.log(err);
+						callback();
+					})
+				}, arr => {
+					app.render('result_list', { data: response.data },
+						(err, html) => {
+							response.data.listHTML = err ? null : html;
+							res.send(response.data);
+						}
+					)
+				}
+			)
 		})
 		.catch(err => {
 			console.log(err);
@@ -101,8 +128,10 @@ app.post('/mediator', function (req, res) {
 	} else if (cmd == 'get-element-wise-mapping') {
 		let ref = req.body.ref;
 		let query = req.body.query;
+
 		let url = 'http://localhost:5000/mappings/';
 		let params = { q: query, ref: ref }
+		
 		axios.get(url, { params })
 		.then(response => res.render('mapping', {mappings: response.data}))
 		.catch(err => res.status(500).send(error('Error occurred.')))

@@ -269,8 +269,31 @@
 <script type="text/javascript" src="bootstrap-4.3.1/js/popper.min.js"></script>
 <script type="text/javascript" src="bootstrap-4.3.1/js/bootstrap.min.js"></script>
 <script type="text/javascript">
+	var app = {};
+	app.config = {};
+	app.state = {};
 
-	var examples = [
+	app.config.chartsDisabled = true;
+	app.config.loadMappings = 1;
+	app.config.showOptions = false;
+	app.config.palette = [
+		'#003f5c', '#444e86', '#955196',
+		'#dd5182', '#ff6e54', '#ffa600',
+		'#666666', '#999999', '#BBBBBB'
+	];
+
+	app.state.query = null;
+	app.state.dateFilterBefore = null;
+	app.state.dateFilterAfter = null;
+	app.state.loading = false;
+	app.state.stats = null;
+	app.state.results = [];
+	app.state.pointer = -1;
+	app.state.visited = {};
+	app.state.bookmarks = [];
+	app.state.latentQuery = '';
+
+	app.config.examples = [
 		{
 			id: 'ex1',
 			query: 'An automated cooking system that minimizes food wastage.\n'
@@ -288,30 +311,6 @@
 		}
 	];
 
-	var app = {
-		config: {},
-		state: {}
-	}
-
-	app.config.chartsDisabled = true;
-	app.config.loadMappings = 1;
-	app.config.showOptions = false;
-	app.config.palette = [
-		'#003f5c', '#444e86', '#955196',
-		'#dd5182', '#ff6e54', '#ffa600',
-		'#666666', '#999999', '#BBBBBB'
-	];
-
-	app.state.query = null;
-	app.state.stats = null;
-	app.state.results = [];
-	app.state.pointer = -1;
-	app.state.dateFilterBefore = null;
-	app.state.loading = false;
-	app.state.bookmarks = [];
-	app.state.visited = {};
-	app.state.latentQuery = '';
-
 	var chartA;
 	var chartB;
 	var chartC;
@@ -327,7 +326,7 @@
 	});
 
 	function populateExamples() {
-		examples.forEach(function (example) {
+		app.config.examples.forEach(function (example) {
 			$('#example-queries').append(
 				'<a class="dropdown-item example-query" data-query="' + btoa(example.query) + '" href="#">' + example.label + '</a>'
 			)
@@ -435,15 +434,18 @@
 			query,
 			techDomain,
 			before: app.state.dateFilterBefore,
-			after: '',
-			mappings: app.config.loadMappings
-		}, function (html) {
+			after: app.state.dateFilterAfter,
+			mappings: app.config.loadMappings,
+			n: 10
+		}, function (response) {
 			clearOutput();
 			app.state.latentQuery = '';
-			$('#output-pane').html(html);
+			app.state.results = response;
+			$('#output-pane').html(response.results[0].mappingHTML);
+			app.state.pointer = 0;
 			app.state.loading = false;
 			hideLoading();
-		});
+		})
 	}
 
 	function hideCharts() {
