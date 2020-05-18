@@ -79,6 +79,7 @@ class Index():
         self.index.load(ann_file)
         self.n_items = self.index.get_n_items()
         self.items = json.load(open(json_file, 'r'))
+        self.search_depth = 100000 # No. of nodes inspected during search
 
     def __getitem__(self, value):
         """Return vector for the i-th item.
@@ -110,7 +111,7 @@ class Index():
             list: Similar items as a list of item ids (if dist=False),
                 or tuples (item_id, distance) if dist=True.
         """
-        ids, dists = self.index.get_nns_by_vector(query_vec, n, -1, True)
+        ids, dists = self.index.get_nns_by_vector(query_vec, n, self.search_depth, True)
         doc_ids = [self.resolve_item_id(i) for i in ids]
         if dist: # include distances with ids
             doc_ids = list(zip(doc_ids, dists))
@@ -131,7 +132,7 @@ class Index():
             list: Similar items as a list of item ids (if dist=False),
                 or tuples (item_id, distance) if dist=True.
         """
-        ids, dists = self.index.get_nns_by_item(i, n, -1, True)
+        ids, dists = self.index.get_nns_by_item(i, n, self.searh_depth, True)
         doc_ids = [self.resolve_item_id(i) for i in ids]
         if dist: # include distances with ids
             doc_ids = list(zip(doc_ids, dists))
