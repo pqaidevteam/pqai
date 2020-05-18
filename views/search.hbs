@@ -266,12 +266,14 @@
 		</section>
 	</body>
 </html>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.0/handlebars.min.js"></script>
 <script type="text/javascript" src="bootstrap-4.3.1/js/popper.min.js"></script>
 <script type="text/javascript" src="bootstrap-4.3.1/js/bootstrap.min.js"></script>
 <script type="text/javascript">
 	var app = {};
 	app.config = {};
 	app.state = {};
+	app.templates = {};
 
 	app.config.chartsDisabled = true;
 	app.config.loadMappings = 1;
@@ -287,11 +289,13 @@
 	app.state.dateFilterAfter = null;
 	app.state.loading = false;
 	app.state.stats = null;
+	app.state.metaResults = {}
 	app.state.results = [];
 	app.state.pointer = -1;
 	app.state.visited = {};
 	app.state.bookmarks = [];
 	app.state.latentQuery = '';
+	app.state.bookmarks = [];
 
 	app.config.examples = [
 		{
@@ -323,6 +327,7 @@
 		hideCharts();
 		$('#calendar-btn').dropdown();
 		gaugeWidth = $('.gauge').width();
+		loadBookmarks();
 	});
 
 	function populateExamples() {
@@ -421,15 +426,13 @@
 
 	function triggerSearch(query, techDomain="auto") {
 		query = query.trim();
-		
-		let cmd;
+		var cmd;
 		if (query.match(/^US\d+[AB]\d?$/)) {
 			cmd = 'search-by-patent'
 		} else {
 			cmd = 'search-by-query'
 		}
-		
-		callMediator({
+		var reqParams = {
 			cmd,
 			query,
 			techDomain,
@@ -437,15 +440,111 @@
 			after: app.state.dateFilterAfter,
 			mappings: app.config.loadMappings,
 			n: 10
-		}, function (response) {
-			clearOutput();
-			app.state.latentQuery = '';
-			app.state.results = response;
-			$('#output-pane').html(response.results[0].mappingHTML);
-			app.state.pointer = 0;
-			app.state.loading = false;
-			hideLoading();
-		})
+		};
+		callMediator(reqParams, function(response) {
+			loadNewResults(response, function(done) {
+				app.state.loading = false;
+				hideLoading();
+			});
+		});
+	}
+
+	function loadNewResults(newQueryResponse, callback=Function.prototype) {
+		app.state.latentQuery = '';
+		app.state.metaResults = newQueryResponse;
+		app.state.results = app.state.metaResults.results;
+		app.state.pointer = -1;
+		showNextResult();
+		callback(true);
+	}
+
+	function showNextResult() {
+		seekRelative(1, function (shown) {
+			if (!shown) {
+				notifyUser('Error occurred while showing next result.');
+			}
+		});
+	}
+
+	function showPreviousResult() {
+		seekRelative(-1, function (shown) {
+			if (!shown) {
+				notifyUser('Error occurred while showing next result.');
+			}
+		});
+	}
+
+	function seekRelative(r, callback=Function.prototype) {
+		var n = app.state.pointer + r;
+		seekAbsolute(n, callback);
+	}
+
+	function seekAbsolute(n, callback=Function.prototype) {
+		/* Check if position is valid */
+		if (n < 0 || n >= app.state.results.length) {
+			callback(false);
+		}
+		
+		var result = app.state.results[n];
+		showResult(result, function(done) {
+			if (!done)
+				return callback(false);
+			app.state.pointer = n;
+
+			/* Update result navigator */
+			$('#result-navigator button.active').removeClass('active');
+			var activatedButton = $('#result-navigator button').get(n)
+			$(activatedButton).addClass('active');
+			
+			callback(true);
+		});
+
+		/* Load and buffer mapping of next result */
+		if (n+1 < app.state.results.length) {
+			var nextResult = app.state.results[n+1];
+			loadMapping(nextResult);
+		}
+	}
+
+	function showResult(result, callback=Function.prototype) {
+		hideShownResult();
+		if (!result.mapping) {
+			loadMapping(result, function(loaded) {
+				showResult(result);
+			});
+			return callback(true);
+		}
+
+		if (!$('#result-navigator').length) {
+			var html = app.templates.resultNavigator();
+			$('#output-pane').html(html);
+		}
+
+		html = app.templates.resultCard(result);
+		$('#output-pane').append(html);
+
+		callback(true);
+	}
+
+	function hideShownResult() {
+		$('.result-card').remove();
+	}
+
+	function loadMapping(result, callback=Function.prototype) {
+		var ref = result.id;
+		var query = app.state.query;
+		callMediator({
+			cmd: 'get-element-wise-mapping',
+			ref: ref,
+			query: query
+		}, function (mapping) {
+			result.mapping = mapping;
+			callback(true);
+		});
+	}
+
+	function notifyUser(message) {
+		alert(message);
 	}
 
 	function hideCharts() {
@@ -826,4 +925,115 @@
 		$('#trigger-search-btn').click();
 	});
 
+	$(document).on('click', '.bookmark-btn', function (e) {
+		e.preventDefault();
+		var n = app.state.pointer;
+		var result = app.state.results[n];
+		app.state.bookmarks.push(result);
+		saveBookmarks();
+		$(this).addClass('disabled');
+		$(this).text('Bookmarked');
+	});
+
+	function saveBookmarks() {
+		localStorage.setItem('bookmarks', JSON.stringify(app.state.bookmarks));
+	}
+
+	function loadBookmarks() {
+		if (!localStorage.getItem('bookmarks')) {
+			return null;
+		}
+		app.state.bookmarks = JSON.parse(localStorage.getItem('bookmarks'));
+	}
+
+	function floatToPercentage (floatVal) {
+		let f = parseFloat(floatVal);
+		return parseInt(100*f);
+	}
+
+	app.templates.resultCard = function (result) {
+		var html = '';
+		html += `
+			<div class="card result-card mb-3">
+				<div class="card-body">
+					<div class="card-title">
+						<h5 class="res-title" data-pn="${result.id}">
+							${ result.title }
+						</h5>
+					</div>
+					<p class="card-text res-bib">
+						<span class="mr-3">${ result.owner }</span>
+						<span class="mr-3">${ result.publication_date }</span>
+						<a href="${ result.www_link }"
+							target="_blank"
+							class="mr-3 ext-link"
+							data-pn="${ result.id }">
+							${ result.publication_id }
+						</a>
+						<a href="#"
+							class="more-like-result-btn mr-3"
+							data-pn="${ result.id }">
+							Show more like this
+						</a>
+					</p>
+					<p class="card-text res-snippet">
+						${ result.abstract }
+					</p>
+					<table class="table table-responsive table-inverse mapping-table">
+						<thead>
+							<tr>
+								<th style='text-align: left'>Query elements</th>
+								<th style='text-align: left'>Reference text</th>
+								<th style='text-align: left'>Similarity</th>
+							</tr>
+						</thead>
+						<tbody>`
+		result.mapping.forEach(function (row) {
+			html += `
+				<tr>
+					<td style='vertical-align: top'>${ row.element }</td>
+					<td style='vertical-align: top'>${ row.mapping }</td>
+					<td style='vertical-align: top'>${floatToPercentage(row.similarity)}%</td>
+				</tr>`
+		});
+		html += `		</tbody>
+					</table>`
+		if (!app.state.bookmarks.map(
+				function(e) { return e.id }
+				).includes(result.id)
+			) {
+			html +=	`<a href="#" class="btn btn-primary bookmark-btn">
+						Bookmark</a>`
+		} else {
+			html +=	`<a href="#" class="btn btn-primary bookmark-btn disabled">
+						Bookmarked</a>`
+		}
+		html +=	`</div>
+			</div>`
+		return html;
+	}
+
+	app.templates.resultNavigator = function () {
+		var html = '';
+		html += `<div class="row">
+					<div
+						class="col-md-12"
+						style="text-align:center">
+						<div
+							class="btn-group mb-3"
+						id="result-navigator"
+						role="group">`;
+		app.state.results.forEach(function (result, i) {
+			html += `<button
+						type="button"
+						class="btn btn-secondary"
+						onclick="seekAbsolute(${i})">
+							${i+1}
+						</button>`
+		})
+		html += `</div>
+			</div>
+		</div>`;
+		return html;
+	}
 </script>

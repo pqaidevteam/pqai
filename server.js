@@ -70,11 +70,7 @@ app.post('/mediator', function (req, res) {
 					axios.get(url, { params })
 					.then(response => {
 						result.mapping = response.data;
-
-						app.render('mapping', { result }, (err, html) => {
-							result.mappingHTML = err ? null : html;
-							callback();
-						})
+						callback();
 					}).catch(err => {
 						// console.log(err);
 						callback();
@@ -133,8 +129,11 @@ app.post('/mediator', function (req, res) {
 		let params = { q: query, ref: ref }
 		
 		axios.get(url, { params })
-		.then(response => res.render('mapping', {mappings: response.data}))
-		.catch(err => res.status(500).send(error('Error occurred.')))
+		.then(
+			response => res.send(response.data)
+		).catch(err => res.status(500).send(
+			error('Error occurred in Python API.')
+		))
 	} else {
 		res.status(400).send(error('Invalid request.'));
 	}
