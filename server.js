@@ -156,7 +156,6 @@ app.get('/datasets/:datasetName/:n', function (req, res) {
 			datapoint.similars.forEach(e => e.role = 'negative');
 			datapoint.citation.role = 'positive';
 			let r = parseInt(datapoint.similars.length * Math.random());
-			console.log('Random number', r);
 			datapoint.all = datapoint.similars.slice(0, r);
 			datapoint.all = datapoint.all.concat([datapoint.citation]);
 			datapoint.all = datapoint.all.concat(datapoint.similars.slice(r));
