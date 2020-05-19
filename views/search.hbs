@@ -118,7 +118,13 @@
 						<div class="dropdown-menu" id="bookmarks-list">
 							<div class="dropdown-divider"></div>
 							<a class="dropdown-item" id="clear-bookmarks-btn" href="#">Clear list</a>
-							<a class="dropdown-item" id="export-bookmarks-btn" href="#">Export</a>
+							<a
+								class="dropdown-item"
+								id="export-bookmarks-btn"
+								style="color: grey"
+								href="#">
+								Export (under construction)
+							</a>
 						</div>
 					</li>
 					<li class="nav-item">
@@ -1010,7 +1016,8 @@
 			$('#bookmarks-list').prepend(
 				`<a
 					class="dropdown-item bookmark"
-					href="#"
+					href="${bookmark.www_link}"
+					target="_BLANK"
 					data-id="${bookmark.id}">
 					${cutShort(bookmark.title, 75)}
 				</a>`
