@@ -314,18 +314,18 @@
 	app.config.examples = [
 		{
 			id: 'ex1',
+			label: 'Reducing food wastage at restaurant using customer prediction',
 			query: 'An automated cooking system that minimizes food wastage.\n'
 				+ 'It predicts the customer inflow based on historical data.\n'
-				+ 'It prepares ingredients according to the predicted number of customers.',
-			label: 'Reducing food wastage at restaurant using customer prediction'
+				+ 'It prepares ingredients according to the predicted number of customers.'
 		},
 		{
 			id: 'ex2',
+			label: 'Meeting transcription system',
 			query: 'A system for preparing minutes of meeting.\n'
 				+ 'A voice recognition system is trained to recognize voice of different persons.\n'
 				+ 'A voice-to-text system records the dialog and converts it to text.\n'
-				+ 'A combining system associates a person with each dialog element.',
-			label: 'Meeting transcription system'
+				+ 'A combining system associates a person with each dialog element.'
 		}
 	];
 
@@ -453,10 +453,9 @@
 			n: 10
 		};
 		callMediator(reqParams, function(response) {
-			loadNewResults(response, function(done) {
-				app.state.loading = false;
-				hideLoading();
-			});
+			app.state.loading = false;
+			hideLoading();
+			loadNewResults(response);
 		});
 	}
 
@@ -504,7 +503,7 @@
 
 			/* Update result navigator */
 			$('#result-navigator button.active').removeClass('active');
-			var activatedButton = $('#result-navigator button').get(n)
+			var activatedButton = $('#result-navigator button').get(n);
 			$(activatedButton).addClass('active');
 			
 			callback(true);
@@ -521,9 +520,9 @@
 		hideShownResult();
 		if (!result.mapping) {
 			loadMapping(result, function(loaded) {
-				showResult(result);
+				showResult(result, callback);
 			});
-			return callback(true);
+			return;
 		}
 
 		if (!$('#result-navigator').length) {
