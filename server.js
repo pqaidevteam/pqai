@@ -34,8 +34,8 @@ app.get('/search', function (req, res) {
 	res.render('search');
 });
 
-app.get('/b68ccabe63f8059a52604f1e6fd2e5ba', function (req, res) {
-	res.render('about');
+app.get('/tech-areas', function (req, res) {
+	res.render('tech_areas');
 });
 
 app.post('/mediator', function (req, res) {
