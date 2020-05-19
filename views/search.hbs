@@ -172,6 +172,13 @@
 											id="example-queries">
 										</div>
 									</div>
+									<a
+										href='#'
+										class="ml-2"
+										id="data-coverage-notice-toggle-btn"
+										style="color: var(--offwhite); text-decoration: underline;">
+										Data sources and coverage
+									</a>
 								</div>
 								<div class="col-md-4">
 									<div class="form-group">
@@ -222,6 +229,15 @@
 						</div>
 						<div class="col-md-2"></div>
 					</div>
+				</div>
+			</div>
+			<div class="container mt-2 mb-2 hidden" id="data-coverage-notice">
+				<div class="row">
+					<div class="col-md-2"></div>
+					<div class="col-md-8">
+						<p><span class="fa fa-info-circle"></span> The data coverage of this beta version is limited to nearly 6 million US patents and applications classified under G, H, and Y technology sections of the CPC scheme and nearly 11.5 million research papers in the fields of engineering and computer science. Datasets were obtained from <a href="https://bulkdata.uspto.gov/" target="_BLANK">USPTO Bulk Datasets</a> and <a href="http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/" target="_BLANK">Semantic Scholar's Open Research Corpus</a>, respectively.</p>
+					</div>
+					<div class="col-md-2"></div>
 				</div>
 			</div>
 			<div class="container">
@@ -1106,4 +1122,9 @@
 	    var html = shownText + `<span class='hidden-text' data-text='${btoa(text.substring(i))}'> ...</span>`;
 	    return html;
 	}
+
+	$(document).on('click', '#data-coverage-notice-toggle-btn', function (e) {
+		$('#data-coverage-notice').toggleClass('hidden');
+	});
+
 </script>
