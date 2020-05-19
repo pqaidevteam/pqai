@@ -106,11 +106,26 @@
 					<li class="nav-item active">
 						<a href="/search" class="nav-link">Search</a>
 					</li>
-					<li class="nav-item">
+					<!-- <li class="nav-item">
 						<a href="/about" class="nav-link">About</a>
-					</li>
-					<li class="nav-item active">
+					</li> -->
+					<li class="nav-item">
 						<a href="/datasets" class="nav-link">Datasets</a>
+					</li>
+					<li class="nav-item dropdown">
+						<a
+							href="#"
+							class="nav-link dropdown-toggle"
+							id="view-bookmarks-btn"
+							data-toggle="dropdown"
+							role="button">
+							Bookmarks (<span id="bookmark-count">0</span>)
+						</a>
+						<div class="dropdown-menu" id="bookmarks-list">
+							<div class="dropdown-divider"></div>
+							<a class="dropdown-item" id="clear-bookmarks-btn" href="#">Clear list</a>
+							<a class="dropdown-item" id="export-bookmarks-btn" href="#">Export</a>
+						</div>
 					</li>
 				</ul>
 			</div>
@@ -130,7 +145,7 @@
 									class="form-control"
 									id="user-text-input"
 									cols="30"
-									rows="3"
+									rows="4"
 									style="background-color: #1b3842; resize: vertical;"
 									placeholder="Pick an example from the below dropdown menu, or enter an invention description, a claim, or a patent number (US only)"></textarea>
 							</div>
@@ -934,6 +949,8 @@
 
 	function saveBookmarks() {
 		localStorage.setItem('bookmarks', JSON.stringify(app.state.bookmarks));
+		updateBookmarksCountBadge();
+		populateBookmarksList();
 	}
 
 	function loadBookmarks() {
@@ -941,6 +958,54 @@
 			return null;
 		}
 		app.state.bookmarks = JSON.parse(localStorage.getItem('bookmarks'));
+		updateBookmarksCountBadge();
+		populateBookmarksList();
+	}
+
+	$(document).on('click', '#clear-bookmarks-btn', function (e) {
+		var confirmation = confirm('Remove all bookmarks?');
+		if (confirmation) {
+			app.state.bookmarks = [];
+			saveBookmarks();
+		}
+	});
+
+	$(document).on('click', '#export-bookmarks-btn', function (e) {
+		alert('Export feature is under construction.');
+	});
+
+	function populateBookmarksList() {
+		/* clear previously rendered list */
+			$('#bookmarks-list .bookmark').remove();
+
+		/* edge case - no bookmarks */
+			if (!app.state.bookmarks.length) {
+				$('#bookmarks-list').prepend(
+					`<a
+						class="dropdown-item bookmark"
+						href="#"
+						data-id="">
+						No bookmarks
+					</a>`
+				)
+				return;
+			}
+
+		/* populate list */
+		app.state.bookmarks.forEach(function (bookmark) {
+			$('#bookmarks-list').prepend(
+				`<a
+					class="dropdown-item bookmark"
+					href="#"
+					data-id="${bookmark.id}">
+					${cutShort(bookmark.title, 75)}
+				</a>`
+			)
+		});
+	}
+
+	function updateBookmarksCountBadge() {
+		$('#bookmark-count').text(app.state.bookmarks.length);
 	}
 
 	function floatToPercentage (floatVal) {
@@ -1032,5 +1097,15 @@
 			</div>
 		</div>`;
 		return html;
+	}
+
+	function cutShort(text, length) {
+	    if (!length || length > text.length || length < 10) return text;
+	    var i = length-4;
+	    while (text.charAt(i) !== ' ') i--;
+	    var shownText = text.substring(0, i);
+	    var hiddenText = text.substring(i);
+	    var html = shownText + `<span class='hidden-text' data-text='${btoa(text.substring(i))}'> ...</span>`;
+	    return html;
 	}
 </script>
