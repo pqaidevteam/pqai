@@ -349,6 +349,14 @@
 				+ 'A voice recognition system is trained to recognize voice of different persons.\n'
 				+ 'A voice-to-text system records the dialog and converts it to text.\n'
 				+ 'A combining system associates a person with each dialog element.'
+		},
+		{
+			id: 'ex3',
+			label: 'Photo frame with adjustable photo slide rate',
+			query: 'A photo frame for a desk.' +
+				+ 'The frame stores a number of photos.'
+				+ 'The frame has a number of settings.'
+				+ 'The settings can be configured such that photo slide time changes.'
 		}
 	];
 
@@ -444,6 +452,9 @@
 		}
 	});
 
+	/*
+		On CTRL+Enter, submit the query
+	*/
 	$(document).on('keyup', '#user-text-input', function (e) {
 		if (e.keyCode == 13 && e.ctrlKey) {
 			$('#trigger-search-btn').click();
