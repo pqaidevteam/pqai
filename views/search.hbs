@@ -444,6 +444,12 @@
 		}
 	});
 
+	$(document).on('keyup', '#user-text-input', function (e) {
+		if (e.keyCode == 13 && e.ctrlKey) {
+			$('#trigger-search-btn').click();
+		}
+	});
+
 	function readUserQuery() {
 		var query = $('#user-text-input').val().trim();
 		app.state.query = query;
