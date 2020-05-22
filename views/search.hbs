@@ -151,7 +151,7 @@
 									id="user-text-input"
 									cols="30"
 									rows="4"
-									style="background-color: #1b3842; resize: vertical;"
+									style="background-color: #1b3842; resize: vertical; max-height: 400px;"
 									placeholder="Pick an example from the dropdown menu below, or enter an invention description or a claim (one feature per line)"></textarea>
 							</div>
 							<div class="row">
@@ -305,6 +305,7 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.0/handlebars.min.js"></script>
 <script type="text/javascript" src="bootstrap-4.3.1/js/popper.min.js"></script>
 <script type="text/javascript" src="bootstrap-4.3.1/js/bootstrap.min.js"></script>
+{{> export_js}}
 <script type="text/javascript">
 	var app = {};
 	app.config = {};
