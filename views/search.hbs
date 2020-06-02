@@ -121,9 +121,8 @@
 							<a
 								class="dropdown-item"
 								id="export-bookmarks-btn"
-								style="color: grey"
 								href="#">
-								Export (under construction)
+								Export to Excel
 							</a>
 						</div>
 					</li>
@@ -306,6 +305,8 @@
 <script type="text/javascript" src="bootstrap-4.3.1/js/popper.min.js"></script>
 <script type="text/javascript" src="bootstrap-4.3.1/js/bootstrap.min.js"></script>
 {{> export_js}}
+
+
 <script type="text/javascript">
 	var app = {};
 	app.config = {};
@@ -353,9 +354,9 @@
 		{
 			id: 'ex3',
 			label: 'Photo frame with adjustable photo slide rate',
-			query: 'A photo frame for a desk.' +
-				+ 'The frame stores a number of photos.'
-				+ 'The frame has a number of settings.'
+			query: 'A photo frame for a desk.\n'
+				+ 'The frame stores a number of photos.\n'
+				+ 'The frame has a number of settings.\n'
 				+ 'The settings can be configured such that photo slide time changes.'
 		}
 	];
@@ -1009,7 +1010,12 @@
 	});
 
 	$(document).on('click', '#export-bookmarks-btn', function (e) {
-		alert('Export feature is under construction.');
+		try {
+			exportBookmarks(app.state.bookmarks);
+		} catch (e) {
+			console.log(e);
+			alert("Error while exporting bookmarks.");
+		}
 	});
 
 	function populateBookmarksList() {
@@ -1080,7 +1086,7 @@
 					<p class="card-text res-snippet">
 						${ result.abstract }
 					</p>
-					<table class="table table-responsive table-inverse mapping-table">
+					<table class="table table-inverse mapping-table">
 						<thead>
 							<tr>
 								<th style='text-align: left'>Query elements</th>
@@ -1094,8 +1100,13 @@
 				<tr>
 					<td style='vertical-align: top'>${ row.element }</td>
 					<td style='vertical-align: top'>${ row.mapping }</td>
-					<td style='vertical-align: top'>${floatToPercentage(row.similarity)}%</td>
 				</tr>`
+			// html += `
+			// 	<tr>
+			// 		<td style='vertical-align: top'>${ row.element }</td>
+			// 		<td style='vertical-align: top'>${ row.mapping }</td>
+			// 		<td style='vertical-align: top'>${floatToPercentage(row.similarity)}%</td>
+			// 	</tr>`
 		});
 		html += `		</tbody>
 					</table>`
@@ -1127,8 +1138,8 @@
 		app.state.results.forEach(function (result, i) {
 			html += `<button
 						type="button"
-						class="btn btn-secondary"
-						onclick="seekAbsolute(${i})">
+						class="btn btn-secondary res-nav-btn"
+						data-i="${i}">
 							${i+1}
 						</button>`
 		})
@@ -1137,6 +1148,12 @@
 		</div>`;
 		return html;
 	}
+
+	$(document).on('click', '.res-nav-btn', function (e) {
+		e.preventDefault();
+		var i = $(this).attr('data-i');
+		seekAbsolute(i);
+	});
 
 	function cutShort(text, length) {
 	    if (!length || length > text.length || length < 10) return text;

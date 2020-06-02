@@ -1,0 +1,246 @@
+<script type="text/javascript" src="xlsx.core.min.js"></script>
+<script type="text/javascript" src="Blob.js"></script>
+<script type="text/javascript" src="FileSaver.js"></script>
+
+<script type='text/javascript'>
+	function exportBookmarks(bookmarks) {
+
+		var finalExcelFileName = 'PQAI-Bookmarks.xlsx';
+		var arrOfArrData = _getWorksheetData(bookmarks);
+		var ws = _generateSheet(arrOfArrData);
+
+		if (!ws) {
+			alert('Error occured which generating excel file.');
+			return;
+		}
+
+		var wsName = "Bookmarks";
+		var wb = new Workbook();
+
+		wb.SheetNames.push(wsName);
+		wb.Sheets[wsName] = ws;
+		
+		var wbOptions = {
+			bookType:'xlsx',
+			bookSST:true,
+			type: 'binary',
+			showGridLines: false
+		}
+		var wbout = XLSX.write(wb, wbOptions);
+
+		saveAs(new Blob([s2ab(wbout)],{type:'application/octet-stream'}), finalExcelFileName)
+
+		function Workbook() {
+			if(!(this instanceof Workbook)) return new Workbook();
+			this.SheetNames = [];
+			this.Sheets = {};
+		}
+
+		function s2ab(s) {
+			var buf = new ArrayBuffer(s.length);
+			var view = new Uint8Array(buf);
+			for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+			return buf;
+		}
+	}
+
+	function _getWorksheetData(jsonData) {
+		if (!Array.isArray(jsonData)) {
+			return alert('No valid JSON data found');
+		}
+
+		var wsData = [];
+		jsonData.forEach(function (doc) {
+			wsData.push(['', ''],
+						['', ''],
+						['', '', 'Title', doc.title],
+						['', '', 'Link', doc.www_link],
+						['', '', 'Publication date', doc.publication_date],
+						['', '', 'Abstract', doc.abstract],
+						['', ''],
+						['', '', 'Query elements', '', '', '', 'Reference text',
+						 '', '', '', 'Similarity']
+					   );
+			
+			doc.mapping.forEach(function(obj) {
+				wsData.push(
+					['', '', obj.element, '', '', '', obj.mapping, '', '', '', obj.similarity])
+			});
+		});
+		return wsData;
+	}
+
+	function _generateSheet(data, opts) {
+		if (!Array.isArray(data)) return null;
+		if (!Array.isArray(data[0])) return null;
+
+		var ws = {};
+		var wsRange = {s: {c:10000000, r:10000000}, e: {c:0, r:0 }};
+		var mergedCellRanges = [];
+		var rowHeightsArr = [];
+
+		var bibHeadings = ['Title', 'Link', 'Publication date', 'Abstract'];
+		var bibHeadingsCol = 2;
+		var bibDataCol = 3;
+		var refTextCol = 6;
+		var similarityCol = 10;
+
+		for(var R = 0; R != data.length; ++R) {
+			var maxCharsInOneCell = 1; // max chars length for this row
+
+			for(var C = 0; C != data[R].length; ++C) {
+				if(wsRange.s.r > R) wsRange.s.r = R;
+				if(wsRange.s.c > C) wsRange.s.c = C;
+				if(wsRange.e.r < R) wsRange.e.r = R;
+				if(wsRange.e.c < C) wsRange.e.c = C;
+
+				if (typeof data[R][C] == 'string') data[R][C] = data[R][C].trim();
+
+				var cell = {
+					v: data[R][C],
+					s: {
+						alignment: {
+							vertical: 'top',
+							wrapText: true
+						}
+					}
+				};
+
+				if(cell.v == null) continue;
+
+				if (typeof cell.v === 'number') {
+					cell.t = 'n';
+					(C == similarityCol) ? (cell.s['numFmt'] = "0%") : '';
+				} else {
+					cell.t = 's';
+				}
+
+				var firstDataCellAddress, firstDataCellVal;
+
+				if (C == bibHeadingsCol) {
+					firstDataCellAddress = XLSX.utils.encode_cell({c:C, r:R})
+					firstDataCellVal = cell.v;
+				} else if (C > bibHeadingsCol) {
+					firstDataCellAddress = XLSX.utils.encode_cell({c:bibHeadingsCol, r:R});
+					firstDataCellVal = ws[firstDataCellAddress].v;
+				}
+			
+				// For bibliographic data - merge cells, change date format, hyperlink
+				if ((C == bibDataCol)) {
+					if (bibHeadings.indexOf(firstDataCellVal) > -1) {
+						mergedCellRanges.push({s: {c: C, r: R}, e: {c: C+7, r: R} });
+					}
+
+					// Convert publication date format
+					if (firstDataCellVal.match(/^publication date$/i)) {
+						var date = cell.v;
+						var formatedDate = _changeDateFormat(date);
+						cell.v = formatedDate;
+						cell.t = 's';
+					}
+
+					// Hyperlink
+					if (firstDataCellVal.match(/^link$/i)) {
+						cell.l = {
+							Target: cell.v,
+							Tooltip: 'Open patent link'
+						}
+						// cell.f = 'HYPERLINK("' + cell.v + '", "Link")'
+					}
+				}
+
+				// For 'Query elements' heading and cols below it - merge cells
+				if ((C == bibHeadingsCol) && (bibHeadings.indexOf(cell.v) == -1)) {
+					mergedCellRanges.push({s: {c: C, r: R}, e: {c: C+3, r: R} });
+				}
+
+				// For 'Reference text' heading and cells below it - merge cells
+				if (C == refTextCol) { // C == 6
+					if (bibHeadings.indexOf(firstDataCellVal) == -1) {
+						mergedCellRanges.push({s: {c: C, r: R}, e: {c: C+3, r: R} });
+					}
+				}
+
+				// Add border on required cells
+				if (C >= bibHeadingsCol) {
+					if (firstDataCellVal == 'Query elements') {
+						cell.s['border'] = {
+							top: {
+								style: 'medium'
+							},
+							bottom: {
+								style: 'medium'
+							}
+						}
+					} else if (bibHeadings.indexOf(firstDataCellVal) == -1) {
+						// For cells below 'Query elements', 'Ref text' & 'Similarity' headings
+						cell.s['border'] = {
+							bottom: {
+								style: 'thin'
+							}
+						}
+					}
+				}
+
+				var currentCellAddress = XLSX.utils.encode_cell({c:C,r:R});
+				ws[currentCellAddress] = cell;
+
+				var charsCount = cell.v.length;
+				if (charsCount > maxCharsInOneCell) maxCharsInOneCell = charsCount;
+			}
+
+			// Add row heights
+			var reqRowHeight;
+			var firstDataCellAddress = XLSX.utils.encode_cell({c:bibHeadingsCol, r:R});
+			var cellObj = ws[firstDataCellAddress];
+			var defaultRowHeight = 16; // 16pt
+
+			if (!cellObj) { // Empty rows
+				rowHeightsArr.push({hpt: defaultRowHeight});
+			} else {
+				var firstDataCellVal = cellObj.v;
+				var maxCharsInOneLineInBibData = 85;
+				var maxCharsInOneLineInRefs = 44;
+
+				if (bibHeadings.indexOf(firstDataCellVal) > -1) {
+					reqRowHeight = Math.ceil(maxCharsInOneCell/maxCharsInOneLineInBibData)
+								   * defaultRowHeight;
+				} else {										
+					reqRowHeight = Math.ceil(maxCharsInOneCell/maxCharsInOneLineInRefs)
+								   * defaultRowHeight;
+				}
+
+				rowHeightsArr.push({hpt: reqRowHeight})
+			}
+		}
+
+		if(wsRange.s.c < 10000000) ws['!ref'] = XLSX.utils.encode_range(wsRange);
+
+		ws['!merges'] = mergedCellRanges;
+		ws['!cols'] = [
+			{wch: 10}, // Col A width
+			{wch: 3},  // Col B width
+			{wch: 15}  // Col C width
+		]
+		ws['!rows'] = rowHeightsArr;
+
+		return ws;
+	}
+
+	function _changeDateFormat(dateStr) {
+		if (typeof dateStr !== 'string') return dateStr;
+
+		if (!dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dateStr;
+
+		var year = dateStr.slice(0,4);
+		var monthNum = dateStr.slice(5,7);
+		var day = dateStr.slice(8);
+
+		var months = ['January', 'February', 'March', 'April', 'May',
+					  'June', 'July', 'August', 'September', 'October',
+					  'November', 'December'];
+		var finalDate = months[parseInt(monthNum)-1] + ' ' + day + ', ' + year;
+
+		return finalDate;
+	}
+</script>

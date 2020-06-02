@@ -79,7 +79,7 @@ class Index():
         self.index.load(ann_file)
         self.n_items = self.index.get_n_items()
         self.items = json.load(open(json_file, 'r'))
-        self.search_depth = 5000 # No. of nodes inspected during search
+        self.search_depth = 1000 # No. of nodes inspected during search
 
     def __getitem__(self, value):
         """Return vector for the i-th item.
