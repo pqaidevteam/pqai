@@ -314,7 +314,8 @@
 	app.templates = {};
 
 	app.config.chartsDisabled = true;
-	app.config.loadMappings = 0;
+	app.config.nResults = 10;
+	app.config.loadMappings = -1;
 	app.config.showOptions = false;
 	app.config.palette = [
 		'#003f5c', '#444e86', '#955196',
@@ -491,7 +492,7 @@
 			before: app.state.dateFilterBefore,
 			after: app.state.dateFilterAfter,
 			mappings: app.config.loadMappings,
-			n: 10
+			n: app.config.nResults
 		};
 		callMediator(reqParams, function(response) {
 			app.state.loading = false;
