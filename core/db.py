@@ -4,6 +4,7 @@ import json
 
 from config.config import mongo_host, mongo_port
 from config.config import mongo_dbname, mongo_pat_coll, mongo_npl_coll
+from config.config import patents_dir
 
 client = MongoClient(mongo_host, mongo_port)
 pat_coll = client[mongo_dbname][mongo_pat_coll]
@@ -29,7 +30,7 @@ def get_patent_data (pn, only_bib=False):
 		query = { 'publicationNumber': pn }
 		patent_data = pat_coll.find_one(query)
 	else:
-		path = f'/home/ubuntu/lts/data/patents/{pn}.json'
+		path = f'{patents_dir}{pn}.json'
 		with open(path) as file:
 			patent_data = json.load(file)
 	return patent_data
