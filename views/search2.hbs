@@ -58,6 +58,12 @@
 			background-color: var(--whitesmoke);
 			box-shadow: none;
 		}
+		.card.demo {
+			box-shadow: 0 2px 4px #e3e3e3;
+		}
+		.card.demo:hover {
+			box-shadow: 0 2px 8px #d0d0d0;
+		}
 	</style>
 </head>
 <body>
@@ -78,15 +84,12 @@
 				<li class="nav-item active">
 					<a href="/search" class="nav-link">Search</a>
 				</li>
-				<li class="nav-item">
-					<a href="/about" class="nav-link">About</a>
-				</li>
-				<li class="nav-item">
-					<a href="/datasets" class="nav-link">Datasets</a>
-				</li>
 			</ul>
 
 			<ul class="navbar-nav ml-md-auto">
+				<li class="nav-item">
+					<a href="/about" class="nav-link">About</a>
+				</li>
 				<li class="nav-item">
 					<a href="#" class="nav-link">Github</a>
 				</li>
@@ -98,6 +101,71 @@
 			<div class="col-md-12 py-3 action-area">
 				<div class="container-fluid pl-5 pr-0">
 					<div class="container">
+						<h1 class="text-center">PQAI</h1>
+						<p class="text-center">
+							A simple and powerful way to help you run prior-art checks.
+						</p>
+						<p class="text-center">
+							PQAI is <a href="">open-source</a> and powered by <a href="">cutting-edge AI</a>.
+						</p>
+						<div class="row" style="display:none">
+							<div class="col-md-4">
+								<div class="demo card">
+									<div class="card-body">
+										<h4 class="card-title">Smart restaurant</h4>
+										<p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+										<button class="btn btn-outline-primary">Find prior-art</button>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="demo card">
+									<div class="card-body">
+										<h4 class="card-title">Meeting notes</h4>
+										<p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+										<button class="btn btn-outline-primary">Find prior-art</button>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="demo card">
+									<div class="card-body">
+										<h4 class="card-title">Photo frame</h4>
+										<p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+										<button class="btn btn-outline-primary">Find prior-art</button>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row py-3">
+							<div class="col-md-3"></div>
+							<div class="col-md-6">
+								<button
+									class="btn btn-primary btn-lg btn-block">
+									Try it with your own idea	
+								</button>
+							</div>
+							<div class="col-md-3"></div>
+						</div>
+						<div class="row py-3">
+							<div class="col-md-3"></div>
+							<div class="col-md-6">
+								<p class="text-center my-0">-- OR --</p>
+							</div>
+							<div class="col-md-3"></div>
+						</div>
+						<div class="row py-3">
+							<div class="col-md-3"></div>
+							<div class="col-md-6">
+								<button
+									class="btn btn-outline-secondary btn-lg btn-block">
+									Test drive with an example	
+								</button>
+							</div>
+							<div class="col-md-3"></div>
+						</div>
+					</div>
+					<div class="container" style="display: none">
 						<textarea
 							class="form-control"
 							id="user-text-input"
