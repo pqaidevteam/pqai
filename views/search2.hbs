@@ -19,14 +19,20 @@
 			font-weight: var(--default-font-weight);
 			background-color: var(--body-bg);
 		}
+		.navbar {
+			background-color: whitesmoke;
+			border: 1px solid #cecece;
+		}
+		.container {
+			max-width: 960px;
+		}
 		.action-area {
 			background-color: whitesmoke;
-			box-shadow: 0 4px 8px #CDD7DD;
-			height: 100vh;
+			box-shadow: 0 8px 8px #CDD7DD;
 		}
 		.landing-page-intro {
 			color: var(--diffused-blue-text);
-			margin-top: 100px;
+			margin-top: 20px;
 			margin-left: 50px;
 		}
 		.logo {
@@ -42,24 +48,88 @@
 			display: inline-block;
 			padding: 3px 6px;
 		}
+		.action-area input,
+		.action-area textarea {
+			background-color: var(--whitesmoke);
+			margin-bottom: 10px;
+			resize: none;
+		}
+		.action-area textarea:focus {
+			background-color: var(--whitesmoke);
+			box-shadow: none;
+		}
 	</style>
 </head>
 <body>
+	<nav class="navbar navbar-expand-lg navbar-light">
+		<a class="navbar-brand" href="#">PQAI</a>
+		
+		<button class="navbar-toggler"
+			type="button"
+			data-toggle="collapse"
+			data-target="#navbarSupportedContent">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+
+		<div
+			class="collapse navbar-collapse"
+			id="navbarSupportedContent">
+			<ul class="navbar-nav mr-auto">
+				<li class="nav-item active">
+					<a href="/search" class="nav-link">Search</a>
+				</li>
+				<li class="nav-item">
+					<a href="/about" class="nav-link">About</a>
+				</li>
+				<li class="nav-item">
+					<a href="/datasets" class="nav-link">Datasets</a>
+				</li>
+			</ul>
+
+			<ul class="navbar-nav ml-md-auto">
+				<li class="nav-item">
+					<a href="#" class="nav-link">Github</a>
+				</li>
+			</ul>
+		</div>
+	</nav>
 	<div class="container-fluid">
 		<div class="row">
-			<div class="col-sm-6 py-3 action-area">
+			<div class="col-md-12 py-3 action-area">
 				<div class="container-fluid pl-5 pr-0">
-					Hello
+					<div class="container">
+						<textarea
+							class="form-control"
+							id="user-text-input"
+							cols="30"
+							rows="4"
+							placeholder="Pick an example from the dropdown menu below, or enter an invention description or a claim (one feature per line)"></textarea>
+						<button
+							class="btn btn-primary"
+							type="button"
+							id="trigger-search-btn">
+							Submit
+						</button>
+						<button
+							class="btn btn-outline-secondary"
+							type="button">
+							Pick an example
+						</button>
+					</div>
 				</div>
 			</div>
-			<div class="col-sm-6 py-3 response-area">
+		</div>
+		<div class="row">
+			<div class="col-md-12 py-3 response-area">
 				<div class="container-fluid pl-0 pr-5">
-					<div class="landing-page-intro">
-						<h1 class="logo">PQAI</h1>
-						<h5 class="logo-subtext">
-							Patent Quality through AI
-						</h5>
-						<p style="max-width:50%; margin-left: 6px">PQAI is an open-source AI-based platform that aims to provide a simplified yet powerful way to run prior-art checks.</p>
+					<div class="container">
+						<div class="landing-page-intro">
+							<h1 class="logo">PQAI</h1>
+							<h5 class="logo-subtext">
+								Patent Quality through AI
+							</h5>
+							<p style="max-width:300px; margin-left: 6px">PQAI is an open-source AI-based platform that aims to provide a simplified yet powerful way to run prior-art checks.</p>
+						</div>
 					</div>
 				</div>
 			</div>
