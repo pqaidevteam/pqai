@@ -334,7 +334,6 @@
 	app.state.visited = {};
 	app.state.bookmarks = [];
 	app.state.latentQuery = '';
-	app.state.bookmarks = [];
 
 	app.config.examples = [
 		{
@@ -1007,6 +1006,10 @@
 		if (confirmation) {
 			app.state.bookmarks = [];
 			saveBookmarks();
+
+			// If the currently displayed result is bookmarked,
+			// remove the "bookmarked" button by re-rendering
+			seekRelative(0);
 		}
 	});
 
@@ -1151,7 +1154,7 @@
 
 	$(document).on('click', '.res-nav-btn', function (e) {
 		e.preventDefault();
-		var i = $(this).attr('data-i');
+		var i = int($(this).attr('data-i'));
 		seekAbsolute(i);
 	});
 
