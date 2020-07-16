@@ -41,6 +41,7 @@ class SearchResult (Document):
 
 
 def _filter_family_members (results):
+	results.sort(key=lambda x: x.score)
 	filtrate = results[:1]
 	for result in results[1:]:
 		last_result = filtrate[-1]
@@ -49,7 +50,12 @@ def _filter_family_members (results):
 	return filtrate
 
 
-def _search_by_patent_number (pn, n=10, indexes=None, before=None, after=None):
+def _search_by_patent_number (pn,
+								n=10,
+								indexes=None,
+								before=None,
+								after=None,
+								reranker=None):
 	try:
 		first_claim = db.get_first_claim(pn)
 	except:
@@ -59,11 +65,18 @@ def _search_by_patent_number (pn, n=10, indexes=None, before=None, after=None):
 	return _search_by_text_query(claim_text, n, indexes, before, after)
 
 
-def _search_by_text_query (query_text, n=10, indexes=None, before=None, after=None):
+def _search_by_text_query (query_text,
+							n=10,
+							indexes=None,
+							before=None,
+							after=None,
+							reranker=None):
 	if not (type(indexes) == list and len(indexes) > 0):
+		print('Predicting subclasses...')
 		indexes = predict_subclasses(query_text,
-								N_INDEXES_TO_SEARCH,
-								AVAILABLE_INDEXES)
+										N_INDEXES_TO_SEARCH,
+										AVAILABLE_INDEXES)
+		print('Subclasses predicted.')
 
 	m = n
 	results = []
@@ -81,29 +94,34 @@ def _search_by_text_query (query_text, n=10, indexes=None, before=None, after=No
 
 				results += arr
 
-		
-
 		# Convert tuples to `SearchResult` objects
 		results = [SearchResult(result[0], result[1])
 							for result in results]
 
-		# Arrange closest first (lowest score is best result)
-		results.sort(key=lambda x: x.score)
-
 		# Apply date filter
 		results = [result for result in results
 					if result.is_published_between(before, after)]
-
 		results = _filter_family_members(results)
-
 		m *= 2
+
+	results = results[:n]
+	# Do re-ranking
+	if reranker is not None:
+		abstracts = [result.abstract for result in results]
+		ranks = reranker.rank(query_text, abstracts)
+		results = [results[r] for r in ranks]
 	
-	return results[:n]
+	return results
 
 
-def search (value, n=10, indexes=None, before=None, after=None):
+def search (value,
+			n=10,
+			indexes=None,
+			before=None,
+			after=None,
+			reranker=None):
 	if utils.is_patent_number(value):
-		return _search_by_patent_number(value, n, indexes, before, after)
+		return _search_by_patent_number(value, n, indexes, before, after, reranker)
 	else:
-		return _search_by_text_query(value, n, indexes, before, after)
+		return _search_by_text_query(value, n, indexes, before, after, reranker)
 

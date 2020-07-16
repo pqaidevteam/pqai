@@ -192,7 +192,11 @@ def remove_claim_number(claim_text):
 
 
 def get_elements (text):
-    return get_paragraphs(text)
+    elements = []
+    for paragraph in get_paragraphs(text):
+        elements += get_sentences(paragraph)
+    elements = [el for el in elements if len(el.strip()) > 0]
+    return elements
 
 
 def get_external_link(pn):

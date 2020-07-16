@@ -12,11 +12,17 @@ from core import datasets
 from core import utils
 from core import searcher
 from core.documents import Document
+from core.reranking import MatchPyramidRanker
+from core.remote import search_extensions, merge_results
+from config.config import reranker_active, extension_active
+import re
+
+reranker = None
 
 app = FlaskAPI(__name__)
 
 @app.route('/documents/', methods=['GET'])
-def search_index ():
+def search_index (extend=True):
     num_results = request.args.get('n', 10, int)
     index_id = request.args.get('idx', '', str)
     query = request.args.get('q', '', str)
@@ -30,9 +36,14 @@ def search_index ():
 
     before = before if before else None
     after = after if after else None
-    
+
+    if reranker_active:
+        global reranker
+        if reranker is None:
+            reranker = MatchPyramidRanker()
+
     try:
-        results = searcher.search(query, num_results, indexes, before, after)
+        results = searcher.search(query, num_results, indexes, before, after, reranker)
     except Exception as e:
         print(repr(e))
         return 'Error while searching.', status.HTTP_500_INTERNAL_SERVER_ERROR 
@@ -44,6 +55,11 @@ def search_index ():
         for result in results:
             snippet = extract_snippet(query, result.full_text)
             result.snippet = snippet
+
+    if extend and extension_active:
+        remote_results = search_extensions(request.args)
+
+    results = merge_results([results, remote_results])
 
     response = {
         'results': [result.to_json() for result in results],
@@ -68,7 +84,6 @@ def get_snippet():
         query = query
     )
     return response, status.HTTP_200_OK
-
 
 
 @app.route('/mappings/', methods=['GET'])
@@ -109,6 +124,10 @@ def get_datapoint():
 
     return datapoint, status.HTTP_200_OK
 
+@app.route('/extension/', methods=['GET'])
+def handle_extension_request():
+    return search_index (extend=False)
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, threaded=False)
