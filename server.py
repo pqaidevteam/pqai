@@ -14,12 +14,26 @@ from core import searcher
 from core.documents import Document
 from core.reranking import MatchPyramidRanker
 from core.remote import search_extensions, merge_results
-from config.config import reranker_active, extension_active
+from config.config import reranker_active, allow_outgoing_extension_requests
 import re
 
 reranker = None
 
 app = FlaskAPI(__name__)
+
+# TODO
+# Find an appropriate location for this function and move it there
+def get_element_wise_mapping(query, doc):
+    if utils.is_patent_number(query): 
+        elements = utils.get_elements(db.get_first_claim(query))
+    else:
+        elements = utils.get_elements(query)
+    target_text = doc.full_text
+    embed = SIFTextVectorizer().embed
+    arr_vectorize = lambda X: [embed(x) for x in X]
+    mapping = map_elements_to_text(elements, target_text, arr_vectorize)
+    return mapping
+
 
 @app.route('/documents/', methods=['GET'])
 def search_index (extend=True):
@@ -29,6 +43,7 @@ def search_index (extend=True):
     before = request.args.get('before', '', str)
     after = request.args.get('after', '', str)
     include_snippets = request.args.get('snip', 0, int)
+    include_mappings = request.args.get('maps', 0, int)
     
     # If automatic index selection mode is enabled by setting
     # `index_id` to `auto`, indexes will be predicted
@@ -56,10 +71,14 @@ def search_index (extend=True):
             snippet = extract_snippet(query, result.full_text)
             result.snippet = snippet
 
-    if extend and extension_active:
-        remote_results = search_extensions(request.args)
+    if (not extend) or include_mappings:
+        for result in results:
+            mapping = get_element_wise_mapping(query, result)
+            result.mapping = mapping
 
-    results = merge_results([results, remote_results])
+    if extend and allow_outgoing_extension_requests:
+        remote_results = search_extensions(request.args)
+        results = merge_results([results, remote_results])
 
     response = {
         'results': [result.to_json() for result in results],
@@ -93,18 +112,8 @@ def get_mapping():
     if not (ref or query):
         return 'Reference or query invalid.', status.HTTP_400_BAD_REQUEST
     
-    if utils.is_patent_number(query): 
-        elements = utils.get_elements(db.get_first_claim(query))
-    else:
-        elements = utils.get_elements(query)
-
     doc = Document(ref)
-    target_text = doc.full_text
-    # arr_vectorize = DistilBERTVectorizer().embed_arr
-    embed = SIFTextVectorizer().embed
-    arr_vectorize = lambda X: [embed(x) for x in X]
-
-    mapping = map_elements_to_text(elements, target_text, arr_vectorize)
+    mapping = get_element_wise_mapping(query, doc)
     return mapping, status.HTTP_200_OK
 
 

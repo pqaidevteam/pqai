@@ -64,7 +64,8 @@ app.post('/mediator', function (req, res) {
 			before: before,
 			after: after,
 			n: n,
-			snip: 0
+			snip: 0,
+			maps: 1
 		}
 
 		axios.get(url, { params })
@@ -72,6 +73,12 @@ app.post('/mediator', function (req, res) {
 			processor.run(
 				response.data.results.slice(0, n_mappings),
 				(result, callback) => {
+					console.log(result.mapping);
+					
+					if (result.mapping) {
+						return callback();
+					}
+
 					let url = 'http://localhost:5000/mappings/';
 					let params = { q: query, ref: result.id }
 					

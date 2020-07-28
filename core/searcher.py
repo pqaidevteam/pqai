@@ -14,6 +14,7 @@ class SearchResult (Document):
 		super().__init__(doc_id)
 		self._score = score
 		self._snippet = None
+		self._mapping = None
 
 	def __str__(self):
 		return f'SearchResult: {self.id}, Score: {self.score}'
@@ -29,14 +30,23 @@ class SearchResult (Document):
 	def snippet(self):
 		return self._snippet
 
+	@property
+	def mapping(self):
+		return self._mapping
+	
 	@snippet.setter
 	def snippet(self, value):
 		self._snippet = value
+
+	@mapping.setter
+	def mapping(self, value):
+		self._mapping = value
 
 	def to_json (self):
 		json_obj = super().to_json()
 		json_obj['score'] = self.score
 		json_obj['snippet'] = self.snippet
+		json_obj['mapping'] = self.mapping
 		return json_obj
 
 
@@ -83,7 +93,7 @@ def _search_by_text_query (query_text,
 	while len(results) < n and m <= MAX_RESULTS_LIMIT:
 		results = []
 		for index_id in indexes:
-			for suffix in ['abs', 'ttl', 'npl']:
+			for suffix in ['abs', 'ttl']:
 				index = get_index(f'{index_id}.{suffix}')
 				if index is None:
 					continue
