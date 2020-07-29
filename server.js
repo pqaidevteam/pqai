@@ -38,12 +38,16 @@ app.get('/search2', function (req, res) {
 	res.render('search2');
 });
 
-app.get('/search4', function (req, res) {
-	res.render('search4');
+app.get('/contact', function (req, res) {
+	res.render('contact');
 });
 
-app.get('/tech-areas', function (req, res) {
-	res.render('tech_areas');
+app.get('/about', function (req, res) {
+	res.render('about');
+});
+
+app.get('/blog', function (req, res) {
+	res.render('blog');
 });
 
 app.post('/mediator', function (req, res) {
