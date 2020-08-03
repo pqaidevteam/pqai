@@ -2,8 +2,10 @@ from core import utils
 from core import db
 from core.indexes import index_ids as AVAILABLE_INDEXES
 from core.indexes import get_index
-from core.subclass_predictor import predict_subclasses
 from core.documents import Document
+from core.classifiers import BOWSubclassPredictor
+
+predict_subclasses = BOWSubclassPredictor().predict_subclasses
 
 N_INDEXES_TO_SEARCH = 3
 MAX_RESULTS_LIMIT = 200
