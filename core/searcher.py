@@ -95,7 +95,7 @@ def _search_by_text_query (query_text,
 	while len(results) < n and m <= MAX_RESULTS_LIMIT:
 		results = []
 		for index_id in indexes:
-			for suffix in ['abs', 'ttl']:
+			for suffix in ['abs', 'ttl', 'npl']:
 				index = get_index(f'{index_id}.{suffix}')
 				if index is None:
 					continue
