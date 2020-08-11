@@ -7,9 +7,13 @@
 </head>
 <body>
 	{{> navbar}}
+	
+	<!-- Content -->
 	<div class="container-fluid">
 		<div class="row">
-			<div class="col-md-12 py-3 action-area">
+
+			<!-- Input area -->
+			<div class="col-md-12 py-3 input-area">
 				<div class="container-fluid pl-5 pr-0">
 					<div class="container">
 						<h1 class="text-center">PQAI</h1>
@@ -19,58 +23,656 @@
 						<p class="text-center">
 							PQAI is <a href="">open-source</a> and powered by <a href="">cutting-edge AI</a>.
 						</p>
-						<div class="row">
-							<div class="col-md-4">
-								<div class="demo card">
-									<div class="card-body">
-										<h4 class="card-title">Smart restaurant</h4>
-										<p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-										<button class="btn btn-outline-primary">Find prior-art</button>
-									</div>
-								</div>
-							</div>
-							<div class="col-md-4">
-								<div class="demo card">
-									<div class="card-body">
-										<h4 class="card-title">Meeting notes</h4>
-										<p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-										<button class="btn btn-outline-primary">Find prior-art</button>
-									</div>
-								</div>
-							</div>
-							<div class="col-md-4">
-								<div class="demo card">
-									<div class="card-body">
-										<h4 class="card-title">Photo frame</h4>
-										<p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-										<button class="btn btn-outline-primary">Find prior-art</button>
-									</div>
-								</div>
-							</div>
-						</div>
 					</div>
-					<div class="container">
+
+					<!-- CTA buttons -->
+					<div class="text-center" id="cta-buttons">
+						<button
+							type="button"
+							id="go-to-search-page-btn"
+							class="btn btn-lg btn-primary my-3">
+								Try it out
+						</button>
+						<p class="my-0">-- OR --</p>
+						<button
+							type="button"
+							id="demo-btn"
+							class="btn btn-lg btn-secondary my-3">
+								See a demo
+						</button>
+					</div>
+
+					<!-- Search form -->
+					<div
+						id="search-form"
+						class="container hidden">
+						<p class="my-1">
+							Connected to <a href="#">2 nodes</a>
+						</p>
 						<textarea
 							class="form-control"
 							id="user-text-input"
 							cols="30"
 							rows="4"
-							placeholder="Pick an example from the dropdown menu below, or enter an invention description or a claim (one feature per line)"></textarea>
+							placeholder="Enter an invention description, run an example to see how"></textarea>
 						<button
 							class="btn btn-primary"
 							type="button"
-							id="trigger-search-btn">
+							id="query-submit-btn">
 							Submit
 						</button>
-						<button
-							class="btn btn-outline-secondary"
-							type="button">
-							Pick an example
-						</button>
+						<a href="#"
+							 id="run-example-btn"
+							 class="ml-3">
+							 Run an example
+						</a>
+						<span style="float:right" class="my-1">
+							<a href="#" id="data-coverage-btn">Data Coverage</a>
+						</span>
 					</div>
 				</div>
 			</div>
+
+			<!-- Search results area -->
+			<div class="col-md-12 py-3">
+				<div class="container-fluid pl-5 pr-0">
+					<div class="container" id="results-area">
+						<!-- populated by JS -->
+					</div>
+				</div>
+			</div>
+
+			<!-- Front page content -->
+			<div class="col-md-12 py-3">
+				<div class="container-fluid pl-5 pr-0">
+					<div class="container">
+						
+					</div>
+				</div>
+			</div>
+
 		</div>
 	</div>
+
 </body>
+<script type="text/javascript" src="bootstrap-4.3.1/js/popper.min.js"></script>
+<script type="text/javascript" src="bootstrap-4.3.1/js/bootstrap.min.js"></script>
+{{> export_js}}
+<script>
+	var app = {};
+	app.config = {};
+	app.state = {};
+	app.templates = {};
+
+	app.config.nResults = 10;
+	app.config.loadMappings = -1;
+	app.config.showOptions = false;
+	app.config.palette = [
+		'#003f5c', '#444e86', '#955196',
+		'#dd5182', '#ff6e54', '#ffa600',
+		'#666666', '#999999', '#BBBBBB'
+	];
+	app.config.goDirectlyToSearch = true;
+
+	app.state.query = null;
+	app.state.dateFilterBefore = null;
+	app.state.dateFilterAfter = null;
+	app.state.loading = false;
+	app.state.stats = null;
+	app.state.metaResults = {}
+	app.state.results = [];
+	app.state.pointer = -1;
+	app.state.visited = {};
+	app.state.bookmarks = [];
+	app.state.latentQuery = '';
+
+	app.config.examples = [
+		{
+			id: 'ex1',
+			label: 'Reducing food wastage at restaurant using customer prediction',
+			query: 'An automated cooking system that minimizes food wastage.\n'
+				+ 'It predicts the customer inflow based on historical data.\n'
+				+ 'It prepares ingredients according to the predicted number of customers.'
+		},
+		{
+			id: 'ex2',
+			label: 'Meeting transcription system',
+			query: 'A system for preparing minutes of meeting.\n'
+				+ 'A voice recognition system is trained to recognize voice of different persons.\n'
+				+ 'A voice-to-text system records the dialog and converts it to text.\n'
+				+ 'A combining system associates a person with each dialog element.'
+		},
+		{
+			id: 'ex3',
+			label: 'Photo frame with adjustable photo slide rate',
+			query: 'A photo frame for a desk.\n'
+				+ 'The frame stores a number of photos.\n'
+				+ 'The frame has a number of settings.\n'
+				+ 'The settings can be configured such that photo slide time changes.'
+		}
+	];
+
+	$(document).ready(() => {
+		if (app.config.goDirectlyToSearch) {
+			$('#demo-btn').click();
+		}
+		loadBookmarks();
+	})
+
+	function callMediator(parameters, callback) {
+		if (typeof parameters == 'string') {
+			parameters = { cmd: parameters }
+		}
+		$.post('mediator', parameters, function (response) {
+			if (!response.error) {
+				callback(response);
+			} else {
+				handleError(response);
+			}
+		});
+	}
+
+	// TODO: Handle error by status code
+	function handleError(err) {
+		if (err.redirectAddress) {
+			window.location = err.redirectAddress;
+		} else if (err.message) {
+			alert(err.message);
+		} else {
+			console.log(err);	
+		}
+		return false;
+	}
+
+	// Move from landing page to search page
+	$(document).on('click', '#go-to-search-page-btn', function () {
+		hideCTAButtons();
+		showSearchForm();
+		$('#user-text-input').focus();
+	})
+
+	// Go to the search page and run an example query
+	$(document).on('click', '#demo-btn', function () {
+		hideCTAButtons();
+		showSearchForm();
+		$('#run-example-btn').click();
+	})
+
+	// Run example query
+	$(document).on('click', '#run-example-btn', function () {
+		let n = app.config.examples.length;
+		let i = getRandomInt(n);
+		let query = app.config.examples[i].query;
+		$('#user-text-input').val(query);
+		$('#query-submit-btn').click();
+	})
+
+	let getRandomInt = (n) => parseInt(n*Math.random())
+	let hideCTAButtons = () => $('#cta-buttons').addClass('hidden');
+	let showSearchForm = () => $('#search-form').removeClass('hidden');
+
+	// On submitting a query for search
+	$(document).on('click', '#query-submit-btn', function (e) {
+		readUserQuery();
+
+		if (app.state.loading) {
+			return alert('Please wait while results are loading.');
+		}
+
+		if (!app.state.query) {
+			return alert('Please enter a query.');
+		}
+
+		clearOutput();
+		app.state.loading = true;
+		showLoadingIndication();
+		
+		var query = app.state.query
+		submitQuery(query);
+	});
+
+	
+	// On CTRL+Enter, submit the query
+	$(document).on('keyup', '#user-text-input', function (e) {
+		if (e.keyCode == 13 && e.ctrlKey) {
+			$('#query-submit-btn').click();
+		}
+	});
+
+	function readUserQuery() {
+		var query = $('#user-text-input').val().trim();
+		app.state.query = query;
+	}
+
+	function submitQuery (query) {
+		query = query.trim();
+		var cmd;
+		if (query.match(/^US\d+[AB]\d?$/)) {
+			cmd = 'search-by-patent';
+		} else {
+			cmd = 'search-by-query';
+		}
+		var reqParams = {
+			cmd,
+			query,
+			before: app.state.dateFilterBefore,
+			after: app.state.dateFilterAfter,
+			mappings: app.config.loadMappings,
+			n: app.config.nResults
+		};
+		callMediator(reqParams, function(response) {
+			app.state.loading = false;
+			finishLoading();
+			updateAppStateWithNewResults(response);
+		});
+	}
+
+	function updateAppStateWithNewResults(queryResponse, callback=Function.prototype) {
+		app.state.latentQuery = '';
+		app.state.metaResults = queryResponse;
+		app.state.results = app.state.metaResults.results;
+		app.state.pointer = -1;
+		seekAbsolute(0);
+		callback(true);
+	}
+
+	function showNextResult() {
+		seekRelative(1, function (shown) {
+			if (!shown) {
+				notifyUser('Error occurred while showing next result.');
+			}
+		});
+	}
+
+	function showPreviousResult() {
+		seekRelative(-1, function (shown) {
+			if (!shown) {
+				notifyUser('Error occurred while showing next result.');
+			}
+		});
+	}
+
+	function seekRelative(r, callback=Function.prototype) {
+		var n = app.state.pointer + r;
+		seekAbsolute(n, callback);
+	}
+
+	function seekAbsolute(n, callback=Function.prototype) {
+		/* Check if position is valid */
+		if (n < 0 || n >= app.state.results.length) {
+			callback(false);
+		}
+		
+		var result = app.state.results[n];
+		showResult(result, function(done) {
+			if (!done)
+				return callback(false);
+			app.state.pointer = n;
+
+			/* Update result navigator */
+			$('#result-navigator button.active').removeClass('active');
+			var activatedButton = $('#result-navigator button').get(n);
+			$(activatedButton).addClass('active');
+			
+			callback(true);
+		});
+
+		/* Load and buffer mapping of next result */
+		if (n+1 < app.state.results.length) {
+			var nextResult = app.state.results[n+1];
+			loadMapping(nextResult);
+		}
+	}
+
+	function showResult(result, callback=Function.prototype) {
+		// Force the height of results area to stay the same
+		// when it is emptied so that a sudden "scroll-to-top"
+		// doesn't happen!
+		var h = $('#results-area').height();
+		$('#results-area').height(h);
+
+		hideShownResult();
+		if (!result.mapping) {
+			loadMapping(result, function(loaded) {
+				showResult(result, callback);
+			});
+			return;
+		}
+
+		if (!$('#result-navigator').length) {
+			var html = app.templates.resultNavigator();
+			$('#results-area').html(html);
+		}
+
+		html = app.templates.resultCard(result);
+		$('#results-area').append(html);
+
+		callback(true);
+
+		// Now set height of result-area back to 'auto'
+		$('#results-area').height('auto');
+
+	}
+
+	function hideShownResult() {
+		$('.result-card').remove();
+	}
+
+	function loadMapping(result, callback=Function.prototype) {
+		return;
+		var ref = result.id;
+		var query = app.state.query;
+		callMediator({
+			cmd: 'get-element-wise-mapping',
+			ref: ref,
+			query: query
+		}, function (mapping) {
+			result.mapping = mapping;
+			callback(true);
+		});
+	}
+
+	function notifyUser(message) {
+		alert(message);
+	}
+
+	function clearOutput() {
+		$('#results-area').empty();
+	}
+
+	var loadMoreBtnHtml = '<button class="btn btn-md btn-default mb-3" id="load-more-btn">Load more results</button>';
+
+	function getSnippet(pn, query, callback) {
+		callMediator({
+			cmd: 'get-snippet',
+			publicationNumber: pn,
+			query: query
+		}, function (snippet) {
+			var arr = snippet.split('<br>');
+			var html = "";
+			arr.forEach(function (e) {
+				html += '<p class="card-text res-snippet">' + e + '</p>';
+			});
+			callback(html);
+		});
+	}
+
+	$(document).on('click', '#load-more-btn', function(e) {
+		if (app.state.results.length > 0) {
+			displayResults();
+		} else {
+			alert("No more results to show.");
+		}
+	});
+
+	$(document).on('click', '.res-title', function(e) {
+		var pn = $(this).attr('data-pn');
+		app.state.visited[pn] = true;
+		$(this).addClass('visited');
+		var url = 'https://patents.google.com/patent/' + pn;
+		openInNewTab(url);
+	});
+
+	$(document).on('click', '.ext-link', function(e) {
+		var pn = $(this).attr('data-pn');
+		app.state.visited[pn] = true;
+	});
+
+	$(document).on('click', '.more-like-this-btn', function(e) {
+		var publicationNumber = $(this).attr('data-pn');
+		app.state.latentQuery = $(this).closest('.card-body').find('p.res-snippet').text().trim();
+		$('#query-submit-btn').click();
+	});
+
+	$(document).on('click', '.element-wise-mapping-btn', function(e) {
+		e.preventDefault();
+		var thisCard = $(this).closest('.card');
+		console.log(thisCard.find('.mapping-table').length);
+		if (thisCard.find('.mapping-table').length) {
+			thisCard.find('.mapping-table').remove();
+			return;
+		}
+		var ref = $(this).attr('data-pn');
+		var query = readUserQuery();
+		callMediator({
+			cmd: 'get-element-wise-mapping',
+			ref: ref,
+			query: query
+		}, function (claimChartHTML) {
+			$(thisCard).children('.card-body').append(claimChartHTML);
+		});
+	});
+
+	function getGoogleLink(pn) {
+		var url = 'https://patents.google.com/patent/' + pn;
+		var link = '<a href="' + url + '" target="_blank" class="mr-3 ext-link" data-pn="' + pn + '"">' + pn + '</a/>';
+		return link;
+	}
+
+	function openInNewTab(url) {
+		var win = window.open(url, '_blank');
+		win.focus();
+	}
+
+	function showLoadingIndication() {
+		var html = '<div class="spinner-border spinner-border-sm" role="status">'
+  				+ '<span class="sr-only">Loading...</span>'
+				+ '</div> Loading';
+		$('#query-submit-btn').html(html);
+	}
+
+	function finishLoading() {
+		$('#query-submit-btn').html('Submit');
+	}
+
+	$(document).on('click', '#apply-date-filter-btn', function (e) {
+		var date = $('#cutoff-date-input').val();
+		if (!date) {
+			app.state.dateFilterBefore = null;
+			return;
+		}
+		$('#calendar-btn').text("before " + date)
+		if (!date.match(/^\d{4}\-\d{2}\-\d{2}$/)) {
+			return alert("Invalid date.");
+		}
+		app.state.dateFilterBefore = date;
+		$('#query-submit-btn').click();
+	});
+
+	$(document).on('click', '.bookmark-btn', function (e) {
+		e.preventDefault();
+		var n = app.state.pointer;
+		var result = app.state.results[n];
+		app.state.bookmarks.push(result);
+		saveBookmarks();
+		$(this).addClass('disabled');
+		$(this).text('Bookmarked');
+	});
+
+	function saveBookmarks() {
+		localStorage.setItem('bookmarks', JSON.stringify(app.state.bookmarks));
+		updateBookmarksCountBadge();
+		populateBookmarksList();
+	}
+
+	function loadBookmarks() {
+		if (!localStorage.getItem('bookmarks')) {
+			return null;
+		}
+		app.state.bookmarks = JSON.parse(localStorage.getItem('bookmarks'));
+		updateBookmarksCountBadge();
+		populateBookmarksList();
+	}
+
+	$(document).on('click', '#clear-bookmarks-btn', function (e) {
+		var confirmation = confirm('Remove all bookmarks?');
+		if (confirmation) {
+			app.state.bookmarks = [];
+			saveBookmarks();
+
+			// If the currently displayed result is bookmarked,
+			// remove the "bookmarked" button by re-rendering
+			seekRelative(0);
+		}
+	});
+
+	$(document).on('click', '#export-bookmarks-btn', function (e) {
+		try {
+			exportBookmarks(app.state.bookmarks);
+		} catch (e) {
+			console.log(e);
+			alert("Error while exporting bookmarks.");
+		}
+	});
+
+	function populateBookmarksList() {
+		/* clear previously rendered list */
+			$('#bookmarks-list .bookmark').remove();
+
+		/* edge case - no bookmarks */
+			if (!app.state.bookmarks.length) {
+				$('#bookmarks-list').prepend(
+					`<a
+						class="dropdown-item bookmark"
+						href="#"
+						data-id="">
+						No bookmarks
+					</a>`
+				)
+				return;
+			}
+
+		/* populate list */
+		app.state.bookmarks.forEach(function (bookmark) {
+			$('#bookmarks-list').prepend(
+				`<a
+					class="dropdown-item bookmark"
+					href="${bookmark.www_link}"
+					target="_BLANK"
+					data-id="${bookmark.id}">
+					${cutShort(bookmark.title, 75)}
+				</a>`
+			)
+		});
+	}
+
+	function updateBookmarksCountBadge() {
+		$('#bookmark-count').text(app.state.bookmarks.length);
+	}
+
+	function floatToPercentage (floatVal) {
+		let f = parseFloat(floatVal);
+		return parseInt(100*f);
+	}
+
+	app.templates.resultCard = function (result) {
+		var html = '';
+		html += `
+			<div class="card result-card my-3">
+				<div class="card-body">
+					<div class="card-title">
+						<h5 class="res-title" data-pn="${result.id}">
+							${ result.title }
+						</h5>
+					</div>
+					<p class="card-text res-bib">
+						<span class="mr-3">${ result.owner }</span>
+						<span class="mr-3">${ result.publication_date }</span>
+						<a href="${ result.www_link }"
+							target="_blank"
+							class="mr-3 ext-link"
+							data-pn="${ result.id }">
+							${ result.publication_id }
+						</a>
+						<a href="#"
+							class="more-like-this-btn mr-3"
+							data-pn="${ result.id }">
+							Show more like this
+						</a>
+					</p>
+					<p class="card-text res-snippet">
+						${ cutShort(result.abstract, 500) }
+					</p>
+					<table class="table table-inverse mapping-table">
+						<thead>
+							<tr>
+								<th style='text-align:left; width:35%'>Query elements</th>
+								<th style='text-align:left; width:65%'>Reference text</th>
+							</tr>
+						</thead>
+						<tbody>`
+		result.mapping.forEach(function (row) {
+			html += `
+				<tr>
+					<td style='vertical-align: top'>${ row.element }</td>
+					<td style='vertical-align: top'>${ row.mapping }</td>
+				</tr>`
+		});
+		html += `		</tbody>
+					</table>`
+		if (!app.state.bookmarks.map(
+				function(e) { return e.id }
+				).includes(result.id)
+			) {
+			html +=	`<a href="#" class="btn btn-primary bookmark-btn">
+						Bookmark</a>`
+		} else {
+			html +=	`<a href="#" class="btn btn-primary bookmark-btn disabled">
+						Bookmarked</a>`
+		}
+		html +=	`</div>
+			</div>`
+		return html;
+	}
+
+	app.templates.resultNavigator = function () {
+		var html = '';
+		html += `<div class="d-flex justify-content-center">
+							<button type="button"
+									class="btn btn-outline"
+									onclick="showPreviousResult()">
+								<i class="fas fa-chevron-left"></i>
+							</button>
+							<div class="btn-toolbar">
+							  <div class="btn-group mx-2" id="result-navigator">`;
+		app.state.results.forEach(function (result, i) {
+			html += `<button
+						type="button"
+						class="btn btn-secondary res-nav-btn"
+						data-i="${i}">
+							${i+1}
+						</button>`
+		})
+		html += `</div>
+			</div>
+			<button type="button"
+					class="btn btn-outline"
+					onclick="showNextResult()">
+				<i class="fas fa-chevron-right"></i>
+			</button>
+		</div>`;
+		return html;
+	}
+
+	$(document).on('click', '.res-nav-btn', function (e) {
+		e.preventDefault();
+		var i = parseInt($(this).attr('data-i'));
+		seekAbsolute(i);
+	});
+
+	function cutShort(text, length) {
+	    if (!length || length > text.length || length < 10) return text;
+	    var i = length-4;
+	    while (text.charAt(i) !== ' ') i--;
+	    var shownText = text.substring(0, i);
+	    var hiddenText = text.substring(i);
+	    var html = shownText + `<span class='hidden-text' data-text='${btoa(text.substring(i))}' style='cursor:pointer' onclick='$(this).replaceWith( atob($(this).attr("data-text")) )'> ...</span>`;
+	    return html;
+	}
+
+	$(document).on('click', '#data-coverage-notice-toggle-btn', function (e) {
+		$('#data-coverage-notice').toggleClass('hidden');
+	});
+
+</script>
 </html>

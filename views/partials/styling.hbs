@@ -12,7 +12,7 @@
 body {
 	font-family: var(--default-font);
 	font-weight: var(--default-font-weight);
-	background-color: var(--body-bg);
+	overflow-y: scroll;
 }
 .navbar {
 	background-color: whitesmoke;
@@ -21,24 +21,49 @@ body {
 .container {
 	max-width: 960px;
 }
-.action-area {
-	background-color: whitesmoke;
-	box-shadow: 0 8px 8px #CDD7DD;
+.input-area {
+	box-shadow: 0 2px 2px #CDD7DD;
 }
-.action-area input,
-.action-area textarea {
-	background-color: var(--whitesmoke);
+.input-area input,
+.input-area textarea {
 	margin-bottom: 10px;
 	resize: none;
 }
-.action-area textarea:focus {
-	background-color: var(--whitesmoke);
+.input-area textarea:focus {
 	box-shadow: none;
 }
-.card.demo {
-	box-shadow: 0 2px 4px #e3e3e3;
+.hidden {
+	display: none;
 }
-.card.demo:hover {
-	box-shadow: 0 2px 8px #d0d0d0;
+#cta-buttons button {
+	min-width: 300px;
+}
+#search-form {
+	padding: 10px 20px;
+	background-color: whitesmoke;
+}
+.center-aligned {
+	margin: 0 auto;
+}
+.table.mapping-table th {
+	border-top: 2pt solid #8a8a8a;
+	border-bottom: 2pt solid #8a8a8a;
+}
+.table.mapping-table th,
+.table.mapping-table td {
+	padding: 0.4rem;
+}
+.table.mapping-table th:first-child,
+.table.mapping-table td:first-child {
+	background-color: whitesmoke;
+}
+.table.mapping-table {
+	border-bottom: 2pt solid #8a8a8a;
+}
+.card.result-card {
+	border: none;
+}
+.card.result-card .card-body {
+	padding: 1.25rem 0;
 }
 </style>

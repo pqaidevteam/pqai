@@ -54,7 +54,7 @@ app.post('/mediator', function (req, res) {
 	let cmd = req.body.cmd;
 	if (cmd == 'search-by-patent' || cmd == 'search-by-query') {
 		let query = req.body.query;
-		let indexId = req.body.techDomain;
+		let indexId = 'auto';
 		let before = req.body.before;
 		let after = req.body.after;
 		let n = req.body.n || 10;
@@ -121,7 +121,7 @@ app.post('/mediator', function (req, res) {
 
 	} else if (cmd == 'get-stats') {
 		let query = req.body.query;
-		let indexId = req.body.techDomain;
+		let indexId = 'auto';
 		let url = 'http://localhost:5000/documents/'
 		let params = {
 			q: query, idx: indexId, n: 100

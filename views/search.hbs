@@ -974,9 +974,14 @@
 	    while (text.charAt(i) !== ' ') i--;
 	    var shownText = text.substring(0, i);
 	    var hiddenText = text.substring(i);
-	    var html = shownText + `<span class='hidden-text' data-text='${btoa(text.substring(i))}'> ...</span>`;
+	    var html = shownText + `<span class='hidden-text' data-text='${btoa(text.substring(i))}' style='cursor:pointer'> ...</span>`;
 	    return html;
 	}
+
+	$(document).on('click', '.hidden-text', function() {
+		var text = atob($(this).attr('data-text'));
+		$(this).replaceWith(text);
+	})
 
 	$(document).on('click', '#data-coverage-notice-toggle-btn', function (e) {
 		$('#data-coverage-notice').toggleClass('hidden');
