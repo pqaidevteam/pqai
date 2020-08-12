@@ -50,6 +50,14 @@ app.get('/blog', function (req, res) {
 	res.render('blog');
 });
 
+app.get('/arch', function (req, res) {
+	res.render('arch');
+});
+
+app.get('/change-history', function (req, res) {
+	res.render('change_history');
+});
+
 app.post('/mediator', function (req, res) {
 	let cmd = req.body.cmd;
 	if (cmd == 'search-by-patent' || cmd == 'search-by-query') {

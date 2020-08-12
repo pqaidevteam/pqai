@@ -21,7 +21,7 @@
 							A simple and powerful way to help you run prior-art checks.
 						</p>
 						<p class="text-center">
-							PQAI is <a href="">open-source</a> and powered by <a href="">cutting-edge AI</a>.
+							PQAI is <a href="">open-source</a> and powered by <a href="/arch">cutting-edge AI</a>.
 						</p>
 					</div>
 
@@ -67,7 +67,9 @@
 							 Run an example
 						</a>
 						<span style="float:right" class="my-1">
-							<a href="#" id="data-coverage-btn">Data Coverage</a>
+							<a href="#" id="data-coverage-btn">
+								<i class="fa fa-database mr-1"></i> Data Coverage
+							</a>
 						</span>
 					</div>
 				</div>
@@ -76,8 +78,64 @@
 			<!-- Search results area -->
 			<div class="col-md-12 py-3">
 				<div class="container-fluid pl-5 pr-0">
-					<div class="container" id="results-area">
-						<!-- populated by JS -->
+					<div class="container">
+
+						<!-- Tab navigation -->
+						<ul class="nav nav-tabs" id="tabs">
+							<li class="nav-item">
+								<a 	href="#results-area"
+										class="nav-link active"
+										id="results-tab">
+									Results
+								</a>
+							</li>
+							<li class="nav-item">
+								<a 	href="#bookmarks-area"
+										class="nav-link"
+										id="bookmarks-tab">
+									Bookmarks <span class="badge badge-secondary" id="bookmarks-count">0</span>
+								</a>
+							</li>
+							<li class="nav-item">
+								<a 	href="#diagnostics-area"
+										class="nav-link"
+										id="diagnostics-tab">
+									Diagnostics
+								</a>
+							</li>
+						</ul>
+
+						<div class="tab-content py-3">
+							
+							<!-- Results pane -->
+							<div class="tab-pane fade show active" id="results-area">
+								<!-- populated by JS -->
+							</div>
+
+							<!-- Bookmarks pane -->
+							<div class="tab-pane fade" id="bookmarks-area">
+
+								<!-- Bookmarks control panel -->
+								<div class="d-flex justify-content-end">
+									<button type="button" id="export-bookmarks-btn" class="btn btn-outline">
+											<i class="fa fa-download mr-1"></i> Export to Excel
+									</button>
+									<button type="button" id="clear-bookmarks-btn" class="btn btn-outline">
+										<i class="fa fa-trash mr-1"></i> Clear list
+									</button>
+								</div>
+
+								<div id="bookmarks-list">
+									<!-- populated by JS -->
+								</div>
+
+							</div>
+
+							<!-- Diagnostics pane -->
+							<div class="tab-pane fade" id="diagnostics-area">
+								<!-- populated by JS -->
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -113,6 +171,9 @@
 		'#666666', '#999999', '#BBBBBB'
 	];
 	app.config.goDirectlyToSearch = true;
+	app.config.diagnostics = false;
+	app.config.showMappingInBookmarks = false;
+	app.config.resultTitleClickable = false;
 
 	app.state.query = null;
 	app.state.dateFilterBefore = null;
@@ -156,6 +217,19 @@
 		if (app.config.goDirectlyToSearch) {
 			$('#demo-btn').click();
 		}
+
+		/*
+			Hide diagnostics tab if required
+		*/
+		if (app.config.diagnostics) {
+			$('#diagnostics-tab').removeClass('hidden');
+		} else {
+			$('#diagnostics-tab').addClass('hidden');
+		}
+		
+		/*
+			Initialize bookmarks
+		*/	
 		loadBookmarks();
 	})
 
@@ -183,6 +257,11 @@
 		}
 		return false;
 	}
+
+	$(document).on('click', '#tabs a', function (e) {
+	  e.preventDefault()
+	  $(this).tab('show')
+	})
 
 	// Move from landing page to search page
 	$(document).on('click', '#go-to-search-page-btn', function () {
@@ -406,6 +485,9 @@
 	});
 
 	$(document).on('click', '.res-title', function(e) {
+		if (!app.config.resultTitleClickable)
+			return null;
+
 		var pn = $(this).attr('data-pn');
 		app.state.visited[pn] = true;
 		$(this).addClass('visited');
@@ -485,14 +567,32 @@
 		var result = app.state.results[n];
 		app.state.bookmarks.push(result);
 		saveBookmarks();
-		$(this).addClass('disabled');
-		$(this).text('Bookmarked');
+		seekRelative(0);
 	});
+
+	$(document).on('click', '.unbookmark-btn', function (e) {
+		e.preventDefault();
+		var id = $(this).attr('data-pn');
+		app.state.bookmarks = app.state.bookmarks.filter(b => b.id != id);
+
+		/* If the currently shown result was unbookmarked,
+			 re-rendering the results will reset the state of
+			 the button. */
+		if ($('#bookmarks-tab').hasClass('active'))
+			renderBookmarks();
+		else
+			seekRelative(0);
+
+		saveBookmarks();
+	});
+
+	$(document).on('click', '#bookmarks-tab', function (e) {
+		renderBookmarks();
+	})
 
 	function saveBookmarks() {
 		localStorage.setItem('bookmarks', JSON.stringify(app.state.bookmarks));
 		updateBookmarksCountBadge();
-		populateBookmarksList();
 	}
 
 	function loadBookmarks() {
@@ -501,7 +601,6 @@
 		}
 		app.state.bookmarks = JSON.parse(localStorage.getItem('bookmarks'));
 		updateBookmarksCountBadge();
-		populateBookmarksList();
 	}
 
 	$(document).on('click', '#clear-bookmarks-btn', function (e) {
@@ -525,39 +624,43 @@
 		}
 	});
 
-	function populateBookmarksList() {
+	function renderBookmarks() {
 		/* clear previously rendered list */
-			$('#bookmarks-list .bookmark').remove();
+			$('#bookmarks-list').empty();
 
 		/* edge case - no bookmarks */
 			if (!app.state.bookmarks.length) {
-				$('#bookmarks-list').prepend(
-					`<a
-						class="dropdown-item bookmark"
-						href="#"
-						data-id="">
-						No bookmarks
-					</a>`
-				)
+				
+				/* hide export and clear-bookmarks buttons */
+				$('#export-bookmarks-btn').addClass('hidden');
+				$('#clear-bookmarks-btn').addClass('hidden');
+
+				/* add a no bookmarks notice and exit */
+				$('#bookmarks-list').prepend(`<p class="my-3">Nothing here.</p>`)
 				return;
 			}
 
+		/* show export and clear-bookmarks buttons */
+		$('#export-bookmarks-btn').removeClass('hidden');
+		$('#clear-bookmarks-btn').removeClass('hidden');
+		
 		/* populate list */
 		app.state.bookmarks.forEach(function (bookmark) {
 			$('#bookmarks-list').prepend(
-				`<a
-					class="dropdown-item bookmark"
-					href="${bookmark.www_link}"
-					target="_BLANK"
-					data-id="${bookmark.id}">
-					${cutShort(bookmark.title, 75)}
-				</a>`
-			)
+				app.templates.resultCard(bookmark, true)
+			);
 		});
 	}
 
 	function updateBookmarksCountBadge() {
-		$('#bookmark-count').text(app.state.bookmarks.length);
+		if (app.state.bookmarks.length == 0) {
+			$('#bookmarks-count').addClass('badge-secondary');
+			$('#bookmarks-count').removeClass('badge-primary');
+		} else {
+			$('#bookmarks-count').addClass('badge-primary');
+			$('#bookmarks-count').removeClass('badge-secondary');
+		}
+		$('#bookmarks-count').text(app.state.bookmarks.length);
 	}
 
 	function floatToPercentage (floatVal) {
@@ -565,14 +668,14 @@
 		return parseInt(100*f);
 	}
 
-	app.templates.resultCard = function (result) {
+	app.templates.resultCard = function (result, asBookmark=false) {
 		var html = '';
 		html += `
 			<div class="card result-card my-3">
 				<div class="card-body">
 					<div class="card-title">
 						<h5 class="res-title" data-pn="${result.id}">
-							${ result.title }
+							${ toTitleCase(result.title) }
 						</h5>
 					</div>
 					<p class="card-text res-bib">
@@ -592,8 +695,11 @@
 					</p>
 					<p class="card-text res-snippet">
 						${ cutShort(result.abstract, 500) }
-					</p>
-					<table class="table table-inverse mapping-table">
+					</p>`
+
+		// Do not show mapping in bookmarks
+		if (app.config.showMappingInBookmarks || !asBookmark) {
+			html += `<table class="table table-inverse mapping-table">
 						<thead>
 							<tr>
 								<th style='text-align:left; width:35%'>Query elements</th>
@@ -601,24 +707,29 @@
 							</tr>
 						</thead>
 						<tbody>`
-		result.mapping.forEach(function (row) {
-			html += `
-				<tr>
-					<td style='vertical-align: top'>${ row.element }</td>
-					<td style='vertical-align: top'>${ row.mapping }</td>
-				</tr>`
-		});
+			result.mapping.forEach(function (row) {
+				html += `
+					<tr>
+						<td style='vertical-align: top'>${ row.element }</td>
+						<td style='vertical-align: top'>${ row.mapping }</td>
+					</tr>`
+			});
+		}
 		html += `		</tbody>
 					</table>`
 		if (!app.state.bookmarks.map(
 				function(e) { return e.id }
 				).includes(result.id)
 			) {
-			html +=	`<a href="#" class="btn btn-primary bookmark-btn">
-						Bookmark</a>`
+			html +=	`<a href="#"
+									class="btn btn-primary bookmark-btn"
+									data-pn="${result.id}">
+									<i class="fa fa-bookmark mr-1"></i> Bookmark</a>`
 		} else {
-			html +=	`<a href="#" class="btn btn-primary bookmark-btn disabled">
-						Bookmarked</a>`
+			html +=	`<a href="#"
+										class="btn btn-outline unbookmark-btn"
+										data-pn="${result.id}">
+										<i class="fa fa-minus-square mr-1"></i> Remove bookmark</a>`
 		}
 		html +=	`</div>
 			</div>`
@@ -673,6 +784,43 @@
 	$(document).on('click', '#data-coverage-notice-toggle-btn', function (e) {
 		$('#data-coverage-notice').toggleClass('hidden');
 	});
+
+	function toTitleCase (str) {
+		var alwaysLower = [
+			'a', 'an', 'the', 'of', 'with', 'through', 'for', 'and', 'in',
+			'on', 'into', 'same', 'such', 'to', 'using', 'utilizing', 'by',
+			'from', 'thereof'];
+
+		if (!_isAllUpperCase(str)) {
+			return str;
+		}
+		
+		if (!str.match(/\s/)) { // a single word
+			return str;
+		}
+
+		str = str.toLowerCase();
+		var words = str.split(/\s+/);
+		words[0] = _captializeFirstLetter(words[0]);
+		for (var i=1; i<words.length; i++) {
+			if (! alwaysLower.includes(words[i])) {
+				words[i] = _captializeFirstLetter(words[i]);
+			}
+		}
+		return words.join(' ');
+
+		function _captializeFirstLetter(word) {
+			var ai = word.charCodeAt(0);
+			if (ai >= 97 && ai <= 122) {
+				word = String.fromCharCode(ai-32) + word.slice(1);
+			}
+			return word;
+		}
+
+		function _isAllUpperCase(str) {
+			return !str.match(/[a-z]/);
+		}
+	}
 
 </script>
 </html>
