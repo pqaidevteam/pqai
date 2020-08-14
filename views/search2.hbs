@@ -25,27 +25,10 @@
 						</p>
 					</div>
 
-					<!-- CTA buttons -->
-					<div class="text-center" id="cta-buttons">
-						<button
-							type="button"
-							id="go-to-search-page-btn"
-							class="btn btn-lg btn-primary my-3">
-								Try it out
-						</button>
-						<p class="my-0">-- OR --</p>
-						<button
-							type="button"
-							id="demo-btn"
-							class="btn btn-lg btn-secondary my-3">
-								See a demo
-						</button>
-					</div>
-
 					<!-- Search form -->
 					<div
 						id="search-form"
-						class="container hidden">
+						class="container">
 						<p class="my-1">
 							Connected to <a href="#">2 nodes</a>
 						</p>
@@ -170,7 +153,6 @@
 		'#dd5182', '#ff6e54', '#ffa600',
 		'#666666', '#999999', '#BBBBBB'
 	];
-	app.config.goDirectlyToSearch = true;
 	app.config.diagnostics = false;
 	app.config.showMappingInBookmarks = false;
 	app.config.resultTitleClickable = false;
@@ -214,10 +196,6 @@
 	];
 
 	$(document).ready(() => {
-		if (app.config.goDirectlyToSearch) {
-			$('#demo-btn').click();
-		}
-
 		/*
 			Hide diagnostics tab if required
 		*/
@@ -261,20 +239,6 @@
 	$(document).on('click', '#tabs a', function (e) {
 	  e.preventDefault()
 	  $(this).tab('show')
-	})
-
-	// Move from landing page to search page
-	$(document).on('click', '#go-to-search-page-btn', function () {
-		hideCTAButtons();
-		showSearchForm();
-		$('#user-text-input').focus();
-	})
-
-	// Go to the search page and run an example query
-	$(document).on('click', '#demo-btn', function () {
-		hideCTAButtons();
-		showSearchForm();
-		$('#run-example-btn').click();
 	})
 
 	// Run example query

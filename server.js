@@ -58,6 +58,14 @@ app.get('/change-history', function (req, res) {
 	res.render('change_history');
 });
 
+app.get('/performance', function (req, res) {
+	res.render('performance');
+});
+
+app.get('/datasets', function (req, res) {
+	res.render('datasets');
+});
+
 app.post('/mediator', function (req, res) {
 	let cmd = req.body.cmd;
 	if (cmd == 'search-by-patent' || cmd == 'search-by-query') {

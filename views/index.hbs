@@ -23,8 +23,9 @@
 							<div class="col-md-3"></div>
 							<div class="col-md-6">
 								<button
-									class="btn btn-primary btn-lg btn-block">
-									Try it out	
+									class="btn btn-primary btn-lg btn-block"
+									id="try-it-out-btn">
+									Try it out
 								</button>
 							</div>
 							<div class="col-md-3"></div>
@@ -35,4 +36,9 @@
 		</div>
 	</div>
 </body>
+<script type="text/javascript">
+	$(document).on('click', '#try-it-out-btn', function(e) {
+		window.location = '/search2'
+	})
+</script>
 </html>
