@@ -14,4 +14,4 @@ extensions = [
 ]
 allow_outgoing_extension_requests = True
 allow_incoming_extention_requests = True
-reranker_active = False
+reranker_active = True

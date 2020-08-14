@@ -16,8 +16,9 @@ from core.reranking import MatchPyramidRanker
 from core.remote import search_extensions, merge_results
 from config.config import reranker_active, allow_outgoing_extension_requests
 import re
+from core.reranking import CustomRanker
 
-reranker = None
+reranker = CustomRanker()
 
 app = FlaskAPI(__name__)
 
@@ -56,6 +57,8 @@ def search_index (extend=True):
         global reranker
         if reranker is None:
             reranker = MatchPyramidRanker()
+    else:
+        reranker = None
 
     try:
         results = searcher.search(query, num_results, indexes, before, after, reranker)
