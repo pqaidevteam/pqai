@@ -73,8 +73,6 @@ app.post('/mediator', function (req, res) {
 			processor.run(
 				response.data.results.slice(0, n_mappings),
 				(result, callback) => {
-					console.log(result.mapping);
-					
 					if (result.mapping) {
 						return callback();
 					}
