@@ -3,9 +3,9 @@ from core import db
 from core.indexes import index_ids as AVAILABLE_INDEXES
 from core.indexes import get_index
 from core.documents import Document
-from core.classifiers import BOWSubclassPredictor
+from core.classifiers import BOWSubclassPredictor, BERTSubclassPredictor 
 
-predict_subclasses = BOWSubclassPredictor().predict_subclasses
+predict_subclasses = BERTSubclassPredictor().predict_subclasses
 
 N_INDEXES_TO_SEARCH = 3
 MAX_RESULTS_LIMIT = 200
