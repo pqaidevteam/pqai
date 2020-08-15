@@ -26,11 +26,9 @@
 					</div>
 
 					<!-- Search form -->
-					<div
-						id="search-form"
-						class="container">
-						<p class="my-1">
-							Connected to <a href="#">2 nodes</a>
+					<div id="search-form" class="container">
+						<p class="mb-2">
+							Connected to <a href="#">2 nodes</a> 
 						</p>
 						<textarea
 							class="form-control"
@@ -42,18 +40,45 @@
 							class="btn btn-primary"
 							type="button"
 							id="query-submit-btn">
-							Submit
+							SUBMIT
 						</button>
-						<a href="#"
-							 id="run-example-btn"
-							 class="ml-3">
-							 Run an example
-						</a>
-						<span style="float:right" class="my-1">
-							<a href="#" id="data-coverage-btn">
-								<i class="fa fa-database mr-1"></i> Data Coverage
-							</a>
+						<a href="#" id="run-example-btn" class="ml-3">Run an example</a>
+						<button
+							id="data-coverage-btn"
+							class="btn btn-link ml-2"
+							onclick="$('#data-coverage-notice').toggleClass('hidden')">
+							<i class="fa fa-info-circle mr-1"></i> Data Coverage
+						</button>
+						<span style="float:right">
+							<button
+								class="btn btn-link"
+								id="search-filter-btn"
+								onclick="$('#search-filters').toggleClass('hidden')">
+								<i class="fa fa-filter mr-1"></i> Filters
+							</button>
 						</span>
+						<div id="search-filters" class="hidden">
+							<form class="form-inline d-flex justify-content-end mt-2">
+								<label for="cutoff-date-input" class="mb-2 mr-1">Show results published before </label>
+								<input
+									type="text"
+									class="form-control mb-2 mr-sm-2"
+									id="cutoff-date-input"
+									size="8"
+									placeholder="2019-12-31">
+								<button
+									type="button"
+									id="apply-date-filter-btn"
+									class="btn btn-secondary mb-2"
+									onclick="$(this).parent().addClass('hidden')">
+										Apply
+								</button>
+							</form>
+						</div>
+					</div>
+					<!-- Data coverage notice -->
+					<div id="data-coverage-notice" class="container mt-2 hidden text-justify">
+						<i class="fa fa-info-circle"></i> The data coverage of this beta version is limited to nearly 11 million US patents and applications and nearly 11.5 million research papers in the fields of engineering and computer science. Datasets were obtained from <a href="https://bulkdata.uspto.gov/" target="_BLANK">USPTO Bulk Datasets</a> and <a href="http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/" target="_BLANK">Semantic Scholar's Open Research Corpus</a>, respectively.
 					</div>
 				</div>
 			</div>
