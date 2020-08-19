@@ -5,11 +5,12 @@ import numba
 import re
 import json
 from sklearn.decomposition import TruncatedSVD
+from sentence_transformers import SentenceTransformer
 
 from core.utils import is_cpc_code, is_patent_number
 from config.config import models_dir
 from core.db import get_patent_data
-from sentence_transformers import SentenceTransformer
+from config.config import models_dir as MODELS_DIR
 
 # Files needed for cpc vectorization
 cpc_list_file = models_dir + 'cpc_vectors_256d.items.json'
@@ -329,7 +330,7 @@ def patent2vec (patent, use_cpcs=True):
 class GloveWordEmbeddings():
     
     def __init__(self):
-        self.models_dir = '/home/ubuntu/web_app/models'
+        self.models_dir = MODELS_DIR
         self.vocab_file = self.models_dir + '/glove-vocab.json'
         self.dict_file = self.models_dir + '/glove-dictionary.json'
         self.dfs_file = self.models_dir + '/dfs.json'
