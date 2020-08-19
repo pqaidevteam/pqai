@@ -48,7 +48,7 @@
 	function highlightCurrentPageInNavbar() {
 		let navLinks = Array.from($('nav li.nav-item a'));
 		let navLinkURLs = navLinks.map(el => $(el).attr('href'));
-		let thisPageURL = window.location.toString();
+		let thisPageURL = window.location.pathname;
 		navLinkURLs.forEach((relativeURL, i) => {
 			if (thisPageURL.endsWith(relativeURL)) {
 				$(navLinks[i]).parent().addClass('active');
