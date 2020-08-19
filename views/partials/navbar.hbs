@@ -1,0 +1,60 @@
+<nav class="navbar navbar-expand-lg navbar-light">
+	<a class="navbar-brand" href="/">PQAI</a>
+	
+	<button class="navbar-toggler"
+		type="button"
+		data-toggle="collapse"
+		data-target="#navbarSupportedContent">
+		<span class="navbar-toggler-icon"></span>
+	</button>
+
+	<div
+		class="collapse navbar-collapse"
+		id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto">
+			<li class="nav-item active">
+				<a href="/search2" class="nav-link">Search</a>
+			</li>
+			<li class="nav-item">
+				<a href="/datasets" class="nav-link">Datasets</a>
+			</li>
+			<!-- <li class="nav-item">
+				<a href="/performance" class="nav-link">Performance</a>
+			</li> -->
+		</ul>
+
+		<ul class="navbar-nav ml-md-auto">
+			<!-- <li class="nav-item">
+				<a href="/about" class="nav-link">About</a>
+			</li>
+			<li class="nav-item">
+				<a href="/contact" class="nav-link">Contact</a>
+			</li>
+			<li class="nav-item">
+				<a href="/blog" class="nav-link">Blog</a>
+			</li> -->
+			<li class="nav-item">
+				<a href="/change-history" class="nav-link ml-3">v.0.2.2</a>
+			</li>
+		</ul>
+	</div>
+</nav>
+<script type="text/javascript">
+	
+	$(document).ready(function () {
+		highlightCurrentPageInNavbar();
+	})
+
+	function highlightCurrentPageInNavbar() {
+		let navLinks = Array.from($('nav li.nav-item a'));
+		let navLinkURLs = navLinks.map(el => $(el).attr('href'));
+		let thisPageURL = window.location.pathname;
+		navLinkURLs.forEach((relativeURL, i) => {
+			if (thisPageURL.endsWith(relativeURL)) {
+				$(navLinks[i]).parent().addClass('active');
+			} else {
+				$(navLinks[i]).parent().removeClass('active');
+			}
+		});
+	}
+</script>

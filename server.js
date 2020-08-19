@@ -38,19 +38,39 @@ app.get('/search2', function (req, res) {
 	res.render('search2');
 });
 
-app.get('/search4', function (req, res) {
-	res.render('search4');
+app.get('/contact', function (req, res) {
+	res.render('contact');
 });
 
-app.get('/tech-areas', function (req, res) {
-	res.render('tech_areas');
+app.get('/about', function (req, res) {
+	res.render('about');
+});
+
+app.get('/blog', function (req, res) {
+	res.render('blog');
+});
+
+app.get('/arch', function (req, res) {
+	res.render('arch');
+});
+
+app.get('/change-history', function (req, res) {
+	res.render('change_history');
+});
+
+app.get('/performance', function (req, res) {
+	res.render('performance');
+});
+
+app.get('/datasets', function (req, res) {
+	res.render('datasets');
 });
 
 app.post('/mediator', function (req, res) {
 	let cmd = req.body.cmd;
 	if (cmd == 'search-by-patent' || cmd == 'search-by-query') {
 		let query = req.body.query;
-		let indexId = req.body.techDomain;
+		let indexId = 'auto';
 		let before = req.body.before;
 		let after = req.body.after;
 		let n = req.body.n || 10;
@@ -117,7 +137,7 @@ app.post('/mediator', function (req, res) {
 
 	} else if (cmd == 'get-stats') {
 		let query = req.body.query;
-		let indexId = req.body.techDomain;
+		let indexId = 'auto';
 		let url = 'http://localhost:5000/documents/'
 		let params = {
 			q: query, idx: indexId, n: 100

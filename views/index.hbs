@@ -1,104 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title>PQAI</title>
-		{{> default_header_imports}}
-		<script src="particles-js/particles.min.js"></script>
-	</head>
-	<style type="text/css">
-		body {
-			font-family: 'Work Sans', 'Helvetica Neue', 'Arial', sans-serif;
-		}
-		h1 {
-			font-size: 36pt;
-		}
-		p {
-			font-size: 16pt;
-		}
-		.stage, .container {
-			background-color: rgba(255, 255, 255, 0.0);
-		}
-		.stage {
-			color: var(--white);
-			text-align: center;
-		}
-		.container {
-			padding: 50px 0;
-		}
-		.column {
-			text-align: center;
-			border-right: 1px dotted var(--white);
-		}
-		.column:last-child {
-			border-right: none;
-		}
-		#particles-js {
-			z-index: -1;
-			background-color: var(--blue);
-			position: absolute;
-			width: 100%;
-			height: 100%;
-		}
-	</style>
-	<body>
-		<header>
-			<nav class="navbar navbar-expand-lg navbar-dark">
-				<a class="navbar-brand" href="#">
-					PQAI
-				</a>
-				<div class="collapse navbar-collapse" id="navbar-text">
-					<ul class="navbar-nav mr-auto">
-						
-					</ul>
-					<span class="navbar-text">
-						ABOUT
-					</span>
-				</div>
-			</nav>
-		</header>
-		<div id="particles-js"></div>
-		<section>
-			<div class="stage">
-				<h1>Patent Quality through AI</h1>
-				<p>An open patent information system accessible to everyone.</p>
-				<button class="btn btn-light btn-lg" id="trigger-demo-btn">See a demo</button>
-				<div class="container">
-					<div class="row">
-						<div class="col-md-4 column">
-							<p>AI Search - describe what you are looking for in plain English.</p>
-						</div>
-						<div class="col-md-4 column">
-							<p>Get feature-wise wise breakdown of the results to understand their relevancy.</p>
-						</div>
-						<div class="col-md-4 column">
-							<p>Get results from patents and research papers in one go.</p>
+<head>
+	<title>PQAI | Search</title>
+	{{> default_header}}
+	{{> styling}}
+</head>
+<body>
+	{{> navbar}}
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-12 py-3 action-area">
+				<div class="container-fluid pl-5 pr-0">
+					<div class="container">
+						<h1 class="text-center">PQAI</h1>
+						<p class="text-center">
+							A simple and powerful way to help you run prior-art checks.
+						</p>
+						<p class="text-center">
+							PQAI is <a href="">open-source</a> and powered by <a href="">cutting-edge AI</a>.
+						</p>
+						<div class="row py-3">
+							<div class="col-md-3"></div>
+							<div class="col-md-6">
+								<button
+									class="btn btn-primary btn-lg btn-block"
+									id="try-it-out-btn">
+									Try it out
+								</button>
+							</div>
+							<div class="col-md-3"></div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</section>
-	</body>
-</html>
+		</div>
+	</div>
+</body>
 <script type="text/javascript">
-	$(document).ready(function () {
-		adjustHeights();
-		particlesJS.load('particles-js', 'particles-js/particles.json', function() {
-		  console.log('callback - particles.js config loaded');
-		});
-	});
-	function adjustHeights() {
-		var wh = $(window).height();		// window height (viewport)
-		var ch = $('.stage').height();	// content height
-		var nh = $('.navbar').height();		// navbar height
-		var diff = wh-ch-nh;
-		var pad = 0;
-		if (diff > 0) {
-			pad = parseInt(diff/2);
-		}
-		$('.stage').css('padding', pad + 'px 0');
-		$('body').fadeIn();
-	}
-	$(document).on('click', '#trigger-demo-btn', function(e) {
-		window.location = '/search';
+	$(document).on('click', '#try-it-out-btn', function(e) {
+		window.location = '/search2'
 	})
 </script>
+</html>

@@ -2,103 +2,18 @@
 <html lang="en">
 <head>
 	<title>PQAI | Search</title>
-	<link rel="stylesheet" href="bootstrap-4.3.1/css/bootstrap.min.css">
-	<style type="text/css">
-		@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro&display=swap');
-		@import url('https://fonts.googleapis.com/css2?family=Jost&display=swap');
-		:root {
-			--default-font: 'Jost', sans-serif;
-			--serif-font: 'Crimson-Pro', serif;
-			--default-font-weight: 100;
-			--body-bg: #EEF1F3;
-			--diffused-blue-heading: #628BA6;
-			--diffused-blue-text: #466E88;
-		}
-		body {
-			font-family: var(--default-font);
-			font-weight: var(--default-font-weight);
-			background-color: var(--body-bg);
-		}
-		.navbar {
-			background-color: whitesmoke;
-			border: 1px solid #cecece;
-		}
-		.container {
-			max-width: 960px;
-		}
-		.action-area {
-			background-color: whitesmoke;
-			box-shadow: 0 8px 8px #CDD7DD;
-		}
-		.landing-page-intro {
-			color: var(--diffused-blue-text);
-			margin-top: 20px;
-			margin-left: 50px;
-		}
-		.logo {
-			color: var(--diffused-blue-heading);
-			font-size: 5.5rem;
-			font-weight: 300;
-			margin-bottom: -0.7rem;
-		}
-		.logo-subtext {
-			color: var(--body-bg);
-			margin-left: 7px;
-			background-color: #41647B;
-			display: inline-block;
-			padding: 3px 6px;
-		}
-		.action-area input,
-		.action-area textarea {
-			background-color: var(--whitesmoke);
-			margin-bottom: 10px;
-			resize: none;
-		}
-		.action-area textarea:focus {
-			background-color: var(--whitesmoke);
-			box-shadow: none;
-		}
-		.card.demo {
-			box-shadow: 0 2px 4px #e3e3e3;
-		}
-		.card.demo:hover {
-			box-shadow: 0 2px 8px #d0d0d0;
-		}
-	</style>
+	{{> default_header}}
+	{{> styling}}
 </head>
 <body>
-	<nav class="navbar navbar-expand-lg navbar-light">
-		<a class="navbar-brand" href="#">PQAI</a>
-		
-		<button class="navbar-toggler"
-			type="button"
-			data-toggle="collapse"
-			data-target="#navbarSupportedContent">
-			<span class="navbar-toggler-icon"></span>
-		</button>
-
-		<div
-			class="collapse navbar-collapse"
-			id="navbarSupportedContent">
-			<ul class="navbar-nav mr-auto">
-				<li class="nav-item active">
-					<a href="/search" class="nav-link">Search</a>
-				</li>
-			</ul>
-
-			<ul class="navbar-nav ml-md-auto">
-				<li class="nav-item">
-					<a href="/about" class="nav-link">About</a>
-				</li>
-				<li class="nav-item">
-					<a href="#" class="nav-link">Github</a>
-				</li>
-			</ul>
-		</div>
-	</nav>
+	{{> navbar}}
+	
+	<!-- Content -->
 	<div class="container-fluid">
 		<div class="row">
-			<div class="col-md-12 py-3 action-area">
+
+			<!-- Input area -->
+			<div class="col-md-12 py-3 input-area">
 				<div class="container-fluid pl-5 pr-0">
 					<div class="container">
 						<h1 class="text-center">PQAI</h1>
@@ -106,102 +21,795 @@
 							A simple and powerful way to help you run prior-art checks.
 						</p>
 						<p class="text-center">
-							PQAI is <a href="">open-source</a> and powered by <a href="">cutting-edge AI</a>.
+							PQAI is <a href="">open-source</a> and powered by <a href="/arch">cutting-edge AI</a>.
 						</p>
-						<div class="row" style="display:none">
-							<div class="col-md-4">
-								<div class="demo card">
-									<div class="card-body">
-										<h4 class="card-title">Smart restaurant</h4>
-										<p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-										<button class="btn btn-outline-primary">Find prior-art</button>
-									</div>
-								</div>
-							</div>
-							<div class="col-md-4">
-								<div class="demo card">
-									<div class="card-body">
-										<h4 class="card-title">Meeting notes</h4>
-										<p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-										<button class="btn btn-outline-primary">Find prior-art</button>
-									</div>
-								</div>
-							</div>
-							<div class="col-md-4">
-								<div class="demo card">
-									<div class="card-body">
-										<h4 class="card-title">Photo frame</h4>
-										<p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-										<button class="btn btn-outline-primary">Find prior-art</button>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="row py-3">
-							<div class="col-md-3"></div>
-							<div class="col-md-6">
-								<button
-									class="btn btn-primary btn-lg btn-block">
-									Try it with your own idea	
-								</button>
-							</div>
-							<div class="col-md-3"></div>
-						</div>
-						<div class="row py-3">
-							<div class="col-md-3"></div>
-							<div class="col-md-6">
-								<p class="text-center my-0">-- OR --</p>
-							</div>
-							<div class="col-md-3"></div>
-						</div>
-						<div class="row py-3">
-							<div class="col-md-3"></div>
-							<div class="col-md-6">
-								<button
-									class="btn btn-outline-secondary btn-lg btn-block">
-									Test drive with an example	
-								</button>
-							</div>
-							<div class="col-md-3"></div>
-						</div>
 					</div>
-					<div class="container" style="display: none">
+
+					<!-- Search form -->
+					<div id="search-form" class="container">
+						<p class="mb-2">
+							Connected to <a href="#">2 nodes</a> 
+						</p>
 						<textarea
 							class="form-control"
 							id="user-text-input"
 							cols="30"
 							rows="4"
-							placeholder="Pick an example from the dropdown menu below, or enter an invention description or a claim (one feature per line)"></textarea>
+							placeholder="Enter an invention description, run an example to see how"></textarea>
 						<button
 							class="btn btn-primary"
 							type="button"
-							id="trigger-search-btn">
-							Submit
+							id="query-submit-btn">
+							SUBMIT
 						</button>
+						<a href="#" id="run-example-btn" class="ml-3">Run an example</a>
 						<button
-							class="btn btn-outline-secondary"
-							type="button">
-							Pick an example
+							id="data-coverage-btn"
+							class="btn btn-link ml-2"
+							onclick="$('#data-coverage-notice').toggleClass('hidden')">
+							<i class="fa fa-info-circle mr-1"></i> Data Coverage
 						</button>
+						<span style="float:right">
+							<button
+								class="btn btn-link"
+								id="search-filter-btn"
+								onclick="$('#search-filters').toggleClass('hidden')">
+								<i class="fa fa-filter mr-1"></i> Filters
+							</button>
+						</span>
+						<div id="search-filters" class="hidden">
+							<form class="form-inline d-flex justify-content-end mt-2">
+								<label for="cutoff-date-input" class="mb-2 mr-1">Show results published before </label>
+								<input
+									type="text"
+									class="form-control mb-2 mr-sm-2"
+									id="cutoff-date-input"
+									size="8"
+									placeholder="2019-12-31">
+								<button
+									type="button"
+									id="apply-date-filter-btn"
+									class="btn btn-secondary mb-2"
+									onclick="$(this).parent().addClass('hidden')">
+										Apply
+								</button>
+							</form>
+						</div>
+					</div>
+					<!-- Data coverage notice -->
+					<div id="data-coverage-notice" class="container mt-2 hidden text-justify">
+						<i class="fa fa-info-circle"></i> The data coverage of this beta version is limited to nearly 11 million US patents and applications and nearly 11.5 million research papers in the fields of engineering and computer science. Datasets were obtained from <a href="https://bulkdata.uspto.gov/" target="_BLANK">USPTO Bulk Datasets</a> and <a href="http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/" target="_BLANK">Semantic Scholar's Open Research Corpus</a>, respectively.
 					</div>
 				</div>
 			</div>
-		</div>
-		<div class="row">
-			<div class="col-md-12 py-3 response-area">
-				<div class="container-fluid pl-0 pr-5">
+
+			<!-- Search results area -->
+			<div class="col-md-12 py-3">
+				<div class="container-fluid pl-5 pr-0">
 					<div class="container">
-						<div class="landing-page-intro">
-							<h1 class="logo">PQAI</h1>
-							<h5 class="logo-subtext">
-								Patent Quality through AI
-							</h5>
-							<p style="max-width:300px; margin-left: 6px">PQAI is an open-source AI-based platform that aims to provide a simplified yet powerful way to run prior-art checks.</p>
+
+						<!-- Tab navigation -->
+						<ul class="nav nav-tabs" id="tabs">
+							<li class="nav-item">
+								<a 	href="#results-area"
+										class="nav-link active"
+										id="results-tab">
+									Results
+								</a>
+							</li>
+							<li class="nav-item">
+								<a 	href="#bookmarks-area"
+										class="nav-link"
+										id="bookmarks-tab">
+									Bookmarks <span class="badge badge-secondary" id="bookmarks-count">0</span>
+								</a>
+							</li>
+							<li class="nav-item">
+								<a 	href="#diagnostics-area"
+										class="nav-link"
+										id="diagnostics-tab">
+									Diagnostics
+								</a>
+							</li>
+						</ul>
+
+						<div class="tab-content py-3">
+							
+							<!-- Results pane -->
+							<div class="tab-pane fade show active" id="results-area">
+								<!-- populated by JS -->
+							</div>
+
+							<!-- Bookmarks pane -->
+							<div class="tab-pane fade" id="bookmarks-area">
+
+								<!-- Bookmarks control panel -->
+								<div class="d-flex justify-content-end">
+									<button type="button" id="export-bookmarks-btn" class="btn btn-outline">
+											<i class="fa fa-download mr-1"></i> Export to Excel
+									</button>
+									<button type="button" id="clear-bookmarks-btn" class="btn btn-outline">
+										<i class="fa fa-trash mr-1"></i> Clear list
+									</button>
+								</div>
+
+								<div id="bookmarks-list">
+									<!-- populated by JS -->
+								</div>
+
+							</div>
+
+							<!-- Diagnostics pane -->
+							<div class="tab-pane fade" id="diagnostics-area">
+								<!-- populated by JS -->
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
+
+			<!-- Front page content -->
+			<div class="col-md-12 py-3">
+				<div class="container-fluid pl-5 pr-0">
+					<div class="container">
+						
+					</div>
+				</div>
+			</div>
+
 		</div>
 	</div>
+
 </body>
+<script type="text/javascript" src="bootstrap-4.3.1/js/popper.min.js"></script>
+<script type="text/javascript" src="bootstrap-4.3.1/js/bootstrap.min.js"></script>
+{{> export_js}}
+<script>
+	var app = {};
+	app.config = {};
+	app.state = {};
+	app.templates = {};
+
+	app.config.nResults = 10;
+	app.config.loadMappings = -1;
+	app.config.showOptions = false;
+	app.config.palette = [
+		'#003f5c', '#444e86', '#955196',
+		'#dd5182', '#ff6e54', '#ffa600',
+		'#666666', '#999999', '#BBBBBB'
+	];
+	app.config.diagnostics = false;
+	app.config.showMappingInBookmarks = false;
+	app.config.resultTitleClickable = false;
+
+	app.state.query = null;
+	app.state.dateFilterBefore = null;
+	app.state.dateFilterAfter = null;
+	app.state.loading = false;
+	app.state.stats = null;
+	app.state.metaResults = {}
+	app.state.results = [];
+	app.state.pointer = -1;
+	app.state.visited = {};
+	app.state.bookmarks = [];
+	app.state.latentQuery = '';
+
+	app.config.examples = [
+		{
+			id: 'ex1',
+			label: 'Reducing food wastage at restaurant using customer prediction',
+			query: 'An automated cooking system that minimizes food wastage.\n'
+				+ 'It predicts the customer inflow based on historical data.\n'
+				+ 'It prepares ingredients according to the predicted number of customers.'
+		},
+		{
+			id: 'ex2',
+			label: 'Meeting transcription system',
+			query: 'A system for preparing minutes of meeting.\n'
+				+ 'A voice recognition system is trained to recognize voice of different persons.\n'
+				+ 'A voice-to-text system records the dialog and converts it to text.\n'
+				+ 'A combining system associates a person with each dialog element.'
+		},
+		{
+			id: 'ex3',
+			label: 'Photo frame with adjustable photo slide rate',
+			query: 'A photo frame for a desk.\n'
+				+ 'The frame stores a number of photos.\n'
+				+ 'The frame has a number of settings.\n'
+				+ 'The settings can be configured such that photo slide time changes.'
+		}
+	];
+
+	$(document).ready(() => {
+		/*
+			Hide diagnostics tab if required
+		*/
+		if (app.config.diagnostics) {
+			$('#diagnostics-tab').removeClass('hidden');
+		} else {
+			$('#diagnostics-tab').addClass('hidden');
+		}
+		
+		/*
+			Initialize bookmarks
+		*/	
+		loadBookmarks();
+	})
+
+	function callMediator(parameters, callback) {
+		if (typeof parameters == 'string') {
+			parameters = { cmd: parameters }
+		}
+		$.post('mediator', parameters, function (response) {
+			if (!response.error) {
+				callback(response);
+			} else {
+				handleError(response);
+			}
+		});
+	}
+
+	// TODO: Handle error by status code
+	function handleError(err) {
+		if (err.redirectAddress) {
+			window.location = err.redirectAddress;
+		} else if (err.message) {
+			alert(err.message);
+		} else {
+			console.log(err);	
+		}
+		return false;
+	}
+
+	$(document).on('click', '#tabs a', function (e) {
+	  e.preventDefault()
+	  $(this).tab('show')
+	})
+
+	// Run example query
+	$(document).on('click', '#run-example-btn', function () {
+		let n = app.config.examples.length;
+		let i = getRandomInt(n);
+		let query = app.config.examples[i].query;
+		$('#user-text-input').val(query);
+		$('#query-submit-btn').click();
+	})
+
+	let getRandomInt = (n) => parseInt(n*Math.random())
+	let hideCTAButtons = () => $('#cta-buttons').addClass('hidden');
+	let showSearchForm = () => $('#search-form').removeClass('hidden');
+
+	// On submitting a query for search
+	$(document).on('click', '#query-submit-btn', function (e) {
+		readUserQuery();
+
+		if (app.state.loading) {
+			return alert('Please wait while results are loading.');
+		}
+
+		if (!app.state.query) {
+			return alert('Please enter a query.');
+		}
+
+		clearOutput();
+		app.state.loading = true;
+		showLoadingIndication();
+		
+		var query = app.state.query
+		submitQuery(query);
+	});
+
+	
+	// On CTRL+Enter, submit the query
+	$(document).on('keyup', '#user-text-input', function (e) {
+		if (e.keyCode == 13 && e.ctrlKey) {
+			$('#query-submit-btn').click();
+		}
+	});
+
+	function readUserQuery() {
+		var query = $('#user-text-input').val().trim();
+		app.state.query = query;
+	}
+
+	function submitQuery (query) {
+		query = query.trim();
+		var cmd;
+		if (query.match(/^US\d+[AB]\d?$/)) {
+			cmd = 'search-by-patent';
+		} else {
+			cmd = 'search-by-query';
+		}
+		var reqParams = {
+			cmd,
+			query,
+			before: app.state.dateFilterBefore,
+			after: app.state.dateFilterAfter,
+			mappings: app.config.loadMappings,
+			n: app.config.nResults
+		};
+		callMediator(reqParams, function(response) {
+			app.state.loading = false;
+			finishLoading();
+			updateAppStateWithNewResults(response);
+		});
+	}
+
+	function updateAppStateWithNewResults(queryResponse, callback=Function.prototype) {
+		app.state.latentQuery = '';
+		app.state.metaResults = queryResponse;
+		app.state.results = app.state.metaResults.results;
+		app.state.pointer = -1;
+		seekAbsolute(0);
+		callback(true);
+	}
+
+	function showNextResult() {
+		seekRelative(1, function (shown) {
+			if (!shown) {
+				notifyUser('Error occurred while showing next result.');
+			}
+		});
+	}
+
+	function showPreviousResult() {
+		seekRelative(-1, function (shown) {
+			if (!shown) {
+				notifyUser('Error occurred while showing next result.');
+			}
+		});
+	}
+
+	function seekRelative(r, callback=Function.prototype) {
+		var n = app.state.pointer + r;
+		seekAbsolute(n, callback);
+	}
+
+	function seekAbsolute(n, callback=Function.prototype) {
+		/* Check if position is valid */
+		if (n < 0 || n >= app.state.results.length) {
+			callback(false);
+		}
+		
+		var result = app.state.results[n];
+		showResult(result, function(done) {
+			if (!done)
+				return callback(false);
+			app.state.pointer = n;
+
+			/* Update result navigator */
+			$('#result-navigator button.active').removeClass('active');
+			var activatedButton = $('#result-navigator button').get(n);
+			$(activatedButton).addClass('active');
+			
+			callback(true);
+		});
+
+		/* Load and buffer mapping of next result */
+		if (n+1 < app.state.results.length) {
+			var nextResult = app.state.results[n+1];
+			loadMapping(nextResult);
+		}
+	}
+
+	function showResult(result, callback=Function.prototype) {
+		// Force the height of results area to stay the same
+		// when it is emptied so that a sudden "scroll-to-top"
+		// doesn't happen!
+		var h = $('#results-area').height();
+		$('#results-area').height(h);
+
+		hideShownResult();
+		if (!result.mapping) {
+			loadMapping(result, function(loaded) {
+				showResult(result, callback);
+			});
+			return;
+		}
+
+		if (!$('#result-navigator').length) {
+			var html = app.templates.resultNavigator();
+			$('#results-area').html(html);
+		}
+
+		html = app.templates.resultCard(result);
+		$('#results-area').append(html);
+
+		callback(true);
+
+		// Now set height of result-area back to 'auto'
+		$('#results-area').height('auto');
+
+	}
+
+	function hideShownResult() {
+		$('.result-card').remove();
+	}
+
+	function loadMapping(result, callback=Function.prototype) {
+		return;
+		var ref = result.id;
+		var query = app.state.query;
+		callMediator({
+			cmd: 'get-element-wise-mapping',
+			ref: ref,
+			query: query
+		}, function (mapping) {
+			result.mapping = mapping;
+			callback(true);
+		});
+	}
+
+	function notifyUser(message) {
+		alert(message);
+	}
+
+	function clearOutput() {
+		$('#results-area').empty();
+	}
+
+	var loadMoreBtnHtml = '<button class="btn btn-md btn-default mb-3" id="load-more-btn">Load more results</button>';
+
+	function getSnippet(pn, query, callback) {
+		callMediator({
+			cmd: 'get-snippet',
+			publicationNumber: pn,
+			query: query
+		}, function (snippet) {
+			var arr = snippet.split('<br>');
+			var html = "";
+			arr.forEach(function (e) {
+				html += '<p class="card-text res-snippet">' + e + '</p>';
+			});
+			callback(html);
+		});
+	}
+
+	$(document).on('click', '#load-more-btn', function(e) {
+		if (app.state.results.length > 0) {
+			displayResults();
+		} else {
+			alert("No more results to show.");
+		}
+	});
+
+	$(document).on('click', '.res-title', function(e) {
+		if (!app.config.resultTitleClickable)
+			return null;
+
+		var pn = $(this).attr('data-pn');
+		app.state.visited[pn] = true;
+		$(this).addClass('visited');
+		var url = 'https://patents.google.com/patent/' + pn;
+		openInNewTab(url);
+	});
+
+	$(document).on('click', '.ext-link', function(e) {
+		var pn = $(this).attr('data-pn');
+		app.state.visited[pn] = true;
+	});
+
+	$(document).on('click', '.more-like-this-btn', function(e) {
+		var publicationNumber = $(this).attr('data-pn');
+		app.state.latentQuery = $(this).closest('.card-body').find('p.res-snippet').text().trim();
+		$('#query-submit-btn').click();
+	});
+
+	$(document).on('click', '.element-wise-mapping-btn', function(e) {
+		e.preventDefault();
+		var thisCard = $(this).closest('.card');
+		console.log(thisCard.find('.mapping-table').length);
+		if (thisCard.find('.mapping-table').length) {
+			thisCard.find('.mapping-table').remove();
+			return;
+		}
+		var ref = $(this).attr('data-pn');
+		var query = readUserQuery();
+		callMediator({
+			cmd: 'get-element-wise-mapping',
+			ref: ref,
+			query: query
+		}, function (claimChartHTML) {
+			$(thisCard).children('.card-body').append(claimChartHTML);
+		});
+	});
+
+	function getGoogleLink(pn) {
+		var url = 'https://patents.google.com/patent/' + pn;
+		var link = '<a href="' + url + '" target="_blank" class="mr-3 ext-link" data-pn="' + pn + '"">' + pn + '</a/>';
+		return link;
+	}
+
+	function openInNewTab(url) {
+		var win = window.open(url, '_blank');
+		win.focus();
+	}
+
+	function showLoadingIndication() {
+		var html = '<div class="spinner-border spinner-border-sm" role="status">'
+  				+ '<span class="sr-only">Loading...</span>'
+				+ '</div> Loading';
+		$('#query-submit-btn').html(html);
+	}
+
+	function finishLoading() {
+		$('#query-submit-btn').html('Submit');
+	}
+
+	$(document).on('click', '#apply-date-filter-btn', function (e) {
+		var date = $('#cutoff-date-input').val();
+		if (!date) {
+			app.state.dateFilterBefore = null;
+			return;
+		}
+		$('#calendar-btn').text("before " + date)
+		if (!date.match(/^\d{4}\-\d{2}\-\d{2}$/)) {
+			return alert("Invalid date.");
+		}
+		app.state.dateFilterBefore = date;
+		$('#query-submit-btn').click();
+	});
+
+	$(document).on('click', '.bookmark-btn', function (e) {
+		e.preventDefault();
+		var n = app.state.pointer;
+		var result = app.state.results[n];
+		app.state.bookmarks.push(result);
+		saveBookmarks();
+		seekRelative(0);
+	});
+
+	$(document).on('click', '.unbookmark-btn', function (e) {
+		e.preventDefault();
+		var id = $(this).attr('data-pn');
+		app.state.bookmarks = app.state.bookmarks.filter(b => b.id != id);
+
+		/* If the currently shown result was unbookmarked,
+			 re-rendering the results will reset the state of
+			 the button. */
+		if ($('#bookmarks-tab').hasClass('active'))
+			renderBookmarks();
+		else
+			seekRelative(0);
+
+		saveBookmarks();
+	});
+
+	$(document).on('click', '#bookmarks-tab', function (e) {
+		renderBookmarks();
+	})
+
+	function saveBookmarks() {
+		localStorage.setItem('bookmarks', JSON.stringify(app.state.bookmarks));
+		updateBookmarksCountBadge();
+	}
+
+	function loadBookmarks() {
+		if (!localStorage.getItem('bookmarks')) {
+			return null;
+		}
+		app.state.bookmarks = JSON.parse(localStorage.getItem('bookmarks'));
+		updateBookmarksCountBadge();
+	}
+
+	$(document).on('click', '#clear-bookmarks-btn', function (e) {
+		var confirmation = confirm('Remove all bookmarks?');
+		if (confirmation) {
+			app.state.bookmarks = [];
+			saveBookmarks();
+
+			// If the currently displayed result is bookmarked,
+			// remove the "bookmarked" button by re-rendering
+			seekRelative(0);
+		}
+	});
+
+	$(document).on('click', '#export-bookmarks-btn', function (e) {
+		try {
+			exportBookmarks(app.state.bookmarks);
+		} catch (e) {
+			console.log(e);
+			alert("Error while exporting bookmarks.");
+		}
+	});
+
+	function renderBookmarks() {
+		/* clear previously rendered list */
+			$('#bookmarks-list').empty();
+
+		/* edge case - no bookmarks */
+			if (!app.state.bookmarks.length) {
+				
+				/* hide export and clear-bookmarks buttons */
+				$('#export-bookmarks-btn').addClass('hidden');
+				$('#clear-bookmarks-btn').addClass('hidden');
+
+				/* add a no bookmarks notice and exit */
+				$('#bookmarks-list').prepend(`<p class="my-3">Nothing here.</p>`)
+				return;
+			}
+
+		/* show export and clear-bookmarks buttons */
+		$('#export-bookmarks-btn').removeClass('hidden');
+		$('#clear-bookmarks-btn').removeClass('hidden');
+		
+		/* populate list */
+		app.state.bookmarks.forEach(function (bookmark) {
+			$('#bookmarks-list').prepend(
+				app.templates.resultCard(bookmark, true)
+			);
+		});
+	}
+
+	function updateBookmarksCountBadge() {
+		if (app.state.bookmarks.length == 0) {
+			$('#bookmarks-count').addClass('badge-secondary');
+			$('#bookmarks-count').removeClass('badge-primary');
+		} else {
+			$('#bookmarks-count').addClass('badge-primary');
+			$('#bookmarks-count').removeClass('badge-secondary');
+		}
+		$('#bookmarks-count').text(app.state.bookmarks.length);
+	}
+
+	function floatToPercentage (floatVal) {
+		let f = parseFloat(floatVal);
+		return parseInt(100*f);
+	}
+
+	app.templates.resultCard = function (result, asBookmark=false) {
+		var html = '';
+		html += `
+			<div class="card result-card my-3">
+				<div class="card-body">
+					<div class="card-title">
+						<h5 class="res-title" data-pn="${result.id}">
+							${ toTitleCase(result.title) }
+						</h5>
+					</div>
+					<p class="card-text res-bib">
+						<span class="mr-3">${ result.owner }</span>
+						<span class="mr-3">${ result.publication_date }</span>
+						<a href="${ result.www_link }"
+							target="_blank"
+							class="mr-3 ext-link"
+							data-pn="${ result.id }">
+							${ result.publication_id }
+						</a>
+						<a href="#"
+							class="more-like-this-btn mr-3"
+							data-pn="${ result.id }">
+							Show more like this
+						</a>
+					</p>
+					<p class="card-text res-snippet">
+						${ cutShort(result.abstract, 500) }
+					</p>`
+
+		// Do not show mapping in bookmarks
+		if (app.config.showMappingInBookmarks || !asBookmark) {
+			html += `<table class="table table-inverse mapping-table">
+						<thead>
+							<tr>
+								<th style='text-align:left; width:35%'>Query elements</th>
+								<th style='text-align:left; width:65%'>Reference text</th>
+							</tr>
+						</thead>
+						<tbody>`
+			result.mapping.forEach(function (row) {
+				html += `
+					<tr>
+						<td style='vertical-align: top'>${ row.element }</td>
+						<td style='vertical-align: top'>${ row.mapping }</td>
+					</tr>`
+			});
+		}
+		html += `		</tbody>
+					</table>`
+		if (!app.state.bookmarks.map(
+				function(e) { return e.id }
+				).includes(result.id)
+			) {
+			html +=	`<a href="#"
+									class="btn btn-primary bookmark-btn"
+									data-pn="${result.id}">
+									<i class="fa fa-bookmark mr-1"></i> Bookmark</a>`
+		} else {
+			html +=	`<a href="#"
+										class="btn btn-outline unbookmark-btn"
+										data-pn="${result.id}">
+										<i class="fa fa-minus-square mr-1"></i> Remove bookmark</a>`
+		}
+		html +=	`</div>
+			</div>`
+		return html;
+	}
+
+	app.templates.resultNavigator = function () {
+		var html = '';
+		html += `<div class="d-flex justify-content-center">
+							<button type="button"
+									class="btn btn-outline"
+									onclick="showPreviousResult()">
+								<i class="fas fa-chevron-left"></i>
+							</button>
+							<div class="btn-toolbar">
+							  <div class="btn-group mx-2" id="result-navigator">`;
+		app.state.results.forEach(function (result, i) {
+			html += `<button
+						type="button"
+						class="btn btn-secondary res-nav-btn"
+						data-i="${i}">
+							${i+1}
+						</button>`
+		})
+		html += `</div>
+			</div>
+			<button type="button"
+					class="btn btn-outline"
+					onclick="showNextResult()">
+				<i class="fas fa-chevron-right"></i>
+			</button>
+		</div>`;
+		return html;
+	}
+
+	$(document).on('click', '.res-nav-btn', function (e) {
+		e.preventDefault();
+		var i = parseInt($(this).attr('data-i'));
+		seekAbsolute(i);
+	});
+
+	function cutShort(text, length) {
+	    if (!length || length > text.length || length < 10) return text;
+	    var i = length-4;
+	    while (text.charAt(i) !== ' ') i--;
+	    var shownText = text.substring(0, i);
+	    var hiddenText = text.substring(i);
+	    var html = shownText + `<span class='hidden-text' data-text='${btoa(text.substring(i))}' style='cursor:pointer' onclick='$(this).replaceWith( atob($(this).attr("data-text")) )'> ...</span>`;
+	    return html;
+	}
+
+	$(document).on('click', '#data-coverage-notice-toggle-btn', function (e) {
+		$('#data-coverage-notice').toggleClass('hidden');
+	});
+
+	function toTitleCase (str) {
+		var alwaysLower = [
+			'a', 'an', 'the', 'of', 'with', 'through', 'for', 'and', 'in',
+			'on', 'into', 'same', 'such', 'to', 'using', 'utilizing', 'by',
+			'from', 'thereof'];
+
+		if (!_isAllUpperCase(str)) {
+			return str;
+		}
+		
+		if (!str.match(/\s/)) { // a single word
+			return str;
+		}
+
+		str = str.toLowerCase();
+		var words = str.split(/\s+/);
+		words[0] = _captializeFirstLetter(words[0]);
+		for (var i=1; i<words.length; i++) {
+			if (! alwaysLower.includes(words[i])) {
+				words[i] = _captializeFirstLetter(words[i]);
+			}
+		}
+		return words.join(' ');
+
+		function _captializeFirstLetter(word) {
+			var ai = word.charCodeAt(0);
+			if (ai >= 97 && ai <= 122) {
+				word = String.fromCharCode(ai-32) + word.slice(1);
+			}
+			return word;
+		}
+
+		function _isAllUpperCase(str) {
+			return !str.match(/[a-z]/);
+		}
+	}
+
+</script>
 </html>

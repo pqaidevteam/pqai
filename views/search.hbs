@@ -2,8 +2,9 @@
 <html lang="en">
 	<head>
 		<title>PQAI | Search</title>
-		{{> default_header_imports}}
+		{{> default_header}}
 		<style type="text/css">
+			{{> custom_style}}
 			nav.navbar {
 				background-color: var(--dark-teal);
 			}
@@ -973,9 +974,14 @@
 	    while (text.charAt(i) !== ' ') i--;
 	    var shownText = text.substring(0, i);
 	    var hiddenText = text.substring(i);
-	    var html = shownText + `<span class='hidden-text' data-text='${btoa(text.substring(i))}'> ...</span>`;
+	    var html = shownText + `<span class='hidden-text' data-text='${btoa(text.substring(i))}' style='cursor:pointer'> ...</span>`;
 	    return html;
 	}
+
+	$(document).on('click', '.hidden-text', function() {
+		var text = atob($(this).attr('data-text'));
+		$(this).replaceWith(text);
+	})
 
 	$(document).on('click', '#data-coverage-notice-toggle-btn', function (e) {
 		$('#data-coverage-notice').toggleClass('hidden');

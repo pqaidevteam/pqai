@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>PQAI | Search</title>
+	{{> default_header}}
+	{{> styling}}
+	<style type="text/css">
+		form {
+			background-color: whitesmoke;
+			padding: 12px 20px 5px 20px;
+			border: 1px solid #eee;
+		}
+		h3 {
+			margin-top: 2rem;
+		}
+	</style>
+</head>
+<body>
+	{{> navbar}}
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-12 py-3 action-area">
+				<div class="container-fluid pl-5 pr-0">
+					<div class="container">
+						<h3 id="contact">Contact us</h3>
+						<p>Please fill the form below and we'll get back to you shortly.</p>
+						
+						<!-- Contact form -->
+						<form>
+							<div class="form-group">
+								<label for="contact-email-input">Email address</label>
+								<input 	type="email"
+										class="form-control"
+										id="contact-email-input"
+										placeholder="Enter email address where we can revert">
+							</div>
+							<div class="form-group">
+								<label for="contact-message">Your message</label>
+								<textarea
+									class="form-control"
+									id="contact-message"
+									cols="30"
+									rows="3"
+									placeholder="Write your message here"></textarea>
+							</div>
+							<button
+						  		type="button"
+						  		id="newsletter-submit-btn"
+						  		class="btn btn-primary mb-2">Send</button>
+						</form>
+						
+						<h3>Location</h3>
+						<p>Address line 1</p>
+						<p>Address line 2</p>
+						<p>State, Country</p>
+						<p>user@example.com</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
