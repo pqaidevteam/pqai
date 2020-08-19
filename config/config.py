@@ -12,6 +12,6 @@ mongo_npl_coll = 'npl'
 extensions = [
 	'http://3.215.231.221:5000/extension/'
 ]
-allow_outgoing_extension_requests = True
-allow_incoming_extention_requests = True
-reranker_active = False
+allow_outgoing_extension_requests = False
+allow_incoming_extention_requests = False
+reranker_active = True
