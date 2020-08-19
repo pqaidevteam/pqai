@@ -1,7 +1,13 @@
 # Server
 from flask import request
-import numpy as np
 from flask_api import FlaskAPI, status, exceptions
+
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
+import re
+import numpy as np
 from core.vectorizer import SIFTextVectorizer
 from core.indexes import get_index
 from core.indexes import index_ids as available_indexes
@@ -15,7 +21,6 @@ from core.documents import Document
 from core.reranking import MatchPyramidRanker
 from core.remote import search_extensions, merge_results
 from config.config import reranker_active, allow_outgoing_extension_requests
-import re
 from core.reranking import CustomRanker
 
 reranker = CustomRanker()
@@ -142,4 +147,4 @@ def handle_extension_request():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, threaded=False)
+    app.run(debug=False, threaded=False)
