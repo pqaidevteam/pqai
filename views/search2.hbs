@@ -21,7 +21,7 @@
 							A simple and powerful way to help you run prior-art checks.
 						</p>
 						<p class="text-center">
-							PQAI is <a href="">open-source</a> and powered by <a href="/arch">cutting-edge AI</a>.
+							PQAI is <a href="">open-source</a> and powered by <a href="#">cutting-edge AI</a>.
 						</p>
 					</div>
 
@@ -59,12 +59,19 @@
 						</span>
 						<div id="search-filters" class="hidden">
 							<form class="form-inline d-flex justify-content-end mt-2">
-								<label for="cutoff-date-input" class="mb-2 mr-1">Show results published before </label>
+								<label for="cutff-date-after-input" class="mb-2 mr-1">Show results published after </label>
 								<input
 									type="text"
 									class="form-control mb-2 mr-sm-2"
-									id="cutoff-date-input"
-									size="8"
+									id="cutff-date-after-input"
+									size="3"
+									placeholder="1970-01-01">
+								<label for="cutff-date-before-input" class="mb-2 mr-1">but before </label>
+								<input
+									type="text"
+									class="form-control mb-2 mr-sm-2"
+									id="cutff-date-before-input"
+									size="3"
 									placeholder="2019-12-31">
 								<button
 									type="button"
@@ -181,6 +188,7 @@
 	app.config.diagnostics = false;
 	app.config.showMappingInBookmarks = false;
 	app.config.resultTitleClickable = false;
+	app.config.dateFormat = /^\d{4}\-\d{2}\-\d{2}$/;
 
 	app.state.query = null;
 	app.state.dateFilterBefore = null;
@@ -537,18 +545,30 @@
 	}
 
 	$(document).on('click', '#apply-date-filter-btn', function (e) {
-		var date = $('#cutoff-date-input').val();
-		if (!date) {
-			app.state.dateFilterBefore = null;
-			return;
-		}
-		$('#calendar-btn').text("before " + date)
-		if (!date.match(/^\d{4}\-\d{2}\-\d{2}$/)) {
-			return alert("Invalid date.");
-		}
-		app.state.dateFilterBefore = date;
-		$('#query-submit-btn').click();
+		updateDateFilter();
+		applyDateFilter();
 	});
+
+	function updateDateFilter() {
+		var dateAfter = $('#cutff-date-after-input').val();
+		var dateBefore = $('#cutff-date-before-input').val();
+
+		if (dateBefore && dateBefore.match(app.config.dateFormat)) {
+			app.state.dateFilterBefore = dateBefore;
+		} else {
+			app.state.dateFilterBefore = null;
+		}
+
+		if (dateAfter && dateAfter.match(app.config.dateFormat)) {
+			app.state.dateFilterAfter = dateAfter;
+		} else {
+			app.state.dateFilterAfter = null;
+		}
+	}
+
+	function applyDateFilter() {
+		$('#query-submit-btn').click();
+	}
 
 	$(document).on('click', '.bookmark-btn', function (e) {
 		e.preventDefault();
