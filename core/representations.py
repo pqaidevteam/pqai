@@ -464,9 +464,9 @@ class WordEmbeddings(Embeddings):
         Returns:
             ndarray: The vector corresponding to the given word
         """
-        if item not in self._dict:
+        if word not in self._dict:
             return self.__getitem__(self.UNK)
-        return super().__getitem__(item)
+        return super().__getitem__(word)
 
 
 class Text(str):
@@ -511,6 +511,8 @@ class VectorSequence():
         self._labels = labels
         self._sequence = np.array(vectors)
         self._n = len(vectors)
+        self._dims = self._sequence.shape[1]
+        self._fixed_length = None
         self._default_interaction = Interaction()
         self._default_interaction.metric = 'cosine'
         self._default_interaction.amplify = False
@@ -550,7 +552,34 @@ class VectorSequence():
     
     @property
     def matrix(self):
-        return self._sequence
+        if self._fixed_length is None:
+            return self._sequence
+        if self._n > self._fixed_length:
+            return self._truncated
+        else:
+            return self._padded
+
+    @property
+    def _truncated(self):
+        return self._sequence[:self._fixed_length]
+
+    @property
+    def _padded(self):
+        r = self._fixed_length - self._n
+        shape = (r, self._dims)
+        padding = np.zeros(shape)
+        return np.concatenate((self._sequence, padding))
+
+    def set_length(self, n):
+        self._fixed_length = n
+        return self
+
+    @property
+    def normalized_matrix(self):
+        row_magnitudes = np.sqrt(np.sum(self._sequence*self._sequence, axis=1, keepdims=True))
+        row_magnitudes += np.finfo(float).eps
+        return self._sequence / row_magnitudes
+
 
 class Interaction():
     
