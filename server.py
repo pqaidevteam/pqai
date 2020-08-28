@@ -46,6 +46,7 @@ def search_index (extend=True):
     num_results = request.args.get('n', 10, int)
     index_id = request.args.get('idx', '', str)
     query = request.args.get('q', '', str)
+    latent_query = request.args.get('lq', '', str)
     before = request.args.get('before', '', str)
     after = request.args.get('after', '', str)
     include_snippets = request.args.get('snip', 0, int)
@@ -66,7 +67,8 @@ def search_index (extend=True):
         reranker = None
 
     try:
-        results = searcher.search(query, num_results, indexes, before, after, reranker)
+        full_query = query + '\n' + latent_query
+        results = searcher.search(full_query, num_results, indexes, before, after, reranker)
     except Exception as e:
         print(repr(e))
         return 'Error while searching.', status.HTTP_500_INTERNAL_SERVER_ERROR 

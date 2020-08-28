@@ -70,6 +70,7 @@ app.post('/mediator', function (req, res) {
 	let cmd = req.body.cmd;
 	if (cmd == 'search-by-patent' || cmd == 'search-by-query') {
 		let query = req.body.query;
+		let latentQuery = req.body.latentQuery;
 		let indexId = 'auto';
 		let before = req.body.before;
 		let after = req.body.after;
@@ -80,6 +81,7 @@ app.post('/mediator', function (req, res) {
 		let url = 'http://localhost:5000/documents/';
 		let params = {
 			q: query,
+			lq: latentQuery,
 			idx: indexId,
 			before: before,
 			after: after,

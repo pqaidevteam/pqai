@@ -331,6 +331,7 @@
 		var reqParams = {
 			cmd,
 			query,
+			latentQuery: app.state.latentQuery,
 			before: app.state.dateFilterBefore,
 			after: app.state.dateFilterAfter,
 			mappings: app.config.loadMappings,
