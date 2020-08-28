@@ -787,7 +787,14 @@
 	    while (text.charAt(i) !== ' ') i--;
 	    var shownText = text.substring(0, i);
 	    var hiddenText = text.substring(i);
-	    var html = shownText + `<span class='hidden-text' data-text='${btoa(text.substring(i))}' style='cursor:pointer' onclick='$(this).replaceWith( atob($(this).attr("data-text")) )'> ...</span>`;
+	    try {
+		    var html = shownText + `<span class='hidden-text' data-text='${btoa(text.substring(i))}' style='cursor:pointer' onclick='$(this).replaceWith( atob($(this).attr("data-text")) )'> ...</span>`;
+	    } catch (e) {
+	    	// when the text contains a character that cannot be encoded
+	    	// into base64 format, then it raises an exception, in that
+	    	// case, don't shorten the text, just return it as it is.
+	    	return text;
+	    }
 	    return html;
 	}
 
