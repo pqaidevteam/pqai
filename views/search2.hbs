@@ -112,6 +112,13 @@
 								</a>
 							</li>
 							<li class="nav-item">
+								<a 	href="#query-log-area"
+										class="nav-link"
+										id="query-log-tab">
+									My queries
+								</a>
+							</li>
+							<li class="nav-item">
 								<a 	href="#diagnostics-area"
 										class="nav-link"
 										id="diagnostics-tab">
@@ -149,6 +156,18 @@
 							<!-- Diagnostics pane -->
 							<div class="tab-pane fade" id="diagnostics-area">
 								<!-- populated by JS -->
+							</div>
+
+							<!-- History pane -->
+							<div class="tab-pane fade" id="query-log-area">
+								<div class="d-flex justify-content-end">
+									<button type="button" id="clear-query-log-btn" class="btn btn-outline">
+										<i class="fa fa-trash mr-1"></i> Clear list
+									</button>
+								</div>
+								<div id="query-log">
+									<!-- populated by JS -->
+								</div>
 							</div>
 						</div>
 					</div>
@@ -189,6 +208,9 @@
 	app.config.showMappingInBookmarks = false;
 	app.config.resultTitleClickable = false;
 	app.config.dateFormat = /^\d{4}\-\d{2}\-\d{2}$/;
+	app.config.leftScrollKey = 37;
+	app.config.rightScrollKey = 39;
+	app.config.logLength = 100;
 
 	app.state.query = null;
 	app.state.dateFilterBefore = null;
@@ -201,6 +223,7 @@
 	app.state.visited = {};
 	app.state.bookmarks = [];
 	app.state.latentQuery = '';
+	app.state.queryLog = [];
 
 	app.config.examples = [
 		{
@@ -239,9 +262,11 @@
 		}
 		
 		/*
-			Initialize bookmarks
+			Initialize bookmarks and search history from Browser Storage
 		*/	
-		loadBookmarks();
+		restoreBookmarks();
+		restoreQueryLog();
+
 	})
 
 	function callMediator(parameters, callback) {
@@ -337,6 +362,17 @@
 			mappings: app.config.loadMappings,
 			n: app.config.nResults
 		};
+
+		var logEntry = {
+			query,
+			latentQuery: app.state.latentQuery,
+			before: app.state.dateFilterBefore,
+			after: app.state.dateFilterAfter,
+			timestamp: new Date()
+		};
+
+		addToQueryLog(logEntry);
+
 		callMediator(reqParams, function(response) {
 			app.state.loading = false;
 			finishLoading();
@@ -350,7 +386,14 @@
 		app.state.results = app.state.metaResults.results;
 		app.state.pointer = -1;
 		seekAbsolute(0);
+		scrollToResultsArea();
 		callback(true);
+	}
+
+	function scrollToResultsArea() {
+		$('html, body').animate({
+	        scrollTop: $("#results-tab").offset().top - 10
+	    }, 1000);
 	}
 
 	function showNextResult() {
@@ -390,6 +433,9 @@
 			$('#result-navigator button.active').removeClass('active');
 			var activatedButton = $('#result-navigator button').get(n);
 			$(activatedButton).addClass('active');
+
+			/* Move to results tab (in case not there already) */
+			$('#results-tab').click();
 			
 			callback(true);
 		});
@@ -416,12 +462,8 @@
 			return;
 		}
 
-		if (!$('#result-navigator').length) {
-			var html = app.templates.resultNavigator();
-			$('#results-area').html(html);
-		}
-
-		html = app.templates.resultCard(result);
+		var html = app.templates.resultNavigator();
+		html += app.templates.resultCard(result);
 		$('#results-area').append(html);
 
 		callback(true);
@@ -432,6 +474,7 @@
 	}
 
 	function hideShownResult() {
+		$('.result-navigator-wrapper').remove();
 		$('.result-card').remove();
 	}
 
@@ -457,8 +500,6 @@
 		$('#results-area').empty();
 	}
 
-	var loadMoreBtnHtml = '<button class="btn btn-md btn-default mb-3" id="load-more-btn">Load more results</button>';
-
 	function getSnippet(pn, query, callback) {
 		callMediator({
 			cmd: 'get-snippet',
@@ -473,14 +514,6 @@
 			callback(html);
 		});
 	}
-
-	$(document).on('click', '#load-more-btn', function(e) {
-		if (app.state.results.length > 0) {
-			displayResults();
-		} else {
-			alert("No more results to show.");
-		}
-	});
 
 	$(document).on('click', '.res-title', function(e) {
 		if (!app.config.resultTitleClickable)
@@ -600,12 +633,16 @@
 		renderBookmarks();
 	})
 
+	$(document).on('click', '#query-log-tab', function (e) {
+		renderQueryLog();
+	})
+
 	function saveBookmarks() {
 		localStorage.setItem('bookmarks', JSON.stringify(app.state.bookmarks));
 		updateBookmarksCountBadge();
 	}
 
-	function loadBookmarks() {
+	function restoreBookmarks() {
 		if (!localStorage.getItem('bookmarks')) {
 			return null;
 		}
@@ -622,6 +659,15 @@
 			// If the currently displayed result is bookmarked,
 			// remove the "bookmarked" button by re-rendering
 			seekRelative(0);
+		}
+	});
+
+	$(document).on('click', '#clear-query-log-btn', function (e) {
+		var confirmation = confirm('Remove all queries?');
+		if (confirmation) {
+			app.state.queryLog = [];
+			saveQueryLog();
+			renderQueryLog();
 		}
 	});
 
@@ -681,7 +727,7 @@
 	app.templates.resultCard = function (result, asBookmark=false) {
 		var html = '';
 		html += `
-			<div class="card result-card my-3">
+			<div class="card result-card mb-3">
 				<div class="card-body">
 					<div class="card-title">
 						<h5 class="res-title" data-pn="${result.id}">
@@ -748,7 +794,7 @@
 
 	app.templates.resultNavigator = function () {
 		var html = '';
-		html += `<div class="d-flex justify-content-center">
+		html += `<div class="d-flex justify-content-center mb-2 result-navigator-wrapper">
 							<button type="button"
 									class="btn btn-outline"
 									onclick="showPreviousResult()">
@@ -775,11 +821,29 @@
 		return html;
 	}
 
+	app.templates.queryLogEntry = function (entry) {
+		var html = '';
+		var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+		var dateStr = new Date(entry.timestamp).toLocaleDateString("en-US", options);
+		html += `<div class="query-log-entry">
+					<small>${dateStr}</small>
+					<p>${entry.query} (<button class="btn btn-link query-rerun-btn px-0 py-0">Rerun</button>)</p>
+				</div>`;
+		return html;
+	}
+
 	$(document).on('click', '.res-nav-btn', function (e) {
 		e.preventDefault();
 		var i = parseInt($(this).attr('data-i'));
 		seekAbsolute(i);
 	});
+
+	$(document).on('click', '.query-rerun-btn', function (e) {
+		var wrapper = $(this).closest('.query-log-entry')
+		var query = $(wrapper.children('p').get(0)).text().trim();
+		$('#user-text-input').val(query);
+		$('#query-submit-btn').click();
+	})
 
 	function cutShort(text, length) {
 	    if (!length || length > text.length || length < 10) return text;
@@ -837,6 +901,58 @@
 		function _isAllUpperCase(str) {
 			return !str.match(/[a-z]/);
 		}
+	}
+
+	$(document).on('keyup', 'body', function(e) {
+		let inputInFocus = $('textarea:focus').length || $('input:focus').length
+		if (inputInFocus) return null;
+		
+		if (e.keyCode == app.config.leftScrollKey) {
+			showPreviousResult()
+		} else if (e.keyCode == app.config.rightScrollKey) {
+			showNextResult();
+		}
+	})
+
+	function addToQueryLog (entry) {
+		app.state.queryLog.unshift(entry);
+		if (app.state.queryLog.length > app.config.logLength) {
+			app.state.queryLog = app.state.queryLog.slice(0, app.config.logLength)
+		}
+		saveQueryLog();
+	}
+
+	function saveQueryLog () {
+		localStorage.setItem('queryLog', JSON.stringify(app.state.queryLog));
+	}
+
+	function restoreQueryLog () {
+		app.state.queryLog = JSON.parse(localStorage.getItem('queryLog'));
+	}
+
+	function renderQueryLog () {
+		$('#query-log').empty()
+
+		/* edge case - no query log */
+		if (!app.state.queryLog.length) {
+			
+			/* hide clear-query-log button */
+			$('#clear-query-log-btn').addClass('hidden');
+
+			/* add a no log notice and exit */
+			$('#query-log').prepend(`<p class="my-3">Nothing here.</p>`)
+			return;
+		}
+
+		/* show clear-log buttons */
+		$('#clear-query-log-btn').removeClass('hidden');
+		
+		/* populate list */
+		app.state.queryLog.forEach(function (entry) {
+			$('#query-log').prepend(
+				app.templates.queryLogEntry(entry)
+			);
+		});
 	}
 
 </script>
