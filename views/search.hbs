@@ -1,320 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title>PQAI | Search</title>
-		{{> default_header}}
-		<style type="text/css">
-			{{> custom_style}}
-			nav.navbar {
-				background-color: var(--dark-teal);
-			}
-			sup {
-				font-size: 60%;
-				top: -0.9em;
-			}
-			.visited {
-				color: purple !important;
-			}
-			.gauge-container {
-				width: 80%;
-				margin: 0 auto;
-				display: block;
-				max-width: 200px;
-			}
-			.gauge {
-				max-width: 300px;
-			}
-			.gauge-segment {
-				background-color: lightgray;
-				display: inline-block;
-				margin: 0px;
-				padding: 0px;
-				border: 0;
-				height: 30px;
-			}
-			.segment-0 {
-				background-color: #fa2d08;
-				width: 30%;
-			}
-			.segment-1 {
-				background-color: #f7c20e;
-				width: 40%;
-			}
-			.segment-2 {
-				background-color: #809507;
-				width: 30%;
-			}
-			.gauge-segment.legend {
-				background-color: transparent !important;
-				font-family: sans-serif;
-				font-size: smaller;
-				color: #2c82c9;
-				border: 1px solid #2c82c9;
-				border-bottom: none;
-				text-align: center;
-				height: 10px;
-			}
-			#gauge-text {
-				font-family: sans-serif;
-				color: #2c82c9;
-			}
-			.gauge-segment.legend:first-child {
-				border-right: none;
-			}
-			.gauge-segment.legend:last-child {
-				border-left: none;
-			}
-			#gauge-pointer {
-				position: relative;
-				left: 200px;
-				top: 2px;
-			}
-			.curtain {
-				position: absolute;
-				width: 100%;
-				height: 100%;
-				z-index: 200;
-				background-color: #f4f7fc;
-			}
-			#tech-domain-input {
-				color: var(--offwhite);
-				font-size:12;
-				background-color:transparent;
-				border:none;
-				padding: 0;
-			}
-			.custom-select:focus {
-				border: none;
-				box-shadow: none;
-			}
-		</style>
-	</head>
-	<body>
-		<nav class="navbar navbar-expand-lg navbar-dark">
-			<a href="#" class="navbar-brand">PQAI</a>
-			<button
-				class="navbar-toggler"
-				type="button"
-				data-toggle="collapse"
-				data-target="#navbarSupportedContent">
-					<span class="navbar-toggler-icon"></span>
-			</button>
-			<div
-				class="collapse navbar-collapse"
-				id="navbarSupportedContent">
-				<ul class="navbar-nav mr-auto">
-					<li class="nav-item active">
-						<a href="/search" class="nav-link">Search</a>
-					</li>
-					<li class="nav-item dropdown">
-						<a
-							href="#"
-							class="nav-link dropdown-toggle"
-							id="view-bookmarks-btn"
-							data-toggle="dropdown"
-							role="button">
-							Bookmarks (<span id="bookmark-count">0</span>)
-						</a>
-						<div class="dropdown-menu" id="bookmarks-list">
-							<div class="dropdown-divider"></div>
-							<a class="dropdown-item" id="clear-bookmarks-btn" href="#">Clear list</a>
-							<a
-								class="dropdown-item"
-								id="export-bookmarks-btn"
-								href="#">
-								Export to Excel
-							</a>
+<head>
+	<title>PQAI | Search</title>
+	{{> default_header}}
+	{{> styling}}
+</head>
+<body>
+	{{> navbar}}
+	
+	<!-- Content -->
+	<div class="container-fluid">
+		<div class="row">
+
+			<!-- Input area -->
+			<div class="col-md-12 py-3 input-area">
+				<div class="container-fluid pl-5 pr-0">
+					<div class="container">
+						<h1 class="text-center">PQAI</h1>
+						<p class="text-center">
+							A simple and powerful way to help you run prior-art checks.
+						</p>
+						<p class="text-center">
+							PQAI is <a href="">open-source</a> and powered by <a href="#">cutting-edge AI</a>.
+						</p>
+					</div>
+
+					<!-- Search form -->
+					<div id="search-form" class="container">
+						<p class="mb-2">
+							Connected to <a href="#">2 nodes</a> 
+						</p>
+						<textarea
+							class="form-control"
+							id="user-text-input"
+							cols="30"
+							rows="4"
+							placeholder="Enter an invention description, run an example to see how"></textarea>
+						<button
+							class="btn btn-primary"
+							type="button"
+							id="query-submit-btn">
+							SUBMIT
+						</button>
+						<a href="#" id="run-example-btn" class="ml-3">Run an example</a>
+						<button
+							id="data-coverage-btn"
+							class="btn btn-link ml-2"
+							onclick="$('#data-coverage-notice').toggleClass('hidden')">
+							<i class="fa fa-info-circle mr-1"></i> Data Coverage
+						</button>
+						<span style="float:right">
+							<button
+								class="btn btn-link"
+								id="search-filter-btn"
+								onclick="$('#search-filters').toggleClass('hidden')">
+								<i class="fa fa-filter mr-1"></i> Filters
+							</button>
+						</span>
+						<div id="search-filters" class="hidden">
+							<form class="form-inline d-flex justify-content-end mt-2">
+								<label for="cutff-date-after-input" class="mb-2 mr-1">Show results published after </label>
+								<input
+									type="text"
+									class="form-control mb-2 mr-sm-2"
+									id="cutff-date-after-input"
+									size="3"
+									placeholder="1970-01-01">
+								<label for="cutff-date-before-input" class="mb-2 mr-1">but before </label>
+								<input
+									type="text"
+									class="form-control mb-2 mr-sm-2"
+									id="cutff-date-before-input"
+									size="3"
+									placeholder="2019-12-31">
+								<button
+									type="button"
+									id="apply-date-filter-btn"
+									class="btn btn-secondary mb-2"
+									onclick="$(this).parent().addClass('hidden')">
+										Apply
+								</button>
+							</form>
 						</div>
-					</li>
-					<li class="nav-item">
-						<a href="/datasets" class="nav-link">Datasets</a>
-					</li>
-					<!-- <li class="nav-item">
-						<a href="/about" class="nav-link">About</a>
-					</li> -->
-				</ul>
+					</div>
+					<!-- Data coverage notice -->
+					<div id="data-coverage-notice" class="container mt-2 hidden text-justify">
+						<i class="fa fa-info-circle"></i> The data coverage of this beta version is limited to nearly 11 million US patents and applications and nearly 11.5 million research papers in the fields of engineering and computer science. Datasets were obtained from <a href="https://bulkdata.uspto.gov/" target="_BLANK">USPTO Bulk Datasets</a> and <a href="http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/" target="_BLANK">Semantic Scholar's Open Research Corpus</a>, respectively.
+					</div>
+				</div>
 			</div>
-		</nav>
-		<section>
-			<div id='input-pane'>
-				<div class="container py-3">
-					<div class="row">
-						<div class="col-md-2"></div>
-						<div class="col-md-8">
-							<h2 class='pqai-logo mb-5'>Patent Quality through AI<sup>beta</sup></h2>
-							<div class="form-group">
-								<label
-									for="user-text-input"></label>
-								<textarea
-									class="form-control"
-									id="user-text-input"
-									cols="30"
-									rows="4"
-									style="background-color: #1b3842; resize: vertical; max-height: 400px;"
-									placeholder="Pick an example from the dropdown menu below, or enter an invention description or a claim (one feature per line)"></textarea>
+
+			<!-- Search results area -->
+			<div class="col-md-12 py-3">
+				<div class="container-fluid pl-5 pr-0">
+					<div class="container">
+
+						<!-- Tab navigation -->
+						<ul class="nav nav-tabs" id="tabs">
+							<li class="nav-item">
+								<a 	href="#results-area"
+										class="nav-link active"
+										id="results-tab">
+									Results
+								</a>
+							</li>
+							<li class="nav-item">
+								<a 	href="#bookmarks-area"
+										class="nav-link"
+										id="bookmarks-tab">
+									Bookmarks <span class="badge badge-secondary" id="bookmarks-count">0</span>
+								</a>
+							</li>
+							<li class="nav-item">
+								<a 	href="#query-log-area"
+										class="nav-link"
+										id="query-log-tab">
+									My queries
+								</a>
+							</li>
+							<li class="nav-item">
+								<a 	href="#diagnostics-area"
+										class="nav-link"
+										id="diagnostics-tab">
+									Diagnostics
+								</a>
+							</li>
+						</ul>
+
+						<div class="tab-content py-3">
+							
+							<!-- Results pane -->
+							<div class="tab-pane fade show active" id="results-area">
+								<!-- populated by JS -->
 							</div>
-							<div class="row">
-								<div class="col-md-8">
-									<button
-										class="btn btn-light"
-										type="button"
-										id="trigger-search-btn">
-										Submit
+
+							<!-- Bookmarks pane -->
+							<div class="tab-pane fade" id="bookmarks-area">
+
+								<!-- Bookmarks control panel -->
+								<div class="d-flex justify-content-end">
+									<button type="button" id="export-bookmarks-btn" class="btn btn-outline">
+											<i class="fa fa-download mr-1"></i> Export to Excel
 									</button>
-									<div
-										class="dropdown open ml-2"
-										style="display: inline-block">
-										<button
-											class="btn btn-transparent dropdown-toggle"
-											type="button"
-											id="example-select-btn"
-											data-toggle="dropdown"
-											style="color:var(--offwhite); font-size:12; text-align:left; border: 1px solid var(--offwhite)">
-											Pick an example
-										</button>
-										<div
-											class="dropdown-menu"
-											id="example-queries">
-										</div>
-									</div>
-									<a
-										href='#'
-										class="ml-2"
-										id="data-coverage-notice-toggle-btn"
-										style="color: var(--offwhite); text-decoration: underline;">
-										Data sources and coverage
-									</a>
+									<button type="button" id="clear-bookmarks-btn" class="btn btn-outline">
+										<i class="fa fa-trash mr-1"></i> Clear list
+									</button>
 								</div>
-								<div class="col-md-4">
-									<div class="form-group">
-									  <button
-									  	type="button"
-									  	class="btn btn-transparent dropdown-toggle ml-2"
-									  	id="calendar-btn"
-									  	data-toggle="dropdown"
-									  	style="color:var(--offwhite);font-size:12;float:right">
-										  	No date restriction
-									  </button>
-									  <div
-									  	class="dropdown-menu"
-									  	style="padding: 10px 20px">
-											<span id="date-filter-label">
-												Cut-off date
-											</span>
-											<input
-												type="text"
-												class="form-control form-control-sm"
-												id="cutoff-date-input"
-												placeholder="YYYY-MM-DD"
-												style="display: inline-block; font-family: sans-serif;">
-											<a
-												href="#"
-												id="apply-date-filter-btn">
-													Apply
-											</a>
-									  </div>
-									</div>
+
+								<div id="bookmarks-list">
+									<!-- populated by JS -->
+								</div>
+
+							</div>
+
+							<!-- Diagnostics pane -->
+							<div class="tab-pane fade" id="diagnostics-area">
+								<!-- populated by JS -->
+							</div>
+
+							<!-- History pane -->
+							<div class="tab-pane fade" id="query-log-area">
+								<div class="d-flex justify-content-end">
+									<button type="button" id="clear-query-log-btn" class="btn btn-outline">
+										<i class="fa fa-trash mr-1"></i> Clear list
+									</button>
+								</div>
+								<div id="query-log">
+									<!-- populated by JS -->
 								</div>
 							</div>
 						</div>
-						<div class="col-md-2"></div>
-					</div>
-					<div class="row">
-						<div class="col-md-2"></div>
-						<div class="col-md-8 hidden" id="options-pane">
-							<button class="btn btn-sm btn-outline-secondary" type="button" id="download-report-btn">
-								<i class="fa fa-download"></i> Download report
-							</button>
-							<button class="btn btn-sm btn-outline-secondary" type="button" id="toggle-charts-btn">
-								<i class="fa fa-line-chart"></i> Hide charts
-							</button>
-							<button class="btn btn-sm btn-outline-secondary" type="button" id="toggle-abstracts-btn">
-								<i class="fa fa-adjust"></i> Show abstracts
-							</button>
-						</div>
-						<div class="col-md-2"></div>
 					</div>
 				</div>
 			</div>
-			<div class="container mt-2 mb-2 hidden" id="data-coverage-notice">
-				<div class="row">
-					<div class="col-md-2"></div>
-					<div class="col-md-8">
-						<p><span class="fa fa-info-circle"></span> The data coverage of this beta version is limited to nearly 11 million US patents and applications and nearly 11.5 million research papers in the fields of engineering and computer science. Datasets were obtained from <a href="https://bulkdata.uspto.gov/" target="_BLANK">USPTO Bulk Datasets</a> and <a href="http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/" target="_BLANK">Semantic Scholar's Open Research Corpus</a>, respectively.</p>
-					</div>
-					<div class="col-md-2"></div>
-				</div>
-			</div>
-			<div class="container">
-				<div class="row" id="charts-pane">
-					<div class="curtain"></div>
-					<div class="col-lg-4 mt-3">
-						<div class="card chart-card">
-						  <div class="card-body">
-						    <h5 class="card-title">O-Score</h5>
-						    <div id="chart-a" style="width:100%; height:250px; display:block; margin: 0 auto;">
-						    	<div class="linear-gauge-container">
-						    		<div id="gauge-text"></div>
-						    	  <div class="pointer-container">
-						    	    <img id="gauge-pointer" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAJCAIAAACJ2loDAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TtaVUHOxQxCFDdbIgfuGoVShChVArtOpgcumH0KQhaXFxFFwLDn4sVh1cnHV1cBUEwQ8QF1cnRRcp8X9JoUWMB8f9eHfvcfcOEBplplldo4CmV810MiFmcyti4BUhRBFEDyZlZhmzkpSC5/i6h4+vd3Ge5X3uz9Gr5i0G+ETiGWaYVeJ14qnNqsF5nzjCSrJKfE48YtIFiR+5rrj8xrnosMAzI2YmPUccIRaLHax0MCuZGvEEcUzVdMoXsi6rnLc4a+Uaa92TvzCc15eXuE5zEEksYBESRCioYQNlVBGnVSfFQpr2Ex7+AccvkUsh1wYYOeZRgQbZ8YP/we9urcL4mJsUTgDdL7b9MQQEdoFm3ba/j227eQL4n4Erve2vNIDpT9LrbS12BPRtAxfXbU3ZAy53gOiTIZuyI/lpCoUC8H5G35QD+m+B0KrbW2sfpw9AhrpK3QAHh8BwkbLXPN4d7Ozt3zOt/n4AY/VyoWOKwJMAAAAJcEhZcwAALiMAAC4jAXilP3YAAAAHdElNRQfjChgICR0/ziJ1AAAAGXRFWHRDb21tZW50AENyZWF0ZWQgd2l0aCBHSU1QV4EOFwAAAI9JREFUGNN1yrEJxCAYxfHvCmvHyQTZQrBzCSFDCAELd7DLErpAOquUVgFBhHdFjiSXO1/5f7/XNE3zPFN/SinKOQ/D0BOc823bCECMsYe89wAIAABr7a+QUtZaL1RKEUI80Lqux/tBAFJKjLFTOOfO60IAlmU5xDiO+77/R601rTURhRDu/QsByDkbYx7xDUxwqKG/gFUNAAAAAElFTkSuQmCC" alt="\/" />
-						    	  </div>
-						    	  <div class="gauge">
-						    	    <div class="gauge-segment segment-0">&nbsp;</div><div class="gauge-segment segment-1">&nbsp;</div><div class="gauge-segment segment-2">&nbsp;</div>
-						    	  </div>
-						    	  <div class="gauge" style="margin-top: 5px;">
-						    	  	<div class="gauge-segment segment-0 legend">Low</div><div class="gauge-segment segment-1 legend">Medium</div><div class="gauge-segment segment-2 legend">High</div>
-						    	  </div>
-						    	</div>
-						    </div>
-						    <p class="card-text">A high originality score indicates that your ideas seems unique with respect to the patents results from this search.</p>
-						    <!-- <a href="#" class="btn btn-primary">Know more</a> -->
-						  </div>
-						</div>
-					</div>
-					<div class="col-lg-4 mt-3">
-						<div class="card chart-card" style="width: 100%;">
-						  <div class="card-body">
-						    <h5 class="card-title">Filing trend</h5>
-						    <div id="chart-b" style="width:100%; height:250px; display:block; margin: 0 auto;"></div>
-						    <p class="card-text">The filing trend is indicative of the relative number of patents that have been filed on ideas related to yours in recent years.</p>
-						    <!-- <a href="#" class="btn btn-primary">Know more</a> -->
-						  </div>
-						</div>
-					</div>
-					<div class="col-lg-4 mt-3">
-						<div class="card chart-card" style="width: 100%;">
-						  <div class="card-body">
-						    <h5 class="card-title">Key assignees</h5>
-						    <div id="chart-c" style="width:100%; height:250px; display:block; margin: 0 auto;"></div>
-						    <p class="card-text">Key assignees are those patent holders (companies or inventors) that have maximum number of patents related to your idea.</p>
-						    <!-- <a href="#" class="btn btn-primary">Know more</a> -->
-						  </div>
-						</div>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12 mt-3" id="output-pane">
-						<!-- automatically populated -->
+
+			<!-- Front page content -->
+			<div class="col-md-12 py-3">
+				<div class="container-fluid pl-5 pr-0">
+					<div class="container">
+						
 					</div>
 				</div>
 			</div>
-		</section>
-	</body>
-</html>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.0/handlebars.min.js"></script>
+
+		</div>
+	</div>
+
+</body>
 <script type="text/javascript" src="bootstrap-4.3.1/js/popper.min.js"></script>
 <script type="text/javascript" src="bootstrap-4.3.1/js/bootstrap.min.js"></script>
 {{> export_js}}
-{{> charts}}
-
-
-<script type="text/javascript">
+<script>
 	var app = {};
 	app.config = {};
 	app.state = {};
 	app.templates = {};
 
-	app.config.chartsDisabled = true;
 	app.config.nResults = 10;
 	app.config.loadMappings = -1;
 	app.config.showOptions = false;
@@ -323,6 +204,13 @@
 		'#dd5182', '#ff6e54', '#ffa600',
 		'#666666', '#999999', '#BBBBBB'
 	];
+	app.config.diagnostics = false;
+	app.config.showMappingInBookmarks = false;
+	app.config.resultTitleClickable = false;
+	app.config.dateFormat = /^\d{4}\-\d{2}\-\d{2}$/;
+	app.config.leftScrollKey = 37;
+	app.config.rightScrollKey = 39;
+	app.config.logLength = 100;
 
 	app.state.query = null;
 	app.state.dateFilterBefore = null;
@@ -335,6 +223,7 @@
 	app.state.visited = {};
 	app.state.bookmarks = [];
 	app.state.latentQuery = '';
+	app.state.queryLog = [];
 
 	app.config.examples = [
 		{
@@ -362,40 +251,23 @@
 		}
 	];
 
-	$(document).ready(function () {
-		populateExamples();
-		$('#user-text-input').focus();
-		$('#calendar-btn').dropdown();
-		loadBookmarks();
-	});
+	$(document).ready(() => {
+		/*
+			Hide diagnostics tab if required
+		*/
+		if (app.config.diagnostics) {
+			$('#diagnostics-tab').removeClass('hidden');
+		} else {
+			$('#diagnostics-tab').addClass('hidden');
+		}
+		
+		/*
+			Initialize bookmarks and search history from Browser Storage
+		*/	
+		restoreBookmarks();
+		restoreQueryLog();
 
-	function populateExamples() {
-		app.config.examples.forEach(function (example) {
-			$('#example-queries').append(
-				'<a class="dropdown-item example-query" data-query="' + btoa(example.query) + '" href="#">' + example.label + '</a>'
-			)
-		})
-	}
-
-	$(document).on('click', '.example-query', function(e) {
-		e.preventDefault();
-		var b64query = $(this).attr('data-query');
-		var query = atob(b64query);
-		$('#user-text-input').val(query);
-	});
-
-	function initializeCharts() {
-		var w = $('#chart-a').width();
-		var aspectRatio = 4/3;
-		var f = 1 / aspectRatio;
-		w *= f;
-		$('#chart-a').css('height', (w + 'px'));
-		$('#chart-b').css('height', (w + 'px'));
-		$('#chart-c').css('height', (w + 'px'));
-		// chartA = echarts.init(document.getElementById('chart-a'));
-		chartB = echarts.init(document.getElementById('chart-b'));
-		chartC = echarts.init(document.getElementById('chart-c'));
-	}
+	})
 
 	function callMediator(parameters, callback) {
 		if (typeof parameters == 'string') {
@@ -410,6 +282,7 @@
 		});
 	}
 
+	// TODO: Handle error by status code
 	function handleError(err) {
 		if (err.redirectAddress) {
 			window.location = err.redirectAddress;
@@ -421,55 +294,58 @@
 		return false;
 	}
 
-	$(document).on('click', '#trigger-search-btn', function (e) {
-		var techDomain = 'auto';
+	$(document).on('click', '#tabs a', function (e) {
+	  e.preventDefault()
+	  $(this).tab('show')
+	})
+
+	// Run example query
+	$(document).on('click', '#run-example-btn', function () {
+		let n = app.config.examples.length;
+		let i = getRandomInt(n);
+		let query = app.config.examples[i].query;
+		$('#user-text-input').val(query);
+		$('#query-submit-btn').click();
+	})
+
+	let getRandomInt = (n) => parseInt(n*Math.random())
+	let hideCTAButtons = () => $('#cta-buttons').addClass('hidden');
+	let showSearchForm = () => $('#search-form').removeClass('hidden');
+
+	// On submitting a query for search
+	$(document).on('click', '#query-submit-btn', function (e) {
 		readUserQuery();
 
 		if (app.state.loading) {
 			return alert('Please wait while results are loading.');
 		}
+
 		if (!app.state.query) {
 			return alert('Please enter a query.');
 		}
+
 		clearOutput();
 		app.state.loading = true;
-		showLoading();
-		hideCharts();
+		showLoadingIndication();
 		
-		if (app.state.queryType == 'text') {
-			var query = app.state.query + '\n' + app.state.latentQuery.trim();
-			getStats(query, techDomain, function (done) {
-				triggerSearch(query, techDomain);
-			});
-		} else {
-			triggerSearch(query, techDomain);
-		}
+		var query = app.state.query
+		submitQuery(query);
 	});
 
-	/*
-		On CTRL+Enter, submit the query
-	*/
+	
+	// On CTRL+Enter, submit the query
 	$(document).on('keyup', '#user-text-input', function (e) {
 		if (e.keyCode == 13 && e.ctrlKey) {
-			$('#trigger-search-btn').click();
+			$('#query-submit-btn').click();
 		}
 	});
 
 	function readUserQuery() {
 		var query = $('#user-text-input').val().trim();
 		app.state.query = query;
-		app.state.queryType = getQueryType(query);
 	}
 
-	function getQueryType(query) {
-		if (query.match(/^US\d+[AB]\d?$/)) {
-			return 'patent';
-		} else {
-			return 'text';
-		}
-	}
-
-	function triggerSearch(query, techDomain="auto") {
+	function submitQuery (query) {
 		query = query.trim();
 		var cmd;
 		if (query.match(/^US\d+[AB]\d?$/)) {
@@ -480,26 +356,44 @@
 		var reqParams = {
 			cmd,
 			query,
-			techDomain,
+			latentQuery: app.state.latentQuery,
 			before: app.state.dateFilterBefore,
 			after: app.state.dateFilterAfter,
 			mappings: app.config.loadMappings,
 			n: app.config.nResults
 		};
+
+		var logEntry = {
+			query,
+			latentQuery: app.state.latentQuery,
+			before: app.state.dateFilterBefore,
+			after: app.state.dateFilterAfter,
+			timestamp: new Date()
+		};
+
+		addToQueryLog(logEntry);
+
 		callMediator(reqParams, function(response) {
 			app.state.loading = false;
-			hideLoading();
-			loadNewResults(response);
+			finishLoading();
+			updateAppStateWithNewResults(response);
 		});
 	}
 
-	function loadNewResults(newQueryResponse, callback=Function.prototype) {
+	function updateAppStateWithNewResults(queryResponse, callback=Function.prototype) {
 		app.state.latentQuery = '';
-		app.state.metaResults = newQueryResponse;
+		app.state.metaResults = queryResponse;
 		app.state.results = app.state.metaResults.results;
 		app.state.pointer = -1;
-		showNextResult();
+		seekAbsolute(0);
+		scrollToResultsArea();
 		callback(true);
+	}
+
+	function scrollToResultsArea() {
+		$('html, body').animate({
+	        scrollTop: $("#results-tab").offset().top - 10
+	    }, 1000);
 	}
 
 	function showNextResult() {
@@ -539,6 +433,9 @@
 			$('#result-navigator button.active').removeClass('active');
 			var activatedButton = $('#result-navigator button').get(n);
 			$(activatedButton).addClass('active');
+
+			/* Move to results tab (in case not there already) */
+			$('#results-tab').click();
 			
 			callback(true);
 		});
@@ -551,6 +448,12 @@
 	}
 
 	function showResult(result, callback=Function.prototype) {
+		// Force the height of results area to stay the same
+		// when it is emptied so that a sudden "scroll-to-top"
+		// doesn't happen!
+		var h = $('#results-area').height();
+		$('#results-area').height(h);
+
 		hideShownResult();
 		if (!result.mapping) {
 			loadMapping(result, function(loaded) {
@@ -559,22 +462,24 @@
 			return;
 		}
 
-		if (!$('#result-navigator').length) {
-			var html = app.templates.resultNavigator();
-			$('#output-pane').html(html);
-		}
-
-		html = app.templates.resultCard(result);
-		$('#output-pane').append(html);
+		var html = app.templates.resultNavigator();
+		html += app.templates.resultCard(result);
+		$('#results-area').append(html);
 
 		callback(true);
+
+		// Now set height of result-area back to 'auto'
+		$('#results-area').height('auto');
+
 	}
 
 	function hideShownResult() {
+		$('.result-navigator-wrapper').remove();
 		$('.result-card').remove();
 	}
 
 	function loadMapping(result, callback=Function.prototype) {
+		return;
 		var ref = result.id;
 		var query = app.state.query;
 		callMediator({
@@ -592,10 +497,8 @@
 	}
 
 	function clearOutput() {
-		$('#output-pane').empty();
+		$('#results-area').empty();
 	}
-
-	var loadMoreBtnHtml = '<button class="btn btn-md btn-default mb-3" id="load-more-btn">Load more results</button>';
 
 	function getSnippet(pn, query, callback) {
 		callMediator({
@@ -612,15 +515,10 @@
 		});
 	}
 
-	$(document).on('click', '#load-more-btn', function(e) {
-		if (app.state.results.length > 0) {
-			displayResults();
-		} else {
-			alert("No more results to show.");
-		}
-	});
-
 	$(document).on('click', '.res-title', function(e) {
+		if (!app.config.resultTitleClickable)
+			return null;
+
 		var pn = $(this).attr('data-pn');
 		app.state.visited[pn] = true;
 		$(this).addClass('visited');
@@ -636,7 +534,7 @@
 	$(document).on('click', '.more-like-this-btn', function(e) {
 		var publicationNumber = $(this).attr('data-pn');
 		app.state.latentQuery = $(this).closest('.card-body').find('p.res-snippet').text().trim();
-		$('#trigger-search-btn').click();
+		$('#query-submit-btn').click();
 	});
 
 	$(document).on('click', '.element-wise-mapping-btn', function(e) {
@@ -664,127 +562,47 @@
 		return link;
 	}
 
-	function normalizeDate(string) {
-		if (typeof string !== 'string') {
-			return string;
-		}
-		var months = [
-			'_', 'Jan', 'Feb', 'Mar', 'Apr',
-			'May', 'Jun', 'Jul', 'Aug',
-			'Sep', 'Oct', 'Nov', 'Dec'
-		];
-		if (string.match(/^\d\d\d\d\-\d\d\-\d\d$/)) {
-			var yyyy_mm_dd = string;
-			var mm = parseInt(yyyy_mm_dd.substr(5, 7));
-			var yyyy = parseInt(string.substr(0, 4));
-		} else if (string.match(/^\d\d?\/\d\d?\/\d{4}$/)) {
-			var len = string.length;
-			var mm = parseInt(string.match(/^\d+/)[0]);
-			var yyyy = parseInt(string.substr(len-4, len));
-		}
-
-		var month = months[mm];
-		var normalized = month + ' ' + yyyy;
-
-		return normalized;
-	}
-
-	function loadSnippets() {
-		if (!app.state.query) {
-			return;
-		}
-		var pns = $('.snippet-placeholder').toArray().map(function (e) {
-			return $(e).attr('id');
-		});
-
-		runInBatch(pns, function (pn, callback) {
-			callMediator({
-				cmd: 'get-snippet',
-				publicationNumber: pn,
-				query: app.state.query
-			}, function (snippet) {
-				var targetElement = $('#' + pn);
-				targetElement.replaceWith('<p class="res-snippet">' + snippet + '</p>');
-				callback();
-			});
-		}, function (arr) {
-			// done
-		});
-	}
-
-	function runInBatch(arr, mid, end) {
-		if (!Array.isArray(arr) || typeof mid !== 'function' || typeof end !== 'function') return end(null);
-		var sum = arr.length;
-		var interim = [];
-		var arr = arr.map(function (e) { return e; });
-		var threads = 0;
-		var maxThreads = 4;
-		(function _execute() {
-			if (!arr.length)
-				return;
-			threads++;
-			mid(arr.shift(), function (result) {
-				threads--;
-				interim.push(result);
-				if (arr.length === 0 && sum-arr.length-interim.length === 0)
-					return end(interim);
-				while (threads < maxThreads && arr.length)
-					_execute();
-			});
-		}());
-	}
-
-	$(document).on('mouseenter', '.res', function (e) {
-		var res = $(this);
-		res.find('.hidden').addClass('waiting-to-show');
-		setTimeout(function () {
-			var els = res.find('.hidden.waiting-to-show');
-			if (els.length > 0) {
-				res.find('.hidden.waiting-to-show').fadeIn();
-				res.find('.hidden.waiting-to-show').removeClass('waiting-to-show');
-			}
-		}, 500);
-	});
-
-	$(document).on('mouseleave', '.res', function (e) {
-		var res = $(this);
-		res.find('.hidden.waiting-to-show').removeClass('waiting-to-show');
-		res.find('.hidden').fadeOut();
-	});
-
 	function openInNewTab(url) {
 		var win = window.open(url, '_blank');
 		win.focus();
 	}
 
-	function showLoading() {
+	function showLoadingIndication() {
 		var html = '<div class="spinner-border spinner-border-sm" role="status">'
   				+ '<span class="sr-only">Loading...</span>'
 				+ '</div> Loading';
-		$('#trigger-search-btn').html(html);
+		$('#query-submit-btn').html(html);
 	}
 
-	function hideLoading() {
-		$('#trigger-search-btn').html('Submit');
+	function finishLoading() {
+		$('#query-submit-btn').html('Submit');
 	}
-
-	$(document).on('click', '#download-report-btn, #toggle-abstracts-btn, #toggle-charts-btn', function (e) {
-		alert('Work in progress.');
-	});
 
 	$(document).on('click', '#apply-date-filter-btn', function (e) {
-		var date = $('#cutoff-date-input').val();
-		if (!date) {
-			app.state.dateFilterBefore = null;
-			return;
-		}
-		$('#calendar-btn').text("before " + date)
-		if (!date.match(/^\d{4}\-\d{2}\-\d{2}$/)) {
-			return alert("Invalid date.");
-		}
-		app.state.dateFilterBefore = date;
-		$('#trigger-search-btn').click();
+		updateDateFilter();
+		applyDateFilter();
 	});
+
+	function updateDateFilter() {
+		var dateAfter = $('#cutff-date-after-input').val();
+		var dateBefore = $('#cutff-date-before-input').val();
+
+		if (dateBefore && dateBefore.match(app.config.dateFormat)) {
+			app.state.dateFilterBefore = dateBefore;
+		} else {
+			app.state.dateFilterBefore = null;
+		}
+
+		if (dateAfter && dateAfter.match(app.config.dateFormat)) {
+			app.state.dateFilterAfter = dateAfter;
+		} else {
+			app.state.dateFilterAfter = null;
+		}
+	}
+
+	function applyDateFilter() {
+		$('#query-submit-btn').click();
+	}
 
 	$(document).on('click', '.bookmark-btn', function (e) {
 		e.preventDefault();
@@ -792,23 +610,44 @@
 		var result = app.state.results[n];
 		app.state.bookmarks.push(result);
 		saveBookmarks();
-		$(this).addClass('disabled');
-		$(this).text('Bookmarked');
+		seekRelative(0);
 	});
+
+	$(document).on('click', '.unbookmark-btn', function (e) {
+		e.preventDefault();
+		var id = $(this).attr('data-pn');
+		app.state.bookmarks = app.state.bookmarks.filter(b => b.id != id);
+
+		/* If the currently shown result was unbookmarked,
+			 re-rendering the results will reset the state of
+			 the button. */
+		if ($('#bookmarks-tab').hasClass('active'))
+			renderBookmarks();
+		else
+			seekRelative(0);
+
+		saveBookmarks();
+	});
+
+	$(document).on('click', '#bookmarks-tab', function (e) {
+		renderBookmarks();
+	})
+
+	$(document).on('click', '#query-log-tab', function (e) {
+		renderQueryLog();
+	})
 
 	function saveBookmarks() {
 		localStorage.setItem('bookmarks', JSON.stringify(app.state.bookmarks));
 		updateBookmarksCountBadge();
-		populateBookmarksList();
 	}
 
-	function loadBookmarks() {
+	function restoreBookmarks() {
 		if (!localStorage.getItem('bookmarks')) {
 			return null;
 		}
 		app.state.bookmarks = JSON.parse(localStorage.getItem('bookmarks'));
 		updateBookmarksCountBadge();
-		populateBookmarksList();
 	}
 
 	$(document).on('click', '#clear-bookmarks-btn', function (e) {
@@ -823,6 +662,15 @@
 		}
 	});
 
+	$(document).on('click', '#clear-query-log-btn', function (e) {
+		var confirmation = confirm('Remove all queries?');
+		if (confirmation) {
+			app.state.queryLog = [];
+			saveQueryLog();
+			renderQueryLog();
+		}
+	});
+
 	$(document).on('click', '#export-bookmarks-btn', function (e) {
 		try {
 			exportBookmarks(app.state.bookmarks);
@@ -832,39 +680,43 @@
 		}
 	});
 
-	function populateBookmarksList() {
+	function renderBookmarks() {
 		/* clear previously rendered list */
-			$('#bookmarks-list .bookmark').remove();
+			$('#bookmarks-list').empty();
 
 		/* edge case - no bookmarks */
 			if (!app.state.bookmarks.length) {
-				$('#bookmarks-list').prepend(
-					`<a
-						class="dropdown-item bookmark"
-						href="#"
-						data-id="">
-						No bookmarks
-					</a>`
-				)
+				
+				/* hide export and clear-bookmarks buttons */
+				$('#export-bookmarks-btn').addClass('hidden');
+				$('#clear-bookmarks-btn').addClass('hidden');
+
+				/* add a no bookmarks notice and exit */
+				$('#bookmarks-list').prepend(`<p class="my-3">Nothing here.</p>`)
 				return;
 			}
 
+		/* show export and clear-bookmarks buttons */
+		$('#export-bookmarks-btn').removeClass('hidden');
+		$('#clear-bookmarks-btn').removeClass('hidden');
+		
 		/* populate list */
 		app.state.bookmarks.forEach(function (bookmark) {
 			$('#bookmarks-list').prepend(
-				`<a
-					class="dropdown-item bookmark"
-					href="${bookmark.www_link}"
-					target="_BLANK"
-					data-id="${bookmark.id}">
-					${cutShort(bookmark.title, 75)}
-				</a>`
-			)
+				app.templates.resultCard(bookmark, true)
+			);
 		});
 	}
 
 	function updateBookmarksCountBadge() {
-		$('#bookmark-count').text(app.state.bookmarks.length);
+		if (app.state.bookmarks.length == 0) {
+			$('#bookmarks-count').addClass('badge-secondary');
+			$('#bookmarks-count').removeClass('badge-primary');
+		} else {
+			$('#bookmarks-count').addClass('badge-primary');
+			$('#bookmarks-count').removeClass('badge-secondary');
+		}
+		$('#bookmarks-count').text(app.state.bookmarks.length);
 	}
 
 	function floatToPercentage (floatVal) {
@@ -872,14 +724,14 @@
 		return parseInt(100*f);
 	}
 
-	app.templates.resultCard = function (result) {
+	app.templates.resultCard = function (result, asBookmark=false) {
 		var html = '';
 		html += `
 			<div class="card result-card mb-3">
 				<div class="card-body">
 					<div class="card-title">
 						<h5 class="res-title" data-pn="${result.id}">
-							${ result.title }
+							${ toTitleCase(result.title) }
 						</h5>
 					</div>
 					<p class="card-text res-bib">
@@ -898,40 +750,42 @@
 						</a>
 					</p>
 					<p class="card-text res-snippet">
-						${ result.abstract }
-					</p>
-					<table class="table table-inverse mapping-table">
+						${ cutShort(result.abstract, 500) }
+					</p>`
+
+		// Do not show mapping in bookmarks
+		if (app.config.showMappingInBookmarks || !asBookmark) {
+			html += `<table class="table table-inverse mapping-table">
 						<thead>
 							<tr>
-								<th style='text-align: left'>Query elements</th>
-								<th style='text-align: left'>Reference text</th>
+								<th style='text-align:left; width:35%'>Query elements</th>
+								<th style='text-align:left; width:65%'>Reference text</th>
 							</tr>
 						</thead>
 						<tbody>`
-		result.mapping.forEach(function (row) {
-			html += `
-				<tr>
-					<td style='vertical-align: top'>${ row.element }</td>
-					<td style='vertical-align: top'>${ row.mapping }</td>
-				</tr>`
-			// html += `
-			// 	<tr>
-			// 		<td style='vertical-align: top'>${ row.element }</td>
-			// 		<td style='vertical-align: top'>${ row.mapping }</td>
-			// 		<td style='vertical-align: top'>${floatToPercentage(row.similarity)}%</td>
-			// 	</tr>`
-		});
+			result.mapping.forEach(function (row) {
+				html += `
+					<tr>
+						<td style='vertical-align: top'>${ row.element }</td>
+						<td style='vertical-align: top'>${ row.mapping }</td>
+					</tr>`
+			});
+		}
 		html += `		</tbody>
 					</table>`
 		if (!app.state.bookmarks.map(
 				function(e) { return e.id }
 				).includes(result.id)
 			) {
-			html +=	`<a href="#" class="btn btn-primary bookmark-btn">
-						Bookmark</a>`
+			html +=	`<a href="#"
+									class="btn btn-primary bookmark-btn"
+									data-pn="${result.id}">
+									<i class="fa fa-bookmark mr-1"></i> Bookmark</a>`
 		} else {
-			html +=	`<a href="#" class="btn btn-primary bookmark-btn disabled">
-						Bookmarked</a>`
+			html +=	`<a href="#"
+										class="btn btn-outline unbookmark-btn"
+										data-pn="${result.id}">
+										<i class="fa fa-minus-square mr-1"></i> Remove bookmark</a>`
 		}
 		html +=	`</div>
 			</div>`
@@ -940,14 +794,14 @@
 
 	app.templates.resultNavigator = function () {
 		var html = '';
-		html += `<div class="row">
-					<div
-						class="col-md-12"
-						style="text-align:center">
-						<div
-							class="btn-group mb-3"
-						id="result-navigator"
-						role="group">`;
+		html += `<div class="d-flex justify-content-center mb-2 result-navigator-wrapper">
+							<button type="button"
+									class="btn btn-outline"
+									onclick="showPreviousResult()">
+								<i class="fas fa-chevron-left"></i>
+							</button>
+							<div class="btn-toolbar">
+							  <div class="btn-group mx-2" id="result-navigator">`;
 		app.state.results.forEach(function (result, i) {
 			html += `<button
 						type="button"
@@ -958,7 +812,23 @@
 		})
 		html += `</div>
 			</div>
+			<button type="button"
+					class="btn btn-outline"
+					onclick="showNextResult()">
+				<i class="fas fa-chevron-right"></i>
+			</button>
 		</div>`;
+		return html;
+	}
+
+	app.templates.queryLogEntry = function (entry) {
+		var html = '';
+		var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+		var dateStr = new Date(entry.timestamp).toLocaleDateString("en-US", options);
+		html += `<div class="query-log-entry">
+					<small>${dateStr}</small>
+					<p>${entry.query} (<button class="btn btn-link query-rerun-btn px-0 py-0">Rerun</button>)</p>
+				</div>`;
 		return html;
 	}
 
@@ -968,23 +838,122 @@
 		seekAbsolute(i);
 	});
 
+	$(document).on('click', '.query-rerun-btn', function (e) {
+		var wrapper = $(this).closest('.query-log-entry')
+		var query = $(wrapper.children('p').get(0)).text().trim();
+		$('#user-text-input').val(query);
+		$('#query-submit-btn').click();
+	})
+
 	function cutShort(text, length) {
 	    if (!length || length > text.length || length < 10) return text;
 	    var i = length-4;
 	    while (text.charAt(i) !== ' ') i--;
 	    var shownText = text.substring(0, i);
 	    var hiddenText = text.substring(i);
-	    var html = shownText + `<span class='hidden-text' data-text='${btoa(text.substring(i))}' style='cursor:pointer'> ...</span>`;
+	    try {
+		    var html = shownText + `<span class='hidden-text' data-text='${btoa(text.substring(i))}' style='cursor:pointer' onclick='$(this).replaceWith( atob($(this).attr("data-text")) )'> ...</span>`;
+	    } catch (e) {
+	    	// when the text contains a character that cannot be encoded
+	    	// into base64 format, then it raises an exception, in that
+	    	// case, don't shorten the text, just return it as it is.
+	    	return text;
+	    }
 	    return html;
 	}
-
-	$(document).on('click', '.hidden-text', function() {
-		var text = atob($(this).attr('data-text'));
-		$(this).replaceWith(text);
-	})
 
 	$(document).on('click', '#data-coverage-notice-toggle-btn', function (e) {
 		$('#data-coverage-notice').toggleClass('hidden');
 	});
 
+	function toTitleCase (str) {
+		var alwaysLower = [
+			'a', 'an', 'the', 'of', 'with', 'through', 'for', 'and', 'in',
+			'on', 'into', 'same', 'such', 'to', 'using', 'utilizing', 'by',
+			'from', 'thereof'];
+
+		if (!_isAllUpperCase(str)) {
+			return str;
+		}
+		
+		if (!str.match(/\s/)) { // a single word
+			return str;
+		}
+
+		str = str.toLowerCase();
+		var words = str.split(/\s+/);
+		words[0] = _captializeFirstLetter(words[0]);
+		for (var i=1; i<words.length; i++) {
+			if (! alwaysLower.includes(words[i])) {
+				words[i] = _captializeFirstLetter(words[i]);
+			}
+		}
+		return words.join(' ');
+
+		function _captializeFirstLetter(word) {
+			var ai = word.charCodeAt(0);
+			if (ai >= 97 && ai <= 122) {
+				word = String.fromCharCode(ai-32) + word.slice(1);
+			}
+			return word;
+		}
+
+		function _isAllUpperCase(str) {
+			return !str.match(/[a-z]/);
+		}
+	}
+
+	$(document).on('keyup', 'body', function(e) {
+		let inputInFocus = $('textarea:focus').length || $('input:focus').length
+		if (inputInFocus) return null;
+		
+		if (e.keyCode == app.config.leftScrollKey) {
+			showPreviousResult()
+		} else if (e.keyCode == app.config.rightScrollKey) {
+			showNextResult();
+		}
+	})
+
+	function addToQueryLog (entry) {
+		app.state.queryLog.unshift(entry);
+		if (app.state.queryLog.length > app.config.logLength) {
+			app.state.queryLog = app.state.queryLog.slice(0, app.config.logLength)
+		}
+		saveQueryLog();
+	}
+
+	function saveQueryLog () {
+		localStorage.setItem('queryLog', JSON.stringify(app.state.queryLog));
+	}
+
+	function restoreQueryLog () {
+		app.state.queryLog = JSON.parse(localStorage.getItem('queryLog'));
+	}
+
+	function renderQueryLog () {
+		$('#query-log').empty()
+
+		/* edge case - no query log */
+		if (!app.state.queryLog.length) {
+			
+			/* hide clear-query-log button */
+			$('#clear-query-log-btn').addClass('hidden');
+
+			/* add a no log notice and exit */
+			$('#query-log').prepend(`<p class="my-3">Nothing here.</p>`)
+			return;
+		}
+
+		/* show clear-log buttons */
+		$('#clear-query-log-btn').removeClass('hidden');
+		
+		/* populate list */
+		app.state.queryLog.forEach(function (entry) {
+			$('#query-log').prepend(
+				app.templates.queryLogEntry(entry)
+			);
+		});
+	}
+
 </script>
+</html>

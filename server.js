@@ -34,10 +34,6 @@ app.get('/search', function (req, res) {
 	res.render('search');
 });
 
-app.get('/search2', function (req, res) {
-	res.render('search2');
-});
-
 app.get('/contact', function (req, res) {
 	res.render('contact');
 });
