@@ -927,7 +927,9 @@
 	}
 
 	function restoreQueryLog () {
-		app.state.queryLog = JSON.parse(localStorage.getItem('queryLog'));
+		if (localStorage.getItem('queryLog')) {
+			app.state.queryLog = JSON.parse(localStorage.getItem('queryLog'));
+		}
 	}
 
 	function renderQueryLog () {
