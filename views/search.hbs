@@ -446,7 +446,8 @@
 	function seekAbsolute(n, callback=Function.prototype) {
 		/* Check if position is valid */
 		if (n < 0 || n >= app.state.results.length) {
-			callback(false);
+			notifyUser('No more results.');
+			return;
 		}
 		
 		var result = app.state.results[n];
