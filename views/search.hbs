@@ -64,14 +64,14 @@
 									type="text"
 									class="form-control mb-2 mr-sm-2"
 									id="cutff-date-after-input"
-									size="3"
+									size="6"
 									placeholder="1970-01-01">
 								<label for="cutff-date-before-input" class="mb-2 mr-1">but before </label>
 								<input
 									type="text"
 									class="form-control mb-2 mr-sm-2"
 									id="cutff-date-before-input"
-									size="3"
+									size="6"
 									placeholder="2019-12-31">
 								<button
 									type="button"
@@ -138,13 +138,26 @@
 							<div class="tab-pane fade" id="bookmarks-area">
 
 								<!-- Bookmarks control panel -->
-								<div class="d-flex justify-content-end">
-									<button type="button" id="export-bookmarks-btn" class="btn btn-outline">
-											<i class="fa fa-download mr-1"></i> Export to Excel
-									</button>
-									<button type="button" id="clear-bookmarks-btn" class="btn btn-outline">
-										<i class="fa fa-trash mr-1"></i> Clear list
-									</button>
+								<div
+									class="d-flex justify-content-between my-3"
+									style="border-bottom: 1px dashed #aaa">
+									<div>
+										<p style="line-height: 1.2">
+											<small>
+												<i>PRIVACY NOTICE<br>
+												This list of bookmarks is stored in your browser and it never leaves your computer.<br>
+												This list will be available to you the next time you access PQAI on this computer from this browser.</i>
+											</small>
+										</p>
+									</div>
+									<div>
+										<button type="button" id="export-bookmarks-btn" class="btn btn-outline">
+												<i class="fa fa-download mr-1"></i> Export to Excel
+										</button>
+										<button type="button" id="clear-bookmarks-btn" class="btn btn-outline">
+											<i class="fa fa-trash mr-1"></i> Clear list
+										</button>
+									</div>
 								</div>
 
 								<div id="bookmarks-list">
@@ -160,10 +173,23 @@
 
 							<!-- History pane -->
 							<div class="tab-pane fade" id="query-log-area">
-								<div class="d-flex justify-content-end">
-									<button type="button" id="clear-query-log-btn" class="btn btn-outline">
-										<i class="fa fa-trash mr-1"></i> Clear list
-									</button>
+								<div
+									class="d-flex justify-content-between my-3"
+									style="border-bottom: 1px dashed #aaa">
+									<div>
+										<p style="line-height: 1.2">
+											<small>
+												<i>PRIVACY NOTICE<br>
+												This list of queries is stored in your browser.<br>
+												Queries are sent to the search server to retrieve results but are not logged there.</i>
+											</small>
+										</p>
+									</div>
+									<div>
+										<button type="button" id="clear-query-log-btn" class="btn btn-outline">
+											<i class="fa fa-trash mr-1"></i> Clear list
+										</button>
+									</div>
 								</div>
 								<div id="query-log">
 									<!-- populated by JS -->
