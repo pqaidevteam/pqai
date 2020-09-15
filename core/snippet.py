@@ -7,6 +7,11 @@ from core.highlighter import highlight as highlighter_fn
 from core.vectorizer import SIFTextVectorizer
 encoder_fn = SIFTextVectorizer().embed
 
+
+from core.reranking import CustomRanker
+ranker = CustomRanker()
+
+
 def last_few_words(sent):
     num_words = randrange(5, 10)
     i = len(sent)-1
@@ -40,7 +45,7 @@ def extract_snippet(query, text, htl_on=True):
 	return snippet
 
 
-def best_sent_for(query, sents):
+def best_sent_for_old_method(query, sents):
 	words = list(set(re.findall(r'[a-z]+', query.lower())))
 	words = [word for word in words if not utils.is_generic(word)]
 	qvecs = np.array([encoder_fn(word) for word in words])
@@ -85,6 +90,11 @@ def best_sent_for(query, sents):
 	terms = list(set(re.findall(r'[a-z]+', sents[best_idx].lower())))
 	terms = [term for term in terms if not utils.is_generic(term)]
 	return best_idx
+
+
+def best_sent_for(query, sents):
+	best_sent_idx = ranker.rank(query, sents)[0]
+	return best_sent_idx
 
 
 def valid_sentences(text):
