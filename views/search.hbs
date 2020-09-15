@@ -30,6 +30,8 @@
 						<p class="mb-2">
 							Connected to <a href="#">2 nodes</a> 
 						</p>
+
+						<!-- Main query input and Submit button -->
 						<textarea
 							class="form-control"
 							id="user-text-input"
@@ -42,13 +44,31 @@
 							id="query-submit-btn">
 							SUBMIT
 						</button>
-						<a href="#" id="run-example-btn" class="ml-3">Run an example</a>
+
+						<!-- Examples dropdown button -->
+						<div class="dropdown open ml-2"
+							style=" display: inline-block;
+									border: 1px solid #ced4da;
+									border-radius: 4px;">
+							<button
+								class="btn btn-outline dropdown-toggle"
+								type="button"
+								data-toggle="dropdown">Run an example
+							</button>
+							<div class="dropdown-menu" id="examples-dropdown">
+								<!-- populated automatically on page load -->
+							</div>
+						</div>
+
+						<!-- Data coverage indicator button -->
 						<button
 							id="data-coverage-btn"
 							class="btn btn-link ml-2"
 							onclick="$('#data-coverage-notice').toggleClass('hidden')">
 							<i class="fa fa-info-circle mr-1"></i> Data Coverage
 						</button>
+
+						<!-- Filter button -->
 						<span style="float:right">
 							<button
 								class="btn btn-link"
@@ -57,6 +77,8 @@
 								<i class="fa fa-filter mr-1"></i> Filters
 							</button>
 						</span>
+
+						<!-- Normally hidden filters -->
 						<div id="search-filters" class="hidden">
 							<form class="form-inline d-flex justify-content-end mt-2">
 								<label for="cutff-date-after-input" class="mb-2 mr-1">Show results published after </label>
@@ -83,6 +105,7 @@
 							</form>
 						</div>
 					</div>
+
 					<!-- Data coverage notice -->
 					<div id="data-coverage-notice" class="container mt-2 hidden text-justify">
 						<i class="fa fa-info-circle"></i> The data coverage of this beta version is limited to nearly 11 million US patents and applications and nearly 11.5 million research papers in the fields of engineering and computer science. Datasets were obtained from <a href="https://bulkdata.uspto.gov/" target="_BLANK">USPTO Bulk Datasets</a> and <a href="http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/" target="_BLANK">Semantic Scholar's Open Research Corpus</a>, respectively.
@@ -278,6 +301,10 @@
 	];
 
 	$(document).ready(() => {
+			
+		// Populate Examples
+		populateExamplesDropdown();
+
 		/*
 			Hide diagnostics tab if required
 		*/
@@ -325,11 +352,21 @@
 	  $(this).tab('show')
 	})
 
+	function populateExamplesDropdown() {
+		app.config.examples.forEach(addExampleToDropdown)
+		
+		function addExampleToDropdown(example) {
+			let dropdownButton = `<a href="#" class="dropdown-item run-example-btn">${example.label}</a>`
+			let dropdownContainer = $('#examples-dropdown');
+			dropdownContainer.append(dropdownButton);
+		}
+	}
+
 	// Run example query
-	$(document).on('click', '#run-example-btn', function () {
-		let n = app.config.examples.length;
-		let i = getRandomInt(n);
-		let query = app.config.examples[i].query;
+	$(document).on('click', '.run-example-btn', function () {
+		let label = $(this).text().trim();
+		let selected = app.config.examples.filter(e => e.label == label)[0];
+		let query = selected.query;
 		$('#user-text-input').val(query);
 		$('#query-submit-btn').click();
 	})
