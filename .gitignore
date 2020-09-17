@@ -1,5 +1,4 @@
 __pycache__
-/node_modules/
 /rough.js
 /rough.py
 /tmp*
@@ -7,6 +6,4 @@ __pycache__
 *.pyc
 /indexes/
 /build/
-/public/images/*
 /indexes*/
-/feedback.tsv
