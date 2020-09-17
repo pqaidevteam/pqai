@@ -5,6 +5,7 @@ const hbs = require('hbs');
 const compression = require('compression');
 const axios = require('axios');
 const bodyParser = require('body-parser');
+const fs = require('fs');
 
 const processor = require('./core/processor.js');
 const stats = require('./core/stats.js');
@@ -165,6 +166,20 @@ app.post('/mediator', function (req, res) {
 		).catch(err => res.status(500).send(
 			error('Error occurred in Python API.')
 		))
+	} else if (cmd == 'positive-feedback') {
+		var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		var timestamp = new Date().toString();
+		var feedback = 'positive';
+		fs.appendFileSync('./feedback.tsv', [ip, timestamp, feedback].join('\t') + '\n');
+		res.status(200).send({ success: true })
+		
+	} else if (cmd == 'negative-feedback') {
+		var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		var timestamp = new Date().toString();
+		var feedback = 'negative';
+		fs.appendFileSync('./feedback.tsv', [ip, timestamp, feedback].join('\t') + '\n');
+		res.status(200).send({ success: true })
+		
 	} else {
 		res.status(400).send(error('Invalid request.'));
 	}

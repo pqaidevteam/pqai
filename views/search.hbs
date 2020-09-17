@@ -47,9 +47,7 @@
 
 						<!-- Examples dropdown button -->
 						<div class="dropdown open ml-2"
-							style=" display: inline-block;
-									border: 1px solid #ced4da;
-									border-radius: 4px;">
+							style="display:inline-block">
 							<button
 								class="btn btn-outline dropdown-toggle"
 								type="button"
@@ -317,7 +315,7 @@
 		/*
 			Initialize bookmarks and search history from Browser Storage
 		*/	
-		restoreBookmarks();
+		loadBookmarksFromLocalStorage();
 		restoreQueryLog();
 
 	})
@@ -450,6 +448,7 @@
 		app.state.pointer = -1;
 		seekAbsolute(0);
 		scrollToResultsArea();
+		defocusInputArea()
 		callback(true);
 	}
 
@@ -706,7 +705,7 @@
 		updateBookmarksCountBadge();
 	}
 
-	function restoreBookmarks() {
+	function loadBookmarksFromLocalStorage() {
 		if (!localStorage.getItem('bookmarks')) {
 			return null;
 		}
@@ -783,9 +782,85 @@
 		$('#bookmarks-count').text(app.state.bookmarks.length);
 	}
 
+	function focusResults() {
+		if ($('.bookmark-btn').hasClass('btn-primary'))
+			return;
+	
+		$('.bookmark-btn').removeClass('btn-outline');
+		$('.bookmark-btn').addClass('btn-primary');
+		$('#result-navigator button').removeClass('btn-outline');
+		$('#result-navigator button').addClass('btn-secondary');
+	}
+
+	function defocusResults() {
+		if ($('.bookmark-btn').hasClass('btn-outline'))
+			return;
+	
+		$('.bookmark-btn').removeClass('btn-primary');
+		$('.bookmark-btn').addClass('btn-outline');
+		$('#result-navigator button').removeClass('btn-secondary');
+		$('#result-navigator button').addClass('btn-outline');
+	}
+
+	function focusInputArea() {
+		if ($('#query-submit-btn').hasClass('btn-primary'))
+			return;
+		
+		$('#query-submit-btn').removeClass('btn-outline');
+		$('#query-submit-btn').addClass('btn-primary');
+		$('#data-coverage-btn').removeClass('disabled');
+		$('#search-filter-btn').removeClass('disabled');
+	}
+
+	function defocusInputArea() {
+		if ($('#query-submit-btn').hasClass('btn-outline'))
+			return
+
+		$('#query-submit-btn').removeClass('btn-primary');
+		$('#query-submit-btn').addClass('btn-outline');
+		$('#data-coverage-btn').addClass('disabled');
+		$('#search-filter-btn').addClass('disabled');
+	}
+
+	$(document).on('click', '.input-area', function () {
+		defocusResults();
+		focusInputArea();
+	})
+
+	$(document).on('click', '#results-area', function () {
+		focusResults();
+		defocusInputArea();
+	})
+
 	function floatToPercentage (floatVal) {
 		let f = parseFloat(floatVal);
 		return parseInt(100*f);
+	}
+
+	$(document).on('click', '#like-btn', function (e) {
+		var thisButton = $(this);
+		var itsContainer = thisButton.closest('.feedback-section');
+		var thankYouNote = app.templates.thankYouNoteTemplate('Thanks for giving us feedback!')
+		$(itsContainer).replaceWith(thankYouNote)
+
+		callMediator('positive-feedback', Function.prototype)
+	})
+
+	$(document).on('click', '#dislike-btn', function (e) {
+		var thisButton = $(this);
+		var itsContainer = thisButton.closest('.feedback-section');
+		var thankYouNote = app.templates.thankYouNoteTemplate('Thanks for giving us feedback!')
+		$(itsContainer).replaceWith(thankYouNote)
+
+		callMediator('negative-feedback', Function.prototype)
+	})
+
+	app.templates.thankYouNoteTemplate = function (note) {
+		var html = `
+			<div class='thank-you-note'>
+				<p>${note}</p>
+			</div>`
+		return html;
 	}
 
 	app.templates.resultCard = function (result, asBookmark=false) {
@@ -837,28 +912,46 @@
 		}
 		html += `		</tbody>
 					</table>`
-		if (!app.state.bookmarks.map(
-				function(e) { return e.id }
-				).includes(result.id)
-			) {
+
+		html += `<div class="d-flex justify-content-between">`
+
+		if (!app.state.bookmarks.map(e => e.id ).includes(result.id)) {
 			html +=	`<a href="#"
-									class="btn btn-primary bookmark-btn"
-									data-pn="${result.id}">
-									<i class="fa fa-bookmark mr-1"></i> Bookmark</a>`
+						class="btn btn-primary bookmark-btn"
+						data-pn="${result.id}">
+						<i class="fa fa-bookmark mr-1"></i> Bookmark</a>`
 		} else {
 			html +=	`<a href="#"
-										class="btn btn-outline unbookmark-btn"
-										data-pn="${result.id}">
-										<i class="fa fa-minus-square mr-1"></i> Remove bookmark</a>`
+						class="btn btn-outline unbookmark-btn"
+						data-pn="${result.id}">
+						<i class="fa fa-minus-square mr-1"></i> Remove bookmark</a>`
 		}
+		html += app.templates.feedbackSection();
+		html += '</div>'
+		
 		html +=	`</div>
 			</div>`
 		return html;
 	}
+	app.templates.feedbackSection = function () {
+		var html = `
+			<div class="feedback-section">
+				<button type="button" class="btn btn-link disabled">
+					Is this result useful?
+				</button>
+				<button type="button" class="btn btn-outline" id="like-btn">
+					<i class="fa fa-thumbs-up"></i>
+				</button>
+				<button type="button" class="btn btn-outline" id="dislike-btn">
+					<i class="fa fa-thumbs-down"></i>
+				</button>
+			</div>`
+		return html
+	}
 
 	app.templates.resultNavigator = function () {
 		var html = '';
-		html += `<div class="d-flex justify-content-center mb-2 result-navigator-wrapper">
+		html += `<div class="d-flex justify-content-between mb-2 result-navigator-wrapper">
 							<button type="button"
 									class="btn btn-outline"
 									onclick="showPreviousResult()">
