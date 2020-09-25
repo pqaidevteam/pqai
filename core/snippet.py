@@ -128,10 +128,14 @@ def map_elements_to_text (elements, target_text, encoder_fn):
     	utils.normalize_rows(element_vectors), utils.normalize_cols(sent_vectors.T))
     
     sent_idxs = cosine_sims.argmax(axis=1)
-
-    mappings = [{
-                    'element': elements[i],
-                    'mapping': target_sentences[sent_idxs[i]],
-                    'similarity': float(cosine_sims[i][sent_idxs[i]])
-                } for i in range(len(elements))]
+    mappings = []
+    for i, element in enumerate(elements):
+    	mapping = {}
+    	j = sent_idxs[i]
+    	mapping['element'] = element
+    	mapping['mapping'] = target_sentences[j]
+    	mapping['ctx_before'] = target_sentences[j-1] if j-1 > 0 else ''
+    	mapping['ctx_after'] = target_sentences[j+1] if j+1 < len(target_sentences) else ''
+    	mapping['similarity'] = float(cosine_sims[i][j])
+    	mappings.append(mapping)
     return mappings
