@@ -106,7 +106,6 @@ def get_index(index_id):
     loaded_indexes[index_id] = index
     return index
 
-
 class Index():
 
     """An annoy index along with identifiers for its items.
@@ -128,7 +127,8 @@ class Index():
         self.index = AnnoyIndex(DIMS, metric='angular')
         self.index.load(ann_file)
         self.n_items = self.index.get_n_items()
-        self.items = json.load(open(json_file, 'r'))
+        with open(json_file) as fp:
+            self.items = json.load(fp)
         self.search_depth = 1000 # No. of nodes inspected during search
 
     def __getitem__(self, value):

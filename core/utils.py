@@ -86,6 +86,8 @@ def is_patent_number (item):
     pattern = r'^[A-Z]{2}\d+[A-Z]\d?$'
     return True if re.fullmatch(pattern, item) else False
 
+def is_doc_id (item):
+    return is_patent_number(item)
 
 def is_generic(word):
     """Check if a given word is a generic word, e.g., 'the', 'of', etc.

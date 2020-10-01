@@ -9,6 +9,11 @@ class Document:
 		self._id = doc_id
 		self._data = None	# lazy-load data from DB
 
+	def __getitem__(self, key):
+		if self._data is None:
+			self._load()
+		return self._data.get(key)
+
 	def _load (self, force=False):
 		if self._data is None or force == True:
 			self._data = db.get_document(self.id)
@@ -29,9 +34,9 @@ class Document:
 			return True
 		return parse_date(self.publication_date) > parse_date(date)
 
-	def is_published_between (self, before, after):
-		return self.is_published_before(before) \
-				and self.is_published_after(after)
+	def is_published_between (self, earlier_date, later_date):
+		return self.is_published_after(earlier_date) \
+				and self.is_published_before(later_date)
 
 	@property
 	def type (self):
@@ -138,8 +143,6 @@ class Document:
 			www_link = self.www_link,
 			owner = self.owner
 		)
-
-	
 
 class Patent (Document):
 	pass

@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class Ranker:
 
@@ -69,8 +70,13 @@ class CustomRanker(Ranker):
 
     def similarity(self, query, doc):
         query_tokens = Text(query).to_tokens()
+        doc_tokens = Text(doc).to_tokens()
+        nq = len(query_tokens)
+        nd = max(1, len(doc_tokens))
+        doc_length_surplus = max(1, nd/nq)
+        doc_length_penalty_factor = 1 + 0.5*math.sqrt(doc_length_surplus)
         Q = query_tokens.to_vector_sequence(embeddings)
-        D = Text(doc).to_tokens().to_vector_sequence(embeddings)
+        D = doc_tokens.to_vector_sequence(embeddings)
         query_term_matches = self._interact(Q, D).maxpool()
         sifs = embeddings.sifs
         query_term_weights = [(sifs[word] if word in sifs else 1.0)
@@ -78,4 +84,7 @@ class CustomRanker(Ranker):
         query_term_weights *= 1 - Q.redundancy_vector
         query_term_matches *= query_term_weights
         score = query_term_matches.sum()
+        if query != doc:
+            score /= self.similarity(query, query)
+            score /= doc_length_penalty_factor
         return score
