@@ -6,6 +6,7 @@ BASE_DIR = Path(__file__).parent.parent
 sys.path.append(str(BASE_DIR.resolve()))
 
 from core.encoders import Encoder
+from core.encoders import BagOfEntitiesEncoder
 
 class TestEncoderClass(unittest.TestCase):
 
@@ -48,6 +49,33 @@ class TestEncoderClass(unittest.TestCase):
 		actual = encoder.encode_many(inputs)
 		self.assertEqual(expected, actual)
 
+class TestBagOfEntitiesEncoderClass(unittest.TestCase):
+
+	def setUp(self):
+		self.boe_encoder = BagOfEntitiesEncoder()
+
+	def test_extract_entities_from_one_sentence(self):
+		sent = 'base station and mobile station'
+		expected = set([ 'base', 'station', 'mobile',
+			'base station', 'mobile station'])
+		actual = self.boe_encoder.encode(sent)
+		self.assertEqual(expected, actual)
+
+	def test_extract_entities_from_two_sentences(self):
+		sents = 'Base station and mobile. Station is there.'
+		expected = set(['base', 'station', 'mobile', 'base station'])
+		actual = self.boe_encoder.encode(sents)
+		self.assertEqual(expected, actual)
+
+	def test_with_trivial_string(self):
+		trivial_string = 'the of and'
+		actual = self.boe_encoder.encode(trivial_string)
+		self.assertEqual(set(), actual)
+
+	def test_with_null_string(self):
+		null_string = ''
+		actual = self.boe_encoder.encode(null_string)
+		self.assertEqual(set(), actual)
 
 if __name__ == '__main__':
     unittest.main()
