@@ -1,6 +1,10 @@
 import numpy as np
 import math
 
+from core.encoders import EmbeddingMatrix
+from core.encoders import BagOfEntitiesEncoder, BagOfVectorsEncoder
+from core.representations import BagOfVectors
+
 class Ranker:
 
     def __init__(self, scoring_fn, metric_type='similarity'):
@@ -43,6 +47,9 @@ class Ranker:
 
 class MatchPyramidRanker(Ranker):
 
+    """An implementation of text similarity scoring algorithm, Pang et al. 2016
+    """
+    
     def __init__(self):
         from core.matchpyramid import  calculate_similarity
         import re # needed because of an issue in MatchZoo library
@@ -88,3 +95,26 @@ class CustomRanker(Ranker):
             score /= self.similarity(query, query)
             score /= doc_length_penalty_factor
         return score
+
+class ConceptMatchRanker(Ranker):
+
+    """Ranking algorithm that scores text similarity by extracting concepts
+    (entities) from a piece of text, then comparing their embeddings
+    with word movers distance.
+    """
+    
+    def __init__(self):
+        super().__init__(self._get_similarity, 'distance')
+        entities_file = "/home/ubuntu/exp/data/entities.vocab.txt"
+        vectors_file = "/home/ubuntu/exp/data/entities.vectors.npy"
+        ent_embs = EmbeddingMatrix.from_txt_npy(entities_file, vectors_file)
+        self._boe_encoder = BagOfEntitiesEncoder.from_vocab_file(entities_file)
+        self._bov_encoder = BagOfVectorsEncoder(ent_embs)
+
+    def _get_similarity(self, qry, doc):
+        qry_boe = self._boe_encoder.encode(qry)
+        doc_boe = self._boe_encoder.encode(doc)
+        print(qry_boe)
+        qry_rep = self._bov_encoder.encode(qry_boe)
+        doc_rep = self._bov_encoder.encode(doc_boe)
+        return BagOfVectors.wmd(qry_rep, doc_rep)
