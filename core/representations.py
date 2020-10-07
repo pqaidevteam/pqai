@@ -5,7 +5,7 @@ import numba
 import re
 import json
 from sklearn.decomposition import TruncatedSVD
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 
 from core.utils import is_cpc_code, is_patent_number
 from config.config import models_dir
@@ -682,3 +682,50 @@ class InteractionMatrix():
 
 embeddings = GloveWordEmbeddings()
 sifs = embeddings.sifs
+
+
+from scipy.spatial import distance
+from core.utils import normalize_rows
+
+class BagOfVectors():
+    
+    def __init__(self, vectors):
+        self._vectors = vectors
+
+    @classmethod
+    def wmd(self, bov1, bov2, dist_fn=distance.cosine):
+        n1 = len(bov1)
+        n2 = len(bov2)
+        if n1 == 0 or n2 == 0:
+            return math.inf
+        dists = np.zeros((n1, n2))
+        for i, v1 in enumerate(bov1):
+            for j, v2 in enumerate(bov2):
+                dists[i, j] = dist_fn(v1, v2)
+        return dists.min(axis=1).sum()
+
+class BagOfEntities(set):
+
+    def __init__(self, entities):
+        super().__init__(entities)
+        self._entities = set(entities)
+
+    def non_overlapping(self):
+        independent = set([])
+        for entity in self._entities:
+            if not self._is_part_of_another(entity):
+                independent.add(entity)
+        return independent
+
+    def _is_part_of_another(self, entity):
+        for target in self._entities:
+            if target == entity:
+                continue
+            if re.search(f'^{entity}_', target):
+                return True
+            if re.search(f'_{entity}_', target):
+                return True
+            if re.search(f'{entity}$', target):
+                return True
+        return False
+
