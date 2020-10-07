@@ -9,6 +9,7 @@ sys.path.append(str(BASE_DIR.resolve()))
 from core.encoders import Encoder
 from core.encoders import BagOfEntitiesEncoder
 from core.encoders import EmbeddingMatrix
+from core.encoders import BagOfVectorsEncoder
 
 class TestEncoderClass(unittest.TestCase):
 
@@ -114,8 +115,31 @@ class TestEmbeddingMatrixClass(unittest.TestCase):
 	def test_similar_items(self):
 		item = 'station'
 		similars = self.emb.similar_to(item)
-		most_similar = similars[1] # 0 is the identical item
+		most_similar = similars[0]
 		self.assertEqual('stations', most_similar)
+
+	def test_whether_item_exists_in_matrix(self):
+		a = 'station' in self.emb
+		b = 'stationary' in self.emb
+		self.assertTrue(a)
+		self.assertFalse(b)
+
+
+class TestBagOfVectorsEncoder(unittest.TestCase):
+
+	def setUp(self):
+		emb_matrix_file = f'{test_dir}/test_embs.tsv'
+		emb_matrix = EmbeddingMatrix.from_tsv(emb_matrix_file)
+		self.encoder = BagOfVectorsEncoder(emb_matrix)
+		
+	def test_can_encode_simple_entity_set(self):
+		entities = set([ 'base', 'station' ])
+		base_vec = tuple([1.0, 0.0])
+		station_vec = tuple([0.1, 2.0])
+		expected_bov = set([base_vec, station_vec])
+		bov = self.encoder.encode(entities)
+		self.assertEqual(expected_bov, bov)
+
 
 if __name__ == '__main__':
     unittest.main()
