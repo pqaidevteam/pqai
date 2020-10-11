@@ -50,12 +50,6 @@ class Encoder:
 
 class BagOfEntitiesEncoder(Encoder):
 
-	@classmethod
-	def from_vocab_file(self, filepath):
-		encoder = BagOfEntitiesEncoder()
-		encoder._vocab_file = filepath
-		return encoder
-
 	def __init__(self):
 		super().__init__()
 		self._name = 'BagOfEntitiesEncoder'
@@ -66,7 +60,7 @@ class BagOfEntitiesEncoder(Encoder):
 		self._lookup_table = None
 		self._no_casing = True
 		self._maxlen = 3
-		self._separator = '_'
+		self._separator = ' '
 		self._sent_tokenizer = utils.get_sentences
 		self._non_overlapping = True
 
@@ -121,6 +115,12 @@ class BagOfEntitiesEncoder(Encoder):
 		tokens = [m for m in matches if m.strip()]
 		return tokens
 
+	@classmethod
+	def from_vocab_file(self, filepath):
+		encoder = BagOfEntitiesEncoder()
+		encoder._vocab_file = filepath
+		return encoder
+
 
 class EmbeddingMatrix():
 
@@ -134,16 +134,6 @@ class EmbeddingMatrix():
 	"""
 	
 	def __init__(self, items, vectors):
-		"""Create an `EmbeddingMatrix` object with the given `items` and
-		`vectors`.
-		
-		Args:
-		    items (list): List of items, which can be `str`, `int` or
-		    	any other hashable data types.
-		    vectors (np.ndarray): A 2-D matrix with rows as numerous as
-		    	the number of items and columns corresponding to the
-		    	vector dimensions.
-		"""
 		self._items = items
 		self._vectors = vectors
 		self._lookup = self._create_lookup()
@@ -151,89 +141,46 @@ class EmbeddingMatrix():
 
 	@property
 	def dims(self):
-		"""Return dimensionality of embeddings (vectors).
-		
-		Returns:
-		    int: Dimensionality of vectors
-		"""
 		vec = self._vectors[0]
 		return len(vec)
 
 	def __getitem__(self, item):
-		"""Get vector for an item.
-		
-		Args:
-		    item (str or int): Item identifier
-		
-		Returns:
-		    np.ndarray: Item vector
-		"""
 		idx = self._lookup[item]
 		return self._vectors[idx]
 
 	def __contains__(self, item):
-		"""Check whether given item has an embedding in the matrix.
-		
-		Args:
-		    item (str or int): Item
-		
-		Returns:
-		    bool: True if embedding exists, False otherwise
-		"""
 		return item in self._lookup
 
-	def similar_to(self, item, n=10):
-		"""Get a list of `n` most similar items to the given `item`.
-		
-		Args:
-		    item (str or int): Item identifier
-		    n (int, optional): Number of items to return
-		
-		Returns:
-		    list: List of items; if fewer than `n` items are present,
-		    	then a fewer items will be returned
-		"""
+	def similar_to_item(self, item, n=10, dist='cosine'):
 		idx = self._lookup[item]
-		item_vector = self._unit_vectors[idx]
-		cosine_prods = np.dot(item_vector, self._unit_vectors.T)
-		idxs = np.argsort(cosine_prods)[::-1][1:n+1]
+		vector = self._unit_vectors[idx]
+		return self.similar_to_vector(vector, n)
+
+	def similar_to_vector(self, vector, n=10, dist='cosine'):
+		if dist == 'cosine':
+			dists = self._cosine_dists(vector, self._unit_vectors)
+		elif dist == 'euclidean':
+			dists = self._euclid_dists(vector, self._vectors)
+		elif dist == 'dot':
+			dists = self._dot_prods(vector, self._vectors)
+		idxs = np.argsort(dists)[:n]
 		return [self._items[i] for i in idxs]
 
-	def _normalize_vectors(self, M):
-		"""Normalize rows of the given 2-D matrix by dividing with their
-		respective magnitudes.
-		
-		Args:
-		    M (np.ndarray): A 2-D numpy matrix
-		
-		Returns:
-		    np.ndarray: A matrix whose rows are unit vectors which
-		    	correspond to the rows of the input matrix
-		"""
-		epsilon = np.finfo(float).eps
-		norms = np.sqrt((M*M).sum(axis=1, keepdims=True))
-		norms += epsilon	# to avoid division by zero
-		return M / norms
+	def _euclid_dists(self, a, b):
+		d = a - b
+		return np.sum(d*d, axis=1)
+
+	def _cosine_dists(self, a, b):
+		return 1-np.dot(a, b.T)
+
+	def _dot_prods(self, a, b):
+		return -np.dot(a, b.T)
 
 	def _create_lookup(self):
-		"""Create a dictionary for finding the index of any item in the
-		items list.
-		
-		Returns:
-		    dict: Dictionary, whose keys are items, values are integer
-		    	indexes
-		"""
 		return {w:i for i,w in enumerate(self._items)}
 
 	def _create_unit_vectors(self):
-		"""Create unit vector matrix of the item vectors (which are
-		used to find similar items).
-		
-		Returns:
-		    np.ndarray: A matrix corresponding to vector matrix of the
-		    	items but this one has unit vectors.
-		"""
-		return self._normalize_vectors(self._vectors)
+		return utils.normalize_rows(self._vectors)
 
 	@classmethod
 	def from_txt_npy(self, txt_filepath, npy_filepath):
@@ -298,6 +245,11 @@ class BagOfVectorsEncoder(Encoder):
 		vectors_as_tuples = [tuple(vec) for vec in vectors]
 		return set(vectors_as_tuples)
 
+	@classmethod
+	def from_txt_npy(self, txtfile, npyfile):
+		emb_matrix = EmbeddingMatrix.from_txt_npy(txtfile, npyfile)
+		return BagOfVectorsEncoder(emb_matrix)
+
 
 class BagOfWordsEncoder(Encoder):
 	
@@ -317,3 +269,10 @@ class TokenSequenceEncoder(Encoder):
 		super().__init__(fn)
 		self._name = 'TokenSequenceEncoder'
 		self._input_validation_fn = lambda x: isinstance(x, str)
+
+
+txt_file = models_dir + 'entities.txt'
+npy_file = models_dir + 'entities.npy'
+default_embedding_matrix = EmbeddingMatrix.from_txt_npy(txt_file, npy_file)
+default_boe_encoder = BagOfEntitiesEncoder.from_vocab_file(txt_file)
+default_bov_encoder = BagOfVectorsEncoder(default_embedding_matrix)

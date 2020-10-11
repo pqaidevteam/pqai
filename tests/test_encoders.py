@@ -114,8 +114,8 @@ class TestEmbeddingMatrixClass(unittest.TestCase):
 
 	def test_similar_items(self):
 		item = 'station'
-		similars = self.emb.similar_to(item)
-		most_similar = similars[0]
+		similars = self.emb.similar_to_item(item)
+		most_similar = similars[1]  # [0] is the item itself
 		self.assertEqual('stations', most_similar)
 
 	def test_whether_item_exists_in_matrix(self):
