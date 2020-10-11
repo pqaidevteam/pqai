@@ -182,10 +182,16 @@ def tokenize(text, lowercase=True, alphanums=False):
 
 
 def normalize_rows(M):
-    return M / np.sqrt(np.sum(M*M, axis=1, keepdims=True))
+    return normalize_along_axis(M, 1)
 
 def normalize_cols(M):
-    return M / np.sqrt(np.sum(M*M, axis=0, keepdims=True))
+    return normalize_along_axis(M, 0)
+
+def normalize_along_axis(M, axis):
+    epsilon = np.finfo(float).eps
+    norms = np.sqrt((M*M).sum(axis=axis, keepdims=True))
+    norms += epsilon    # to avoid division by zero
+    return M / norms
 
 
 def remove_claim_number(claim_text):

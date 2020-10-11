@@ -721,11 +721,11 @@ class BagOfEntities(set):
         for target in self._entities:
             if target == entity:
                 continue
-            if re.search(f'^{entity}_', target):
+            if re.search(rf'^{entity}\s', target):
                 return True
-            if re.search(f'_{entity}_', target):
+            if re.search(rf'\s{entity}\s', target):
                 return True
-            if re.search(f'{entity}$', target):
+            if re.search(rf'\s{entity}$', target):
                 return True
         return False
 
