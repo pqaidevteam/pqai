@@ -19,7 +19,6 @@ class TestSubclassIndexSelector(unittest.TestCase):
 	def test_selects_indexes_accurately(self):
 		query = 'cellular networks'
 		indexes = self.index_selector.select(query, 5)
-		print(indexes)
 		self.assertIsInstance(indexes, list)
 
 

@@ -8,6 +8,7 @@ import requests
 HOST = '127.0.0.1' 	# Server on which the PQAI server is running
 PORT = 5000
 
+@unittest.skip('Works only when the server is running')
 class TestRoutes(unittest.TestCase):
 
 	def setUp(self):

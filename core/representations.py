@@ -718,14 +718,15 @@ class BagOfEntities(set):
         return independent
 
     def _is_part_of_another(self, entity):
+        separator = r'[\_\s]'
         for target in self._entities:
             if target == entity:
                 continue
-            if re.search(rf'^{entity}\s', target):
+            if re.search(rf'^{entity}{separator}', target):
                 return True
-            if re.search(rf'\s{entity}\s', target):
+            if re.search(rf'{separator}{entity}{separator}', target):
                 return True
-            if re.search(rf'\s{entity}$', target):
+            if re.search(rf'{separator}{entity}$', target):
                 return True
         return False
 
