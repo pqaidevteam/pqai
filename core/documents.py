@@ -132,7 +132,7 @@ class Document:
 			text = self.title + '\n' + self.abstract
 		return text
 
-	def to_json(self):
+	def json(self):
 		return dict(
 			id = self.id,
 			type = self.type,

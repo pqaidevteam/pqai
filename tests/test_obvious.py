@@ -21,7 +21,7 @@ class TestCombiner(unittest.TestCase):
 	def test_combination_suggestions(self):
 		combiner = Combiner(self.query, self.docs)
 		combinations = combiner.get_combinations(1)
-		expected = set(['base level', 'station'])
+		expected = set([0, 2])
 		self.assertEqual(expected, combinations)
 
 if __name__ == '__main__':

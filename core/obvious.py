@@ -14,18 +14,27 @@ class Combiner():
 		self._matrix = None
 
 	def get_combinations(self, n=1):
+		"""Return best combinations as index pairs
+		
+		Args:
+		    n (int, optional): Number of combinations needed
+		
+		Returns:
+		    list: List of integer tuples representing indexes of documents
+		    	in the `docs` list
+		"""
 		candidates = self._possible_combinations()
 		distances = [self._distance(i, j) for i, j in candidates]
 		ranked_candidates = [candidates[i] for i in np.argsort(distances)]
 		top_n = ranked_candidates[:n]
-		combinations = [set([self._docs[i], self._docs[j]]) for i, j in top_n]
-		return combinations if n > 1 else combinations[0]
+		return top_n if n > 1 else top_n[0]
 
 	def _possible_combinations(self):
 		pairs = []
 		for i in range(self._ndocs):
 			for j in range(i+1, self._ndocs):
-				pairs.append((i, j))
+				pair = set([i, j])
+				pairs.append(pair)
 		return pairs
 
 	def _distance(self, i, j):
@@ -54,5 +63,3 @@ class Combiner():
 		doc_features = self._extract_features(doc)
 		min_dist = np.min([distance.cosine(df, feature) for df in doc_features])
 		return min_dist
-
-	

@@ -191,7 +191,18 @@ class Searcher():
 			self._add_snippets(results, query)
 		if self.return_mappings:
 			self._add_mappings(results, query)
+
+		results = self._deduplicate(results)
 		return results
+
+	def _deduplicate(self, results):
+		ids = set([])
+		deduplicated = []
+		for result in results:
+			if not result.id in ids:
+				ids.add(result.id)
+				deduplicated.append(result)
+		return deduplicated
 
 	def _get_results(self, querytext, latent_query=None):
 		"""Actually run the query through the indexes and apply filters

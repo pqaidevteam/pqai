@@ -97,16 +97,3 @@ class AssigneeFilter(Filter):
 
 class InventorFilter(Filter):
 	pass
-
-
-# filter_date = DateFilter(None, '2018-01-01')
-# filter_doctype = DocTypeFilter('patent')
-# filter_assignee = AssigneeFilter('facebook')
-# filter_criteria = [filter_date, filter_doctype, filter_assignee]
-
-# searcher = Searcher()
-# searcher.setIndexes(indexes.list())
-# searcher.setAlgorithm('sentbert')
-# prelim_results = searcher.run(query)
-# final_results = Filter.apply(filters, results)
-# [res for res in results if res.meets(filter_criteria)]

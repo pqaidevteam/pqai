@@ -193,16 +193,12 @@ class BERTSubclassPredictor:
             segments_encoded = np.array(segments).reshape(1, self.SEQ_LEN)
             return [tokens_encoded, segments_encoded]
 
-        def predict_subclasses (self, text, n=5, limit_to=None):
+        def predict_subclasses (self, text):
             """Find relevant CPC technology subclasses for a given text snippet.
-           
+            
             Args:
                 text (str): Input text.
-                n (int, optional): Number of subclasses to return.
-                limit_to (list, optional): Predict subclasses only from the given
-                    list (intended for cases when you want to limit prediction
-                    to a specific set of classes)
-           
+            
             Returns:
                 list: Array of subclass codes, most relevant first.
             """
@@ -214,12 +210,7 @@ class BERTSubclassPredictor:
 
             # sort subclasses in descending order of relevancy
             subclasses = [self.subclass_codes[i] for i in np.argsort(y)[::-1]]
-
-            if limit_to:
-                subclasses = [c for c in subclasses if c in limit_to]
-
-            # return top-n
-            return subclasses[:n]
+            return subclasses
 
     __instance = __impl()
 

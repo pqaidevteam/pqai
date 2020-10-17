@@ -21,7 +21,7 @@ word_freq_file = models_dir + 'dfs.json'
 # for DistilBERTVectorizer
 distilbert_model_path = models_dir + 'vectorizer_distilbert_poc/'
 
-class DistilBERTVectorizer:
+class SentBERTVectorizer:
 
     """ Singleton class used for vectorizing text spans using the
         DistilBERT model fine-tuned on the STS dataset and then PoC

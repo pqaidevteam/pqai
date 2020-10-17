@@ -24,16 +24,19 @@ class Encoder:
 
 	def encode(self, item):
 		self._raise_exception_if_incompatible(item)
+		self._raise_exception_if_no_encoding_fn()
 		return self._encoder_fn(item)
 
 	def encode_many(self, items):
 		return [self.encode(item) for item in items]
 
-	def _raise_exception_if_incompatible(self, data):
+	def _raise_exception_if_no_encoding_fn(self):
 		if not callable(self._encoder_fn):
 			self._raise_invalid_encoder_fn_exception()
-		if not self.can_encode(data):
-			self._raise_invalid_input_data_exception()
+
+	def _raise_exception_if_incompatible(self, item):
+		if not self.can_encode(item):
+			self._raise_invalid_input_data_exception(item)
 
 	def can_encode(self, data):
 		is_valid = self._input_validation_fn
@@ -43,8 +46,8 @@ class Encoder:
 		msg = f'{self._name} does not have valid encoding function.'
 		raise Exception(msg)
 
-	def _raise_invalid_input_data_exception(self):
-		msg = f'Invalid input data for {self._name}.'
+	def _raise_invalid_input_data_exception(self, item):
+		msg = f'Invalid input data for {self._name}: {type(item)}'
 		raise Exception(msg)
 
 
