@@ -32,6 +32,7 @@ def create_request_and_serve(request, RequestClass):
         response = request.serve()
         return response, status.HTTP_200_OK
     except Exception as err:
+        print(err.__repr__())
         return server_error()
 
 def server_error(msg=None):

@@ -45,8 +45,8 @@ class SearchRequest(APIRequest):
         self._n_results = int(req_data.get('n', 10))
         self._full_query = self._get_full_query()
         self._indexes = self._get_indexes()
-        self._need_snippets = bool(self._data.get('snip', False))
-        self._need_mappings = bool(self._data.get('maps', False))
+        self._need_snippets = self._read_bool_value('snip')
+        self._need_mappings = self._read_bool_value('maps')
         self._filters = FilterExtractor(self._data).extract()
         self.MAX_RES_LIMIT = 100
 
@@ -84,6 +84,13 @@ class SearchRequest(APIRequest):
         if self._need_mappings:
             result.mapping = generate_mapping(self._query, result.full_text)
 
+    def _read_bool_value(self, key):
+        val = self._data.get(key)
+        if ((isinstance(val, str) and val in ['true', '1', 'yes']) or
+            (isinstance(val, int) and val != 0)):
+            return True
+        return False
+
 
 class FilterExtractor():
 
@@ -103,15 +110,15 @@ class FilterExtractor():
     def _get_date_filter(self):
         after = self._data.get('after', None)
         before = self._data.get('before', None)
-        if after is None and before is None:
-            return None
-        return PublicationDateFilter(after, before)
+        if after or before:
+            after = None if not bool(after) else after
+            before = None if not bool(before) else before
+            return PublicationDateFilter(after, before)
 
     def _get_doctype_filter(self):
-        if not 'type' in self._data:
-            return None
-        doctype = self._data['type']
-        return DocTypeFilter(doctype)
+        doctype = self._data.get('type')
+        if doctype:
+            return DocTypeFilter(doctype)
 
 
 class SearchRequest102(SearchRequest):
