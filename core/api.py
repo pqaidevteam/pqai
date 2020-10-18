@@ -6,7 +6,8 @@ from core.indexes import IndexesDirectory
 from core.search import VectorIndexSearcher
 from core.documents import Document
 from core.snippet import SnippetExtractor
-from config.config import indexes_dir
+from core.reranking import ConceptMatchRanker
+from config.config import indexes_dir, reranker_active
 
 vectorize_text = SentBERTVectorizer().embed
 available_indexes = IndexesDirectory(indexes_dir)
@@ -14,6 +15,7 @@ select_indexes = SublassesBasedIndexSelector(available_indexes).select
 vector_search = VectorIndexSearcher().search
 extract_snippet = SnippetExtractor.extract_snippet
 generate_mapping = SnippetExtractor.map
+reranker = None if not reranker_active else ConceptMatchRanker()
 
 
 class APIRequest():
@@ -131,10 +133,16 @@ class SearchRequest102(SearchRequest):
         qvec = vectorize_text(self._full_query)
         results = []
         m = n
+        m *= 4 # find more results than needed for effective reranking
         while len(results) < n and m < self.MAX_RES_LIMIT:
             results = vector_search(qvec, self._indexes, m)
             results = self._filters.apply(results)
             m *= 2
+        if reranker:
+            result_texts = [r.full_text for r in results]
+            ranks = reranker.rank(self._query, result_texts)
+            print(ranks)
+            results = [results[i] for i in ranks]
         return results[:n]
 
     def _formatting_fn(self, results):
