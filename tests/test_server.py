@@ -34,6 +34,11 @@ class TestRoutes(unittest.TestCase):
 		response = self.api_get('/mappings', {'q': self.query, 'pn': self.pn})
 		self.assertSuccess(response)
 
+	def test_datasets_route(self):
+		response = self.api_get('/datasets', { 'dataset': 'poc', 'n': 23 })
+		self.assertSuccess(response)
+		self.assertTrue('anc' in response.json())
+
 	def api_get(self, route, params):
 		url = self.endpoint + route
 		response = requests.get(url, params)

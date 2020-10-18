@@ -7,7 +7,7 @@ BASE_DIR = str(Path(__file__).parent.parent.resolve())
 sys.path.append(BASE_DIR)
 
 from core.api import APIRequest, SearchRequest102, SearchRequest103
-from core.api import SnippetRequest, MappingRequest
+from core.api import SnippetRequest, MappingRequest, DatasetSampleRequest
 from core.api import BadRequestError, ServerError
 from core.filters import PublicationDateFilter
 from dateutil.parser import parse as parse_date
@@ -135,6 +135,34 @@ class TestSearchRequest103Class(unittest.TestCase):
 		req = SearchRequest103(req)
 		results = req.serve()['results']
 		return results
+
+
+class TestDatasetSampleRequestClass(unittest.TestCase):
+
+	def test_request_a_sample_from_poc(self):
+		self.assertSample('poc', 23)
+		self.assertSample('poc', 45023)
+
+	def test_request_a_sample_that_does_not_exist(self):
+		non_existent_sample = lambda: self.make_request('poc', 200200)
+		self.assertRaises(ServerError, non_existent_sample)
+
+	def test_access_non_existent_dataset(self):
+		non_existent_dataset = lambda: self.make_request('dog', 1)
+		self.assertRaises(ServerError, non_existent_dataset)
+
+	def test_invalid_request(self):
+		invalid_request = lambda: DatasetSampleRequest({ 'sample': 3 }).serve()
+		self.assertRaises(BadRequestError, invalid_request)
+
+	def assertSample(self, dataset, n):
+		sample = self.make_request(dataset, n)
+		self.assertIsInstance(sample, dict)
+
+	def make_request(self, dataset, n):
+		request = DatasetSampleRequest({ 'dataset': dataset, 'n': n })
+		return request.serve()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -7,6 +7,7 @@ from core.search import VectorIndexSearcher
 from core.documents import Document
 from core.snippet import SnippetExtractor
 from core.reranking import ConceptMatchRanker
+from core.datasets import PoC
 from config.config import indexes_dir, reranker_active
 
 vectorize_text = SentBERTVectorizer().embed
@@ -143,9 +144,6 @@ class FilterExtractor():
 
 class SearchRequest102(SearchRequest):
 
-    def __init__(self, req_data):
-        super().__init__(req_data)
-
     def _searching_fn(self):
         n = self._n_results
         qvec = vectorize_text(self._full_query)
@@ -177,9 +175,6 @@ class SearchRequest102(SearchRequest):
 
 
 class SearchRequest103(SearchRequest):
-    
-    def __init__(self, req_data):
-        super().__init__(req_data)
 
     def _searching_fn(self):
         docs = self._get_docs_to_combine()
@@ -228,9 +223,6 @@ class PassageRequest(APIRequest):
 
 class SnippetRequest(PassageRequest):
 
-    def __init__(self, req_data):
-        super().__init__(req_data)
-
     def _serving_fn(self):
         query = self._query
         text = self._doc.full_text
@@ -246,9 +238,6 @@ class SnippetRequest(PassageRequest):
 
 class MappingRequest(PassageRequest):
 
-    def __init__(self, req_data):
-        super().__init__(req_data)
-
     def _serving_fn(self):
         query = self._query
         text = self._doc.full_text
@@ -260,3 +249,23 @@ class MappingRequest(PassageRequest):
             'id': self._doc_id,
             'mapping': mapping,
         }
+
+class DatasetSampleRequest(APIRequest):
+
+    poc_dataset = PoC()
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        name = self._data['dataset']
+        if name.lower() == 'poc':
+            n = self._data['n']
+            return self.poc_dataset[int(n)]
+        else:
+            raise BadRequestError('No such dataset exists.')
+
+    def _validation_fn(self):
+        if not 'n' in self._data or not 'dataset' in self._data:
+            return False
+        return True
