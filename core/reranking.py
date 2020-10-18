@@ -4,6 +4,7 @@ import math
 from core.encoders import EmbeddingMatrix
 from core.encoders import BagOfEntitiesEncoder, BagOfVectorsEncoder
 from core.representations import BagOfVectors
+from config.config import models_dir
 
 class Ranker:
 
@@ -105,8 +106,8 @@ class ConceptMatchRanker(Ranker):
     
     def __init__(self):
         super().__init__(self._get_similarity, 'distance')
-        entities_file = "/home/ubuntu/exp/data/entities.vocab.txt"
-        vectors_file = "/home/ubuntu/exp/data/entities.vectors.npy"
+        entities_file = f"{models_dir}entities.txt"
+        vectors_file = f"{models_dir}entities.npy"
         ent_embs = EmbeddingMatrix.from_txt_npy(entities_file, vectors_file)
         self._boe_encoder = BagOfEntitiesEncoder.from_vocab_file(entities_file)
         self._bov_encoder = BagOfVectorsEncoder(ent_embs)
@@ -114,7 +115,6 @@ class ConceptMatchRanker(Ranker):
     def _get_similarity(self, qry, doc):
         qry_boe = self._boe_encoder.encode(qry)
         doc_boe = self._boe_encoder.encode(doc)
-        print(qry_boe)
         qry_rep = self._bov_encoder.encode(qry_boe)
         doc_rep = self._bov_encoder.encode(doc_boe)
         return BagOfVectors.wmd(qry_rep, doc_rep)
