@@ -145,7 +145,21 @@ class Document:
 		)
 
 class Patent (Document):
-	pass
+	
+	def __init__(self, patent_number):
+		super().__init__(patent_number)
+
+	def _load (self, force=False):
+		if self._data is None or force == True:
+			self._data = db.get_patent_data(self.id)
+
+	@property
+	def claims(self):
+		return self.data['claims']
+
+	@property
+	def first_claim(self):
+		return self.claims[0]
 
 
 class Paper (Document):
