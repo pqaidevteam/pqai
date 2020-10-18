@@ -8,19 +8,43 @@ sys.path.append(BASE_DIR)
 
 from core.api import APIRequest, SearchRequest102, SearchRequest103
 from core.api import SnippetRequest, MappingRequest
+from core.api import BadRequestError, ServerError
 from core.filters import PublicationDateFilter
 from dateutil.parser import parse as parse_date
 
 
 class TestRequestClass(unittest.TestCase):
 
-	def setUp(self):
-		self.greetings = { 'en': 'Hello', 'de': 'Hallo' }
-		self.greeting_fn = lambda x: self.greetings.get(x['lang'])
+	class GreetingRequest(APIRequest):
+
+		greetings = { 'en': 'Hello', 'de': 'Hallo' }
+
+		def __init__(self, req_data):
+			super().__init__(req_data)
+
+		def _serving_fn(self):
+			lang = self._data['lang']
+			return self.greetings[lang]
+
+		def _validation_fn(self):
+			return 'lang' in self._data
 
 	def test_can_create_dummy_request(self):
 		req = APIRequest()
 		self.assertEqual(req.serve(), None)
+
+	def test_serving_fn_operation(self):
+		req = self.GreetingRequest({ 'lang': 'en' })
+		self.assertEqual('Hello', req.serve())
+
+	def test_raises_error_on_invalid_request(self):
+		req = self.GreetingRequest({ 'locale': 'en' })
+		self.assertRaises(BadRequestError, req.serve)
+
+	def test_raises_error_on_expection_during_serving(self):
+		req = self.GreetingRequest({ 'lang': 'hi' })
+		self.assertRaises(ServerError, req.serve)
+
 
 class TestSearchRequest102Class(unittest.TestCase):
 
@@ -79,6 +103,10 @@ class TestSearchRequest102Class(unittest.TestCase):
 		results = self.search({ 'q': self.query, 'maps': 1 })
 		has_mappings = lambda r: r['mapping']
 		self.assertForEach(results, has_mappings)
+
+	def test_raises_error_with_bad_request(self):
+		bad_req = lambda: self.search({ 'qry': self.query })
+		self.assertRaises(BadRequestError, bad_req)
 
 	def search(self, req):
 		req = SearchRequest102(req)

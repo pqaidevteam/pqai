@@ -25,17 +25,32 @@ class APIRequest():
 
     def serve(self):
         self._raise_if_invalid()
-        return self._serving_fn()
+        try:
+            return self._serving_fn()
+        except:
+            raise ServerError()
 
     def _raise_if_invalid(self):
         if not self._validation_fn():
-            raise Exception('Invalid request data.')
+            raise BadRequestError()
 
     def _serving_fn(self):
         pass
 
     def _validation_fn(self):
         return True
+
+
+class BadRequestError(Exception):
+
+    def __init__(self, msg='Invalid request.'):
+        self.message = msg
+
+
+class ServerError(Exception):
+
+    def __init__(self, msg='Server error while handling request.'):
+        self.message = msg
 
 
 class SearchRequest(APIRequest):
@@ -50,7 +65,7 @@ class SearchRequest(APIRequest):
         self._need_snippets = self._read_bool_value('snip')
         self._need_mappings = self._read_bool_value('maps')
         self._filters = FilterExtractor(self._data).extract()
-        self.MAX_RES_LIMIT = 100
+        self.MAX_RES_LIMIT = 500
 
     def _serving_fn(self):
         results = self._searching_fn()
@@ -92,6 +107,9 @@ class SearchRequest(APIRequest):
             (isinstance(val, int) and val != 0)):
             return True
         return False
+
+    def _validation_fn(self):
+        return 'q' in self._data
 
 
 class FilterExtractor():
@@ -139,9 +157,8 @@ class SearchRequest102(SearchRequest):
             results = self._filters.apply(results)
             m *= 2
         if reranker:
-            result_texts = [r.full_text for r in results]
+            result_texts = [r.abstract for r in results]
             ranks = reranker.rank(self._query, result_texts)
-            print(ranks)
             results = [results[i] for i in ranks]
         return results[:n]
 
