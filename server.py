@@ -3,6 +3,7 @@ from flask import request
 from flask_api import FlaskAPI, status, exceptions
 from core.api import SearchRequest102, SearchRequest103
 from core.api import SnippetRequest, MappingRequest
+from core.api import BadRequest, ServerError
 
 import logging
 log = logging.getLogger('werkzeug')
@@ -30,10 +31,14 @@ def create_request_and_serve(request, RequestClass):
     try:
         request = RequestClass(request.args.to_dict())
         response = request.serve()
-        return response, status.HTTP_200_OK
-    except Exception as err:
-        print(err.__repr__())
-        return server_error()
+        return success(response)
+    except BadRequest as err:
+        return bad_request(err.message)
+    except ServerError as err:
+        return server_error(err.message)
+
+def success(response):
+    return response, status.HTTP_200_OK
 
 def server_error(msg=None):
     msg = msg if msg else 'Server error'
