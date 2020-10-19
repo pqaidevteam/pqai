@@ -158,6 +158,11 @@ class Patent (Document):
 		return self.data['claims']
 
 	@property
+	def filing_date(self):
+		return self.data['filingDate']
+	
+
+	@property
 	def first_claim(self):
 		return self.claims[0]
 
