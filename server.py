@@ -1,6 +1,8 @@
+import traceback
 import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
+
 
 import core.api as API
 
@@ -44,13 +46,13 @@ def create_request_and_serve(req, reqClass):
     try:
         return success(reqClass(req.args.to_dict()).serve())
     except API.BadRequestError as err:
-        print(err.__repr__())
+        traceback.print_exc()
         return bad_request(err.message)
     except API.ServerError as err:
-        print(err.__repr__())
+        traceback.print_exc()
         return server_error(err.message)
     except API.NotAllowedError as err:
-        print(err.__repr__())
+        traceback.print_exc()
         return not_allowed(err.message)
 
 def success(response):
