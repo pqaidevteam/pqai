@@ -8,6 +8,7 @@ sys.path.append(BASE_DIR)
 
 from core.api import APIRequest, SearchRequest102, SearchRequest103
 from core.api import SnippetRequest, MappingRequest, DatasetSampleRequest
+from core.api import SimilarPatentsRequest, PatentPriorArtRequest
 from core.api import BadRequestError, ServerError
 from core.filters import PublicationDateFilter
 from dateutil.parser import parse as parse_date
@@ -27,7 +28,8 @@ class TestRequestClass(unittest.TestCase):
 			return self.greetings[lang]
 
 		def _validation_fn(self):
-			return 'lang' in self._data
+			if not 'lang' in self._data:
+				raise BadRequestError('Invalid request.')
 
 	def test_can_create_dummy_request(self):
 		req = APIRequest()
@@ -38,8 +40,9 @@ class TestRequestClass(unittest.TestCase):
 		self.assertEqual('Hello', req.serve())
 
 	def test_raises_error_on_invalid_request(self):
-		req = self.GreetingRequest({ 'locale': 'en' })
-		self.assertRaises(BadRequestError, req.serve)
+		def create_invalid_request():
+			return self.GreetingRequest({ 'locale': 'en' })
+		self.assertRaises(BadRequestError, create_invalid_request)
 
 	def test_raises_error_on_expection_during_serving(self):
 		req = self.GreetingRequest({ 'lang': 'hi' })
@@ -105,7 +108,7 @@ class TestSearchRequest102Class(unittest.TestCase):
 		self.assertForEach(results, has_mappings)
 
 	def test_raises_error_with_bad_request(self):
-		bad_req = lambda: self.search({ 'qry': self.query })
+		bad_req = lambda: SearchRequest102({ 'qry': self.query })
 		self.assertRaises(BadRequestError, bad_req)
 
 	def search(self, req):
@@ -163,6 +166,39 @@ class TestDatasetSampleRequestClass(unittest.TestCase):
 		request = DatasetSampleRequest({ 'dataset': dataset, 'n': n })
 		return request.serve()
 
+
+class TestSimilarPatentsRequestClass(unittest.TestCase):
+
+	def test_invalid_query(self):
+		make_bad_query = lambda: SimilarPatentsRequest({ 'q': 'drones'})
+		self.assertRaises(BadRequestError, make_bad_query)
+
+	def test_with_simple_query(self):
+		response = SimilarPatentsRequest({ 'pn': 'US7654321B2' }).serve()
+		self.assertIsInstance(response, dict)
+		self.assertIsInstance(response['results'], list)
+		self.assertGreater(len(response['results']), 0)
+
+class TestPatentPriorArtRequestClass(unittest.TestCase):
+
+	def test_with_simple_query(self):
+		response = PatentPriorArtRequest({ 'pn': 'US7654321B2'}).serve()
+		results = response['results']
+		def published_before(r):
+			d1 = parse_date(r['publication_date'])
+			d2 = parse_date('2006-12-27')
+			return d1 <= d2
+		self.assertForEach(results, published_before)
+
+	def assertForEach(self, results, condition):
+		truth_arr = [condition(res) for res in results]
+		self.assertTrue(all(truth_arr))
+
+class TestSnippetRequestClass(unittest.TestCase):
+	pass
+
+class TestMappingRequestClass(unittest.TestCase):
+	pass
 
 if __name__ == '__main__':
     unittest.main()

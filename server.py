@@ -1,49 +1,47 @@
-# Server
-from flask import request
-from flask_api import FlaskAPI, status, exceptions
-from core.api import BadRequestError, ServerError
-from core.api import SearchRequest102, SearchRequest103
-from core.api import SnippetRequest, MappingRequest
-from core.api import DatasetSampleRequest
-
-
 import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
+import core.api as API
 
+from flask import request
+from flask_api import FlaskAPI, status, exceptions
 app = FlaskAPI(__name__)
-
 
 @app.route('/documents/', methods=['GET'])
 def search_102 ():
-    return create_request_and_serve(request, SearchRequest102)
+    return create_request_and_serve(request, API.DocumentsRequest)
 
 @app.route('/combinations/', methods=['GET'])
 def seach_103():
-    return create_request_and_serve(request, SearchRequest103)
+    return create_request_and_serve(request, API.SearchRequest103)
 
 @app.route('/snippets/', methods=['GET'])
 def get_snippet():
-    return create_request_and_serve(request, SnippetRequest)
+    return create_request_and_serve(request, API.SnippetRequest)
 
 @app.route('/mappings/', methods=['GET'])
 def get_mapping():
-    return create_request_and_serve(request, MappingRequest)
+    return create_request_and_serve(request, API.MappingRequest)
 
 @app.route('/datasets/', methods=['GET'])
 def get_sample():
-    return create_request_and_serve(request, DatasetSampleRequest)
+    return create_request_and_serve(request, API.DatasetSampleRequest)
 
+@app.route('/prior-art/', methods=['GET'])
+def get_patent_prior_art():
+    return create_request_and_serve(request, API.PatentPriorArtRequest)
 
-def create_request_and_serve(request, RequestClass):
+@app.route('/similar/', methods=['GET'])
+def get_similar_patents():
+    return create_request_and_serve(request, API.SimilarPatentsRequest)
+
+def create_request_and_serve(req, reqClass):
     try:
-        request = RequestClass(request.args.to_dict())
-        response = request.serve()
-        return success(response)
-    except BadRequestError as err:
+        return success(reqClass(req.args.to_dict()).serve())
+    except API.BadRequestError as err:
         return bad_request(err.message)
-    except ServerError as err:
+    except API.ServerError as err:
         return server_error(err.message)
 
 def success(response):
@@ -58,7 +56,6 @@ def bad_request(msg=None):
     msg = msg if msg else 'Bad request'
     http_status = status.HTTP_400_BAD_REQUEST
     return msg, http_status
-
 
 if __name__ == '__main__':
     app.run(debug=False, threaded=False)

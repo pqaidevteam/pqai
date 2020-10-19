@@ -8,7 +8,7 @@ import requests
 HOST = '127.0.0.1' 	# Server on which the PQAI server is running
 PORT = 5000
 
-@unittest.skip('Works only when the server is running')
+# @unittest.skip('Works only when the server is running')
 class TestRoutes(unittest.TestCase):
 
 	def setUp(self):
@@ -16,8 +16,18 @@ class TestRoutes(unittest.TestCase):
 		self.query = 'formation fluid sampling'
 		self.pn = 'US7654321B2'
 
-	def test_102_search_route(self):
+	def test_102_search_route_with_text_query(self):
 		response = self.api_get('/documents', {'q': self.query})
+		self.assertSuccess(response)
+		self.assertGreater(len(response.json()['results']), 0)
+
+	def test_102_search_route_with_patent_query(self):
+		response = self.api_get('/documents', {'pn': 'US7654321B2'})
+		self.assertSuccess(response)
+		self.assertGreater(len(response.json()['results']), 0)
+
+	def test_prior_art_search_route(self):
+		response = self.api_get('/prior-art', {'pn': 'US7654321B2'})
 		self.assertSuccess(response)
 		self.assertGreater(len(response.json()['results']), 0)
 

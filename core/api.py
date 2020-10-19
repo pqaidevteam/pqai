@@ -9,6 +9,8 @@ from core.snippet import SnippetExtractor
 from core.reranking import ConceptMatchRanker
 from core.datasets import PoC
 from config.config import indexes_dir, reranker_active
+import core.utils as utils
+from core.documents import Patent
 
 vectorize_text = SentBERTVectorizer().embed
 available_indexes = IndexesDirectory(indexes_dir)
@@ -23,23 +25,26 @@ class APIRequest():
     
     def __init__(self, req_data=None):
         self._data = req_data
+        self._validate()
 
     def serve(self):
-        self._raise_if_invalid()
         try:
-            return self._serving_fn()
+            response = self._serving_fn()
+            return self._formatting_fn(response)
         except:
             raise ServerError()
 
-    def _raise_if_invalid(self):
-        if not self._validation_fn():
-            raise BadRequestError()
+    def _validate(self):
+        self._validation_fn()
 
     def _serving_fn(self):
         pass
 
     def _validation_fn(self):
-        return True
+        pass
+
+    def _formatting_fn(self, response):
+        return response
 
 
 class BadRequestError(Exception):
@@ -52,6 +57,20 @@ class ServerError(Exception):
 
     def __init__(self, msg='Server error while handling request.'):
         self.message = msg
+
+
+class DocumentsRequest(APIRequest):
+
+    def _serving_fn(self):
+        if 'pn' in self._data:
+            return SimilarPatentsRequest(self._data).serve()
+        else:
+            return SearchRequest102(self._data).serve()
+
+    def _validation_fn(self):
+        if not 'pn' in self._data and not 'q' in self._data:
+            raise BadRequestError(
+                'Request does not contain a query.')
 
 
 class SearchRequest(APIRequest):
@@ -69,8 +88,7 @@ class SearchRequest(APIRequest):
         self.MAX_RES_LIMIT = 500
 
     def _serving_fn(self):
-        results = self._searching_fn()
-        return self._formatting_fn(results)
+        return self._searching_fn()
 
     def _searching_fn(self):
         pass
@@ -110,7 +128,9 @@ class SearchRequest(APIRequest):
         return False
 
     def _validation_fn(self):
-        return 'q' in self._data
+        if not 'q' in self._data:
+            raise BadRequestError(
+                'Request does not contain a query.')
 
 
 class FilterExtractor():
@@ -207,6 +227,46 @@ class SearchRequest103(SearchRequest):
         }
 
 
+class SimilarPatentsRequest(APIRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+        self._pn = req_data.get('pn')
+
+    def _serving_fn(self):
+        search_request = self._create_text_query_request()
+        return SearchRequest102(search_request).serve()
+
+    def _create_text_query_request(self):
+        claim = Patent(self._pn).first_claim
+        query = utils.remove_claim_number(claim)
+        search_request = self._data.copy()
+        search_request['q'] = query
+        search_request.pop('pn')
+        return search_request
+
+    def _validation_fn(self):
+        if not utils.is_patent_number(self._data.get('pn')):
+            raise BadRequestError(
+                'Request does not contain a valid patent number.')
+
+    def _formatting_fn(self, response):
+        response['query'] = self._pn
+        return response
+
+
+class PatentPriorArtRequest(SimilarPatentsRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+        self._before = Patent(self._pn).filing_date
+
+    def _serving_fn(self):
+        search_request = self._create_text_query_request()
+        search_request['before'] = self._before
+        return SearchRequest102(search_request).serve()
+
+
 class PassageRequest(APIRequest):
 
     def __init__(self, req_data):
@@ -216,12 +276,17 @@ class PassageRequest(APIRequest):
         self._doc = Document(self._doc_id)
 
     def _validation_fn(self):
-        if not self._query or not self._doc_id:
-            return False
-        return True
-
+        if not self._data.get('q'):
+            raise BadRequestError(
+                'Request does not contain a query.')
+        if not self._data.get('pn'):
+            raise BadRequestError(
+                'Request does not specify a document.')
 
 class SnippetRequest(PassageRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
 
     def _serving_fn(self):
         query = self._query
@@ -237,6 +302,9 @@ class SnippetRequest(PassageRequest):
 
 
 class MappingRequest(PassageRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
 
     def _serving_fn(self):
         query = self._query
@@ -263,9 +331,12 @@ class DatasetSampleRequest(APIRequest):
             n = self._data['n']
             return self.poc_dataset[int(n)]
         else:
-            raise BadRequestError('No such dataset exists.')
+            raise BadRequestError(f'No dataset named {name}.')
 
     def _validation_fn(self):
-        if not 'n' in self._data or not 'dataset' in self._data:
-            return False
-        return True
+        if not 'dataset' in self._data:
+            raise BadRequestError(
+                'Request does not specify a dataset name.')
+        if not 'n' in self._data:
+            raise BadRequestError(
+                'Request does not specify the sample number.')
