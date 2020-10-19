@@ -376,6 +376,20 @@ class DatasetSampleRequest(APIRequest):
             raise BadRequestError(
                 'Request does not specify the sample number.')
 
+    def _formatting_fn(self, sample):
+        formatted = {}
+        formatted['anc'] = self._format(sample['anc'])
+        formatted['pos'] = self._format(sample['pos'])
+        formatted['negs'] = [self._format(neg) for neg in sample['negs']]
+        return formatted
+
+    def _format(self, pn):
+        patent = Patent(pn)
+        return {
+            'publicationNumber': patent.id,
+            'title': patent.title,
+            'abstract': patent.abstract
+        }
 
 class IncomingExtensionRequest(SearchRequest102):
 
