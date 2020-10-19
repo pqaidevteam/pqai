@@ -5,7 +5,7 @@ from core import utils
 from core.highlighter import highlight as highlighter_fn
 
 from core.vectorizers import SIFTextVectorizer
-encoder_fn = SIFTextVectorizer().embed
+text2vec = SIFTextVectorizer().embed
 
 from core.reranking import CustomRanker
 ranker = CustomRanker()
@@ -36,8 +36,8 @@ class SnippetExtractor():
         elements = utils.get_elements(query)
         sents = cls._get_mappable_sentences(text)
 
-        A = utils.normalize_rows(np.array([encoder_fn(e) for e in elements]))
-        B = utils.normalize_rows(np.array([encoder_fn(e) for e in sents]))
+        A = utils.normalize_rows(np.array([text2vec(e) for e in elements]))
+        B = utils.normalize_rows(np.array([text2vec(e) for e in sents]))
         
         cosine_sims = np.dot(A, B.T)
         sent_idxs = cosine_sims.argmax(axis=1)

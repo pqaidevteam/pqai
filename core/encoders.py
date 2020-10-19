@@ -30,14 +30,6 @@ class Encoder:
 	def encode_many(self, items):
 		return [self.encode(item) for item in items]
 
-	def _raise_exception_if_no_encoding_fn(self):
-		if not callable(self._encoder_fn):
-			self._raise_invalid_encoder_fn_exception()
-
-	def _raise_exception_if_incompatible(self, item):
-		if not self.can_encode(item):
-			self._raise_invalid_input_data_exception(item)
-
 	def can_encode(self, data):
 		is_valid = self._input_validation_fn
 		return False if callable(is_valid) and not is_valid(data) else True
@@ -49,6 +41,14 @@ class Encoder:
 	def _raise_invalid_input_data_exception(self, item):
 		msg = f'Invalid input data for {self._name}: {type(item)}'
 		raise Exception(msg)
+
+	def _raise_exception_if_no_encoding_fn(self):
+		if not callable(self._encoder_fn):
+			self._raise_invalid_encoder_fn_exception()
+
+	def _raise_exception_if_incompatible(self, item):
+		if not self.can_encode(item):
+			self._raise_invalid_input_data_exception(item)
 
 
 class BagOfEntitiesEncoder(Encoder):
