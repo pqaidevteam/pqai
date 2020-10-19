@@ -8,9 +8,15 @@ from core.documents import Document
 from core.snippet import SnippetExtractor
 from core.reranking import ConceptMatchRanker
 from core.datasets import PoC
-from config.config import indexes_dir, reranker_active
-import core.utils as utils
 from core.documents import Patent
+
+import core.remote as remote
+import core.utils as utils
+
+from config.config import indexes_dir, reranker_active
+from config.config import allow_incoming_extension_requests
+from config.config import allow_outgoing_extension_requests
+
 
 vectorize_text = SentBERTVectorizer().embed
 available_indexes = IndexesDirectory(indexes_dir)
@@ -56,6 +62,11 @@ class BadRequestError(Exception):
 class ServerError(Exception):
 
     def __init__(self, msg='Server error while handling request.'):
+        self.message = msg
+
+class NotAllowedError(Exception):
+
+    def __init__(self, msg="Request disallowed."):
         self.message = msg
 
 
@@ -164,21 +175,38 @@ class FilterExtractor():
 
 class SearchRequest102(SearchRequest):
 
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
     def _searching_fn(self):
-        n = self._n_results
+        results = self._get_local_results()
+        results = self._add_remote_results_to(results)
+        results = self._rerank(results)
+        return results[:self._n_results]
+
+    def _get_local_results(self):
         qvec = vectorize_text(self._full_query)
+        n = self._n_results
         results = []
-        m = n
-        m *= 4 # find more results than needed for effective reranking
+        m = n*2
         while len(results) < n and m < self.MAX_RES_LIMIT:
             results = vector_search(qvec, self._indexes, m)
             results = self._filters.apply(results)
             m *= 2
-        if reranker:
-            result_texts = [r.abstract for r in results]
-            ranks = reranker.rank(self._query, result_texts)
-            results = [results[i] for i in ranks]
-        return results[:n]
+        return results
+
+    def _rerank(self, results):
+        if not reranker:
+            return results
+        result_texts = [r.abstract for r in results]
+        ranks = reranker.rank(self._query, result_texts)
+        return [results[i] for i in ranks]
+
+    def _add_remote_results_to(self, local_results):
+        if not allow_outgoing_extension_requests:
+            return local_results
+        remote_results = remote.search_extensions(self._data)
+        return remote.merge(local_results, remote_results)
 
     def _formatting_fn(self, results):
         for result in results:
@@ -190,8 +218,7 @@ class SearchRequest102(SearchRequest):
             'latent_query': self._latent_query,
             'n_results': self._n_results,
             'snippets_included': self._need_snippets,
-            'mappings_included': self._need_mappings
-        }
+            'mappings_included': self._need_mappings }
 
 
 class SearchRequest103(SearchRequest):
@@ -223,8 +250,7 @@ class SearchRequest103(SearchRequest):
             'latent_query': self._latent_query,
             'n_results': self._n_results,
             'snippets_included': self._need_snippets,
-            'mappings_included': self._need_mappings
-        }
+            'mappings_included': self._need_mappings }
 
 
 class SimilarPatentsRequest(APIRequest):
@@ -297,8 +323,7 @@ class SnippetRequest(PassageRequest):
         return {
             'query': self._query,
             'id': self._doc_id,
-            'snippet': snippet,
-        }
+            'snippet': snippet }
 
 
 class MappingRequest(PassageRequest):
@@ -315,8 +340,7 @@ class MappingRequest(PassageRequest):
         return {
             'query': self._query,
             'id': self._doc_id,
-            'mapping': mapping,
-        }
+            'mapping': mapping }
 
 class DatasetSampleRequest(APIRequest):
 
@@ -340,3 +364,13 @@ class DatasetSampleRequest(APIRequest):
         if not 'n' in self._data:
             raise BadRequestError(
                 'Request does not specify the sample number.')
+
+
+class IncomingExtensionRequest(SearchRequest102):
+
+    def __init__(self, req_data):
+        if not allow_incoming_extension_requests:
+            raise NotAllowedError(
+                'Server does not accept extension requests.')
+        else:
+            super().__init__(req_data)

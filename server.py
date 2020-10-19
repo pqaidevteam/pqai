@@ -36,13 +36,22 @@ def get_patent_prior_art():
 def get_similar_patents():
     return create_request_and_serve(request, API.SimilarPatentsRequest)
 
+@app.route('/extension/', methods=['GET'])
+def handle_incoming_ext_request():
+    return create_request_and_serve(request, API.IncomingExtensionRequest)
+
 def create_request_and_serve(req, reqClass):
     try:
         return success(reqClass(req.args.to_dict()).serve())
     except API.BadRequestError as err:
+        print(err.__repr__())
         return bad_request(err.message)
     except API.ServerError as err:
+        print(err.__repr__())
         return server_error(err.message)
+    except API.NotAllowedError as err:
+        print(err.__repr__())
+        return not_allowed(err.message)
 
 def success(response):
     return response, status.HTTP_200_OK
@@ -55,6 +64,11 @@ def server_error(msg=None):
 def bad_request(msg=None):
     msg = msg if msg else 'Bad request'
     http_status = status.HTTP_400_BAD_REQUEST
+    return msg, http_status
+
+def not_allowed(msg=None):
+    msg = msg if msg else 'Request disallowed.'
+    http_status = status.HTTP_403_FORBIDDEN
     return msg, http_status
 
 if __name__ == '__main__':

@@ -6,7 +6,7 @@ HTTP_SUCCESS = 200
 def search_extensions (search_params):
 	results = [search_extension(extension, search_params)
 			for extension in EXTENSIONS]
-	return merge_results(results)
+	return merge(results)
 
 
 def search_extension (extension, search_params):
@@ -17,7 +17,7 @@ def search_extension (extension, search_params):
 	return response.json().results
 
 
-def merge_results (results_lists):
+def merge (results_lists):
 	return _deduplicate(
 			_sort_by_score(
 			 _flatten(results_lists)))
