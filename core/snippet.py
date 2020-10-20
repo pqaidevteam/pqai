@@ -7,7 +7,7 @@ from core.highlighter import highlight as highlighter_fn
 from core.vectorizers import SIFTextVectorizer
 text2vec = SIFTextVectorizer().embed
 
-from core.reranking import CustomRanker
+from core.reranking import CustomRanker, ConceptMatchRanker
 ranker = CustomRanker()
 
 
@@ -81,4 +81,39 @@ class SnippetExtractor():
                 n += 1
             i += 1
         return ' ' + sent[0:i] + '...'
-    
+
+
+class CombinationalMapping (SnippetExtractor):
+
+    ranker = ConceptMatchRanker()
+
+    def __init__(self, query, texts):
+        self._texts = texts
+        self._query = query
+        self._elements = utils.get_elements(query)
+        self._sents = [self._get_mappable_sentences(text) for text in texts]
+
+    def map(self):
+        return [self._select_best(self._map_element_with_all(el))
+                for el in self._elements]
+
+    def _map_element_with_all(self, el):
+        n_texts = len(self._texts)
+        return [self._map_element_with_ith(el, i) for i in range(n_texts)]
+
+    def _map_element_with_ith(self, el, i):
+        sents = self._sents[i]
+        dists = [self.ranker.score(el, s) for s in sents]
+        k = np.argmin(dists)
+        dist = dists[k]
+        return {
+            'element': el,
+            'doc': i,
+            'mapping': sents[k],
+            'ctx_before': sents[k-1] if k-1 > 0 else '',
+            'ctx_after': sents[k+1] if k+1 < len(sents) else '',
+            'similarity': dist
+        }
+
+    def _select_best(self, mappings):
+        return sorted(mappings, key=lambda x: x['similarity'])[0]
