@@ -37,7 +37,6 @@ class CombinationalMappingClass(unittest.TestCase):
 	def test_mapping_operation(self):
 		texts = [self.text1, self.text2]
 		mapping = CombinationalMapping(self.query, texts).map()
-		print(mapping)
 		self.assertIsInstance(mapping, list)
 		self.assertEqual(2, len(mapping))
 		self.assertNotEqual(mapping[0]['doc'], mapping[1]['doc'])

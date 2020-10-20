@@ -25,11 +25,11 @@ class TestVectorIndexSearcher(unittest.TestCase):
 
 	def test_can_search_in_one_index(self):
 		results = self.search(self.unitvec, 'H04W.ttl', 10)
-		self.assertCount(10, results)
+		self.assertGreaterEqual(len(results), 10)
 
 	def test_can_search_in_multiple_indexes(self):
 		results = self.search(self.unitvec, 'H04W', 10)
-		self.assertCount(10, results)
+		self.assertGreaterEqual(len(results), 10)
 
 	def test_ask_for_zero_results(self):
 		results = self.search(self.unitvec, 'H04W', 0)

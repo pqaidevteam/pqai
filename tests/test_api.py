@@ -93,7 +93,7 @@ class TestSearchRequest102Class(unittest.TestCase):
 		self.assertNotEqual(latent, without)
 
 	def test_return_only_non_patent_results(self):
-		results = self.search({ 'q': self.query, 'type': 'npl' })
+		results = self.search({ 'q': 'control systems', 'type': 'npl' })
 		is_npl = lambda r: r['index'].endswith('npl')
 		self.assertForEach(results, is_npl)
 
@@ -117,6 +117,7 @@ class TestSearchRequest102Class(unittest.TestCase):
 		return results
 
 	def assertForEach(self, results, condition):
+		self.assertGreater(len(results), 0)
 		truth_arr = [condition(res) for res in results]
 		self.assertTrue(all(truth_arr))
 		

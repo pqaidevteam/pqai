@@ -46,7 +46,7 @@ class JSONDocumentsFolder(Folder):
 		contents = super().get(filename)
 		return json.loads(contents)
 
-	def save(self, doc_id:str, doc_data:dict):
+	def put(self, doc_id:str, doc_data:dict):
 		filename = self._doc_id_to_filename(doc_id)
 		contents = json.dumps(doc_data)
 		super().put(filename, contents)
