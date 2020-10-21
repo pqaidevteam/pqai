@@ -1,13 +1,13 @@
 from core.classifiers import BERTSubclassPredictor
-from config.config import indexes_dir
 
 class SublassesBasedIndexSelector():
+
+	_subclass_predict_fn = BERTSubclassPredictor().predict_subclasses
 	
 	def __init__(self, indexes):
 		self._indexes = indexes
-		self._subclass_predict_fn = BERTSubclassPredictor().predict_subclasses
 
-	def select(self, text, n=5):
+	def select(self, text, n=3):
 		subclasses = self._subclass_predict_fn(text)
 		subclasses = subclasses[:n]
 		indexes = []
