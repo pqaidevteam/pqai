@@ -50,7 +50,7 @@ class Searcher():
 		list_of_lists = [self._results_from_one(needle, hs, n) for hs in haystack]
 		results = self._flatten(list_of_lists)
 		sorted_by_similarity = self._sort_fn(results)
-		return sorted_by_similarity
+		return sorted_by_similarity[:n]
 
 	def _flatten(self, list2d):
 		return list(itertools.chain.from_iterable(list2d))
