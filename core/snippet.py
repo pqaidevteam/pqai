@@ -93,9 +93,12 @@ class CombinationalMapping (SnippetExtractor):
         self._elements = utils.get_elements(query)
         self._sents = [self._get_mappable_sentences(text) for text in texts]
 
-    def map(self):
-        return [self._select_best(self._map_element_with_all(el))
+    def map(self, table=False):
+        mapping = [self._select_best(self._map_element_with_all(el))
                 for el in self._elements]
+        if not table:
+            return mapping
+        return self._format_as_table(mapping)
 
     def _map_element_with_all(self, el):
         n_texts = len(self._texts)
@@ -117,3 +120,18 @@ class CombinationalMapping (SnippetExtractor):
 
     def _select_best(self, mappings):
         return sorted(mappings, key=lambda x: x['similarity'])[0]
+
+    def _format_as_table(self, elmaps):
+        table = []
+        header = ['Elements'] + list(range(len(self._texts)))
+        table.append(header)
+        for elmap in elmaps:
+            row = []
+            row.append(elmap['element'])
+            for i in range(len(self._texts)):
+                if elmap['doc'] == i:
+                    row.append(elmap['mapping'])
+                else:
+                    row.append('')
+            table.append(row)
+        return table

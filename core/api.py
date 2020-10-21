@@ -9,13 +9,15 @@ from core.snippet import SnippetExtractor, CombinationalMapping
 from core.reranking import ConceptMatchRanker
 from core.datasets import PoC
 from core.documents import Patent
+from core.results import SearchResult
+import copy
 
 import core.remote as remote
 import core.utils as utils
 
 from config.config import indexes_dir, reranker_active
-from config.config import allow_incoming_extension_requests
-from config.config import allow_outgoing_extension_requests
+allow_incoming_extension_requests = False
+allow_outgoing_extension_requests = False
 
 
 vectorize_text = SentBERTVectorizer().embed
@@ -86,6 +88,8 @@ class DocumentsRequest(APIRequest):
 
 class SearchRequest(APIRequest):
 
+    _name = 'Search Request'
+
     def __init__(self, req_data):
         super().__init__(req_data)
         self._query = req_data.get('q', '')
@@ -97,6 +101,12 @@ class SearchRequest(APIRequest):
         self._need_mappings = self._read_bool_value('maps')
         self._filters = FilterExtractor(self._data).extract()
         self.MAX_RES_LIMIT = 500
+
+    def __repr__(self):
+        return f'{self._name}: {json.dumps(self._data)}'
+
+    def __str__(self):
+        return f'[{self._name}]'
 
     def _serving_fn(self):
         return self._searching_fn()
@@ -171,24 +181,26 @@ class FilterExtractor():
 
 class SearchRequest102(SearchRequest):
 
+    _name = '102 Search Request'
+
     def __init__(self, req_data):
         super().__init__(req_data)
 
     def _searching_fn(self):
-        results = self._get_local_results()
-        results = self._add_remote_results_to(results)
-        results = self._deduplicate(results)
+        results = self._get_results()
         results = self._rerank(results)
         return results[:self._n_results]
 
-    def _get_local_results(self):
+    def _get_results(self):
         qvec = vectorize_text(self._full_query)
         n = self._n_results
         results = []
         m = n
         while len(results) < n and m < self.MAX_RES_LIMIT:
             results = vector_search(qvec, self._indexes, m)
+            results = self._add_remote_results_to(results)
             results = self._filters.apply(results)
+            results = self._deduplicate(results)
             m *= 2
         return results
 
@@ -201,7 +213,7 @@ class SearchRequest102(SearchRequest):
     def _deduplicate(self, results):
         if not results:
             return []
-        epsilon = 0.00001
+        epsilon = 0.0000001
         deduplicated = []
         deduplicated.append(results.pop(0))
         for this in results:
@@ -233,6 +245,8 @@ class SearchRequest102(SearchRequest):
 
 class SearchRequest103(SearchRequest):
 
+    _name = '103 Search Request'
+
     def __init__(self, req_data):
         super().__init__(req_data)
 
@@ -245,31 +259,33 @@ class SearchRequest103(SearchRequest):
         return combinations
 
     def _get_docs_to_combine(self):
-        interim_req_data = self._data.copy()
-        interim_req_data['n'] = 100
-        interim_req = SearchRequest102(self._data)
-        interim_results = interim_req.serve()['results']
-        docs = [Document(res['id']) for res in interim_results]
-        return docs
+        params = self._get_interim_request_params()
+        interim_req = SearchRequest102(params)
+        results = interim_req.serve()['results']
+        return [SearchResult(r['id'], r['index'], r['score']) for r in results]
+
+    def _get_interim_request_params(self):
+        params = self._data.copy()
+        params['n'] = 100
+        params['maps'] = 0
+        params['snip'] = 0
+        return params
 
     def _formatting_fn(self, combinations):
-        for comb in combinations:
-            for result in comb:
+        for combination in combinations:
+            for result in combination:
                 self._add_snippet_if_needed(result)
-            self._add_mapping_if_needed(comb)
-
+            self._add_mapping_if_needed(combination)
         return {
-            'results': [[r.json() for r in comb] for comb in combinations],
+            'results': [[r.json() for r in c] for c in combinations],
             'query': self._query,
             'latent_query': self._latent_query }
 
     def _add_mapping_if_needed(self, combination):
         if not self._need_mappings:
             return
-        texts = [res.full_text for res in combination]
-        mapping = CombinationalMapping(self._query, texts).map()
-        for i, result in enumerate(combination):
-            result.mapping = [x for x in mapping if x['doc'] == i]
+        for result in combination:
+            result.mapping = generate_mapping(self._query, result.full_text)
 
 
 class SimilarPatentsRequest(APIRequest):
