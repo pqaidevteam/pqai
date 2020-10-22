@@ -58,6 +58,7 @@ class SnippetExtractor():
     def _get_mappable_sentences(cls, text):
         sents = [sent for sent in utils.get_sentences(text)]
         sents = [sent for sent in sents if len(sent)>=cls.MIN_SNIPPET_LENGTH]
+        sents = [sent for sent in sents if re.match('[A-Z]', sent)]
         return sents
 
     @classmethod

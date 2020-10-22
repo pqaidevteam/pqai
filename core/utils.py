@@ -222,4 +222,3 @@ def get_faln(authors):
         return faln + ' et al.'
     else:
         return faln
-
