@@ -59,6 +59,7 @@ class SnippetExtractor():
         sents = [sent for sent in utils.get_sentences(text)]
         sents = [sent for sent in sents if len(sent)>=cls.MIN_SNIPPET_LENGTH]
         sents = [sent for sent in sents if re.match('[A-Z]', sent)]
+        sents = [sent for sent in sents if not sent.endswith(':')]
         return sents
 
     @classmethod
