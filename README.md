@@ -6,11 +6,11 @@ PQAI takes plain language invention description as input and finds similar prior
 
 ## Website
 
-Use the [web-app](http://3.215.231.221/search) if you want to run prior-art searches.
+Use the web-app [projectPQ.ai](https://projectpq.ai/search) if you want to run prior-art searches.
 
 ## API Access
 
-  1. Retrieve prior-art documents with text query
+###  1. Retrieve prior-art documents with text query
 
      Route: `/documents/`
 
@@ -32,7 +32,7 @@ Use the [web-app](http://3.215.231.221/search) if you want to run prior-art sear
      | `snip`    | Boolean | Include snippets             | `1` or `0`                          |
      | `maps`    | Boolean | Include element-wise mapping | `1` or `0`                          |
 
-  2. Retrieve prior-art combinations with text query
+###  2. Retrieve prior-art combinations with text query
 
      Route: `/combinations/`
 
@@ -42,7 +42,7 @@ Use the [web-app](http://3.215.231.221/search) if you want to run prior-art sear
 
      Request parameters: [Same as for `/document/` route]
 
-  3. Retrieve prior-art for a patent  (documents published before the filing date)
+###  3. Retrieve prior-art for a patent  (documents published before the filing date)
 
      Route: `/prior-art/`
 
@@ -56,7 +56,7 @@ Use the [web-app](http://3.215.231.221/search) if you want to run prior-art sear
      | --------- | ------ | ------------------ | --------------- |
      | `pn`      | String | Publication number | `"US7654321B2"` |
 
-  4. Retrieve similar documents to a patent
+###  4. Retrieve similar documents to a patent
 
      Route: `/combinations/`
 
@@ -66,7 +66,7 @@ Use the [web-app](http://3.215.231.221/search) if you want to run prior-art sear
 
      Request parameters: [Same as `/prior-art/` route]
 
-  5. Retrieve snippet for a query-document pair
+###  5. Retrieve snippet for a query-document pair
 
      Route: `/snippets/`
 
@@ -81,7 +81,7 @@ Use the [web-app](http://3.215.231.221/search) if you want to run prior-art sear
      | `q`       | String | Text query         | `"drone"`        |
      | `pn`      | String | Publication number | `"US10112730B2"` |
 
-  6. Retrieve element-wise mapping for a query-document pair
+###  6. Retrieve element-wise mapping for a query-document pair
 
      Route: `/mappings/`
 
@@ -91,7 +91,7 @@ Use the [web-app](http://3.215.231.221/search) if you want to run prior-art sear
 
      Request parameters: [Same as `/snippets/` route]
 
-  7. Retrieve a sample from a dataset
+###  7. Retrieve a sample from a dataset
 
      Route: `/datasets/`
 
