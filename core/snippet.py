@@ -9,6 +9,14 @@ text2vec = SIFTextVectorizer().embed
 
 from core.reranking import CustomRanker, ConceptMatchRanker
 ranker = CustomRanker()
+conceptmatch_ranker = ConceptMatchRanker()
+
+from core.documents import Document
+from core.encoders import default_boe_encoder
+from core.utils import get_sentences
+from core.sensible_span_extractor import SensibleSpanExtractor
+print('here')
+get_spans = SensibleSpanExtractor().return_ranked
 
 
 class SnippetExtractor():
@@ -137,3 +145,57 @@ class CombinationalMapping (SnippetExtractor):
                     row.append('')
             table.append(row)
         return table
+
+class SubsentSnippetExtractor():
+    
+    def __init__(self, query, doc):
+        self.query = query
+        self.doc = doc
+    
+    def extract(self):
+        keyphrases = self._find_keyphrases_in_doc()
+        subs = self._get_spliced_subsent_snippets(keyphrases)
+        return self._join(subs)
+
+    def _join(self, subs):
+        return '...' + '... '.join(subs) + '...'
+
+    def _get_spliced_subsent_snippets(self, matches):
+        sents = get_sentences(self.doc)
+        sent_scores = [sum([1 for m in matches if m in s]) for s in sents]
+        sent_ranked = [sents[i] for i in np.argsort(sent_scores)[::-1]]
+        temp_str = ""
+        subs = []
+        for match in matches:
+            if match in temp_str:
+                continue
+
+            for sent in sent_ranked:
+                if match in sent:
+                    sub = self._span_containing(match, sent)
+                    temp_str += ' ...' + sub + '...'
+                    subs.append(sub)
+                    break
+        return subs
+
+    def _extract_concepts(self, text):
+        target_concepts = set()
+        for sent in get_sentences(text):
+            for c in default_boe_encoder.encode(sent):
+                target_concepts.add(c)
+        return list(target_concepts)
+
+    def _find_keyphrases_in_doc(self):
+        query_concepts = self._extract_concepts(self.query)
+        doc_concepts = self._extract_concepts(self.doc)
+        keyphrases = []
+        for concept in query_concepts:
+            dists = [conceptmatch_ranker.score(concept, target) for target in doc_concepts]
+            keyphrases.append(doc_concepts[np.argmin(dists)])
+        return keyphrases
+
+    def _span_containing(self, entity, sent):
+        spans = get_spans(sent)
+        for span in spans:
+            if entity in span:
+                return span
