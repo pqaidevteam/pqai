@@ -77,6 +77,7 @@ class BagOfEntitiesEncoder(Encoder):
 		with open(self._vocab_file) as fp:
 			self._vocab = fp.read().strip().splitlines()
 			self._lookup_table = set(self._vocab)
+			self._load_blacklist()
 
 	def _load_vocab_if_unloaded(self):
 		if not isinstance(self._vocab, list):
@@ -87,7 +88,7 @@ class BagOfEntitiesEncoder(Encoder):
 		entities = []
 		for sent in self._sent_tokenizer(text):
 			entities += self._get_entities_from_sentence(sent)
-		entities = set(entities)
+		entities = set([e for e in entities if not self._in_blacklist(e)])
 		if self._non_overlapping:
 			entities = BagOfEntities(entities).non_overlapping()
 		return entities
@@ -117,6 +118,14 @@ class BagOfEntitiesEncoder(Encoder):
 		matches = re.findall(pattern, text)
 		tokens = [m for m in matches if m.strip()]
 		return tokens
+
+	def _in_blacklist(self, entity):
+		if entity in self._blacklist:
+			return True
+
+	def _load_blacklist(self):
+		with open(f'{models_dir}/entities_blacklist.txt') as file:
+			self._blacklist = set(file.read().strip().splitlines())
 
 	@classmethod
 	def from_vocab_file(self, filepath):
