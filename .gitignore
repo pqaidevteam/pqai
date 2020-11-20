@@ -1,11 +1,17 @@
-__pycache__
-/rough.js
+
+# Files for writing throwaway code
 /rough.py
 /tmp*
-/models/
-*.pyc
-/indexes/
-/build/
-/indexes*/
-/datalab/
 /tests/test_tmp.py
+
+*.pyc
+__pycache__
+/build/
+
+# Folders containing heavy files
+/models/*
+/indexes/*
+/datalab/*
+
+!indexes/README.md
+!models/README.md
