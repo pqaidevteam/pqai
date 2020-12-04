@@ -1,8 +1,13 @@
+
+import os
 import traceback
 import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
+from config import config
+if config.gpu_disabled:
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import core.api as API
 
