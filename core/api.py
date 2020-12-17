@@ -5,7 +5,7 @@ from core.obvious import Combiner
 from core.indexes import IndexesDirectory
 from core.search import VectorIndexSearcher
 from core.documents import Document
-from core.snippet import SnippetExtractor, CombinationalMapping
+from core.snippet import SnippetExtractor, CombinationalMapping, SubsentSnippetExtractor
 from core.reranking import ConceptMatchRanker
 from core.datasets import PoC
 from core.documents import Patent
@@ -15,10 +15,9 @@ import copy
 import core.remote as remote
 import core.utils as utils
 
-from config.config import indexes_dir, reranker_active
-allow_incoming_extension_requests = False
-allow_outgoing_extension_requests = False
-
+from config.config import indexes_dir, reranker_active, index_selection_disabled
+from config.config import allow_outgoing_extension_requests
+from config.config import allow_incoming_extension_requests
 
 vectorize_text = SentBERTVectorizer().embed
 available_indexes = IndexesDirectory(indexes_dir)
@@ -120,10 +119,11 @@ class SearchRequest(APIRequest):
     def _get_indexes(self):
         if self._index_specified_in_request():
             index_in_req = self._data['idx']
-            indexes = available_indexes.get(index_in_req)
+            return available_indexes.get(index_in_req)
+        elif index_selection_disabled:
+            return list(available_indexes.available())
         else:
-            indexes = select_indexes(self._full_query, 3)
-        return indexes
+            return select_indexes(self._full_query, 3)
 
     def _index_specified_in_request(self):
         req_data = self._data
@@ -147,7 +147,7 @@ class SearchRequest(APIRequest):
 
     def _add_snippet_if_needed(self, result):
         if self._need_snippets:
-            result.snippet = extract_snippet(self._query, result.full_text)
+            result.snippet = SubsentSnippetExtractor(self._query, result.full_text).extract()
 
 
 class FilterExtractor():
@@ -352,7 +352,7 @@ class SnippetRequest(PassageRequest):
     def _serving_fn(self):
         query = self._query
         text = self._doc.full_text
-        return extract_snippet(query, text)
+        return SubsentSnippetExtractor(query, text).extract()
 
     def _formatting_fn(self, snippet):
         return {
