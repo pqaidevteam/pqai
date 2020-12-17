@@ -57,13 +57,16 @@ class Searcher():
 		return list(itertools.chain.from_iterable(list2d))
 
 	def _deduplicate(self, results):
-		arr = [results[0]]
+		first_result = results[0]
+		arr = [first_result]
+		already_added = set([first_result.id])
 		for this in results:
 			last = arr[-1]
-			if this.score == last.score or this.id == last.id:
+			if this.score == last.score or this.id in already_added:
 				continue
 			else:
 				arr.append(this)
+				already_added.add(this.id)
 		return arr
 
 
