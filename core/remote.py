@@ -24,7 +24,7 @@ def merge (results_lists):
 
 
 def _sort_by_score (results):
-	return sorted(results, key=lambda x: x.score)
+	return sorted(results, key=lambda x: x['score'])
 
 
 def _flatten (arr):
@@ -37,6 +37,6 @@ def _deduplicate (arr):
 	deduplicated = [arr[0]]
 	for current in arr[1:]:
 		previous = deduplicated[-1]
-		if current.abstract != previous.abstract:
+		if current['abstract'] != previous['abstract']:
 			deduplicated.append(current)
 	return deduplicated

@@ -198,9 +198,7 @@ class SearchRequest102(SearchRequest):
         m = n
         while len(results) < n and m < self.MAX_RES_LIMIT:
             results = vector_search(qvec, self._indexes, m)
-            results = self._add_remote_results_to(results)
             results = self._filters.apply(results)
-            results = self._deduplicate(results)
             m *= 2
         return results
 
@@ -208,19 +206,7 @@ class SearchRequest102(SearchRequest):
         if not allow_outgoing_extension_requests:
             return local_results
         remote_results = remote.search_extensions(self._data)
-        return remote.merge(local_results, remote_results)
-
-    def _deduplicate(self, results):
-        if not results:
-            return []
-        epsilon = 0.0000001
-        deduplicated = []
-        deduplicated.append(results.pop(0))
-        for this in results:
-            last = deduplicated[-1]
-            if abs(this.score-last.score) >= epsilon:
-                deduplicated.append(this)
-        return deduplicated
+        return remote.merge([local_results, remote_results])
 
     def _rerank(self, results):
         if not reranker:
@@ -233,8 +219,10 @@ class SearchRequest102(SearchRequest):
         for result in results:
             self._add_snippet_if_needed(result)
             self._add_mapping_if_needed(result)
+        results = [res.json() for res in results]
+        results = self._add_remote_results_to(results)
         return {
-            'results': [res.json() for res in results],
+            'results': results,
             'query': self._query,
             'latent_query': self._latent_query }
 
