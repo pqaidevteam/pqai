@@ -10,10 +10,19 @@ if config.gpu_disabled:
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import core.api as API
+import auth
 
 from flask import request
 from flask_api import FlaskAPI, status, exceptions
 app = FlaskAPI(__name__)
+
+tokens = auth.read_tokens()
+
+@app.before_request
+def validate_token():
+    token = request.args.to_dict().get('token')
+    if not token in tokens:
+        return not_allowed('Invalid access token.')
 
 @app.route('/documents/', methods=['GET'])
 def search_102 ():
