@@ -24,13 +24,25 @@ def validate_token():
     if not token in tokens:
         return not_allowed('Invalid access token.')
 
-@app.route('/documents/', methods=['GET'])
-def search_102 ():
-    return create_request_and_serve(request, API.DocumentsRequest)
+@app.route('/search/102/', methods=['GET'])
+def search_102():
+    return create_request_and_serve(request, API.SearchRequest102)
 
-@app.route('/combinations/', methods=['GET'])
+@app.route('/search/103/', methods=['GET'])
 def seach_103():
     return create_request_and_serve(request, API.SearchRequest103)
+
+@app.route('/prior-art/patent/', methods=['GET'])
+def get_patent_prior_art():
+    return create_request_and_serve(request, API.PatentPriorArtRequest)
+
+@app.route('/similar/', methods=['GET'])
+def get_similar_patents():
+    return create_request_and_serve(request, API.SimilarPatentsRequest)
+
+@app.route('/documents/', methods=['GET'])
+def get_document():
+    return create_request_and_serve(request, API.DocumentRequest)
 
 @app.route('/snippets/', methods=['GET'])
 def get_snippet():
@@ -43,14 +55,6 @@ def get_mapping():
 @app.route('/datasets/', methods=['GET'])
 def get_sample():
     return create_request_and_serve(request, API.DatasetSampleRequest)
-
-@app.route('/prior-art/', methods=['GET'])
-def get_patent_prior_art():
-    return create_request_and_serve(request, API.PatentPriorArtRequest)
-
-@app.route('/similar/', methods=['GET'])
-def get_similar_patents():
-    return create_request_and_serve(request, API.SimilarPatentsRequest)
 
 @app.route('/extension/', methods=['GET'])
 def handle_incoming_ext_request():

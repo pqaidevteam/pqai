@@ -15,8 +15,6 @@ from core.documents import Document
 from core.encoders import default_boe_encoder
 from core.utils import get_sentences
 from core.sensible_span_extractor import SensibleSpanExtractor
-print('here')
-get_spans = SensibleSpanExtractor().return_ranked
 
 
 class SnippetExtractor():

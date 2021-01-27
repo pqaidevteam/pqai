@@ -8,7 +8,7 @@ sys.path.append(BASE_DIR)
 
 from core.api import APIRequest, SearchRequest102, SearchRequest103
 from core.api import SnippetRequest, MappingRequest, DatasetSampleRequest
-from core.api import SimilarPatentsRequest, PatentPriorArtRequest
+from core.api import SimilarPatentsRequest, PatentPriorArtRequest, DocumentRequest
 from core.api import BadRequestError, ServerError
 from core.filters import PublicationDateFilter
 from dateutil.parser import parse as parse_date
@@ -200,6 +200,13 @@ class TestSnippetRequestClass(unittest.TestCase):
 
 class TestMappingRequestClass(unittest.TestCase):
 	pass
+
+class TestDocumentRequestClass(unittest.TestCase):
+
+	def test_get_patent_document(self):
+		doc = DocumentRequest({'id': 'US7654321B2'}).serve()
+		self.assertIsInstance(doc, dict)
+		self.assertEqual(doc['id'], 'US7654321B2')
 
 if __name__ == '__main__':
     unittest.main()

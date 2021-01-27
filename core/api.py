@@ -5,7 +5,7 @@ from core.obvious import Combiner
 from core.indexes import IndexesDirectory
 from core.search import VectorIndexSearcher
 from core.documents import Document
-from core.snippet import SnippetExtractor, CombinationalMapping, SubsentSnippetExtractor
+from core.snippet import SnippetExtractor, CombinationalMapping
 from core.reranking import ConceptMatchRanker
 from core.datasets import PoC
 from core.documents import Patent
@@ -71,20 +71,6 @@ class NotAllowedError(Exception):
         self.message = msg
 
 
-class DocumentsRequest(APIRequest):
-
-    def _serving_fn(self):
-        if 'pn' in self._data:
-            return SimilarPatentsRequest(self._data).serve()
-        else:
-            return SearchRequest102(self._data).serve()
-
-    def _validation_fn(self):
-        if not 'pn' in self._data and not 'q' in self._data:
-            raise BadRequestError(
-                'Request does not contain a query.')
-
-
 class SearchRequest(APIRequest):
 
     _name = 'Search Request'
@@ -147,7 +133,7 @@ class SearchRequest(APIRequest):
 
     def _add_snippet_if_needed(self, result):
         if self._need_snippets:
-            result.snippet = SubsentSnippetExtractor(self._query, result.full_text).extract()
+            result.snippet = SnippetExtractor.extract_snippet(self._query, result.full_text)
 
 
 class FilterExtractor():
@@ -316,6 +302,23 @@ class PatentPriorArtRequest(SimilarPatentsRequest):
         return SearchRequest102(search_request).serve()
 
 
+class DocumentRequest(APIRequest):
+
+    _name = 'Document Request'
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+        self._doc_id = req_data['id']
+
+    def _validation_fn(self):
+        if not 'id' in self._data:
+            raise BadRequestError(
+                'Request does not contain a document ID.')
+
+    def _serving_fn(self):
+        return Document(self._doc_id).json()
+
+
 class PassageRequest(APIRequest):
 
     def __init__(self, req_data):
@@ -340,7 +343,7 @@ class SnippetRequest(PassageRequest):
     def _serving_fn(self):
         query = self._query
         text = self._doc.full_text
-        return SubsentSnippetExtractor(query, text).extract()
+        return SnippetExtractor(query, text).extract()
 
     def _formatting_fn(self, snippet):
         return {
