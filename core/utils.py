@@ -203,7 +203,9 @@ def get_elements (text):
     elements = []
     for paragraph in get_paragraphs(text):
         elements += get_sentences(paragraph)
-    elements = [el for el in elements if len(el.strip()) > 0]
+    elements = [el.strip() for el in elements]
+    elements = [el for el in elements
+                if len(el)>10 and re.search('[A-Za-z]', el)]
     return elements
 
 
