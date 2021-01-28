@@ -1,8 +1,16 @@
 # API Usage Guide
 
+## Authentication
+
+A `token` parameter is used for authentication, which must be included in
+every request. A list of valid tokens are stored in the `./tokens.txt` file -
+one token per line.
+
+## API Routes
+
 ###  1. Retrieve prior-art documents with text query
 
-Route: `/documents/`
+Route: `/search/102/`
 
 Request type: `GET`
 
@@ -24,7 +32,7 @@ Request parameters
 
 ###  2. Retrieve prior-art combinations with text query
 
-Route: `/combinations/`
+Route: `/search/103/`
 
 Request type: `GET`
 
@@ -34,7 +42,7 @@ Request parameters: [Same as for `/document/` route]
 
 ###  3. Retrieve prior-art for a patent  (documents published before the filing date)
 
-Route: `/prior-art/`
+Route: `/prior-art/patent/`
 
 Request type: `GET`
 
@@ -48,7 +56,7 @@ Request parameters
 
 ###  4. Retrieve similar documents to a patent
 
-Route: `/combinations/`
+Route: `/similar/`
 
 Request type: `GET`
 
@@ -95,3 +103,17 @@ Request parameters
 | --------- | ------- | ------------- | ------- |
 | `n`       | Integer | Sample number | `23`    |
 | `dataset` | String  | Dataset name  | `"PoC"` |
+
+###  8. Retrieve a document from PQAI database
+
+Route: `/documents/`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Request parameters
+
+| Parameter | Value   | Meaning       | Example       |
+| --------- | ------- | ------------- | ------------- |
+| `id`      | String  | Document ID   | `US7654321B2` |
