@@ -7,8 +7,9 @@ import requests
 
 HOST = '127.0.0.1' 	# Server on which the PQAI server is running
 PORT = 5000
+API_TEST_TOKEN = 'test_token_asdf77bc3a9f'
 
-@unittest.skip('Works only when the server is running')
+# @unittest.skip('Works only when the server is running')
 class TestRoutes(unittest.TestCase):
 
 	def setUp(self):
@@ -17,24 +18,29 @@ class TestRoutes(unittest.TestCase):
 		self.pn = 'US7654321B2'
 
 	def test_102_search_route_with_text_query(self):
-		response = self.api_get('/documents', {'q': self.query})
+		response = self.api_get('/search/102', {'q': self.query})
 		self.assertSuccess(response)
 		self.assertGreater(len(response.json()['results']), 0)
 
-	def test_102_search_route_with_patent_query(self):
-		response = self.api_get('/documents', {'pn': 'US7654321B2'})
+	def test_patent_prior_art_search_route(self):
+		response = self.api_get('/prior-art/patent', {'pn': 'US7654321B2'})
 		self.assertSuccess(response)
 		self.assertGreater(len(response.json()['results']), 0)
 
-	def test_prior_art_search_route(self):
-		response = self.api_get('/prior-art', {'pn': 'US7654321B2'})
+	def test_similar_patent_search_route(self):
+		response = self.api_get('/similar', {'pn': 'US7654321B2'})
 		self.assertSuccess(response)
 		self.assertGreater(len(response.json()['results']), 0)
 
 	def test_103_search_route(self):
-		response = self.api_get('/combinations', {'q': self.query})
+		response = self.api_get('/search/103', {'q': self.query})
 		self.assertSuccess(response)
 		self.assertGreater(len(response.json()['results']), 0)
+
+	def test_document_retrieval_route(self):
+		response = self.api_get('/documents', {'id': 'US7654321B2'})
+		self.assertSuccess(response)
+		self.assertIsInstance(response.json(), dict)
 
 	def test_snippets_route(self):
 		response = self.api_get('/snippets', {'q': self.query, 'pn': self.pn})
@@ -51,6 +57,7 @@ class TestRoutes(unittest.TestCase):
 
 	def api_get(self, route, params):
 		url = self.endpoint + route
+		params['token'] = API_TEST_TOKEN
 		response = requests.get(url, params)
 		return response
 

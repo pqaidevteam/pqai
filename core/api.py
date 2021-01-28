@@ -343,7 +343,7 @@ class SnippetRequest(PassageRequest):
     def _serving_fn(self):
         query = self._query
         text = self._doc.full_text
-        return SnippetExtractor(query, text).extract()
+        return SnippetExtractor().extract_snippet(query, text)
 
     def _formatting_fn(self, snippet):
         return {
