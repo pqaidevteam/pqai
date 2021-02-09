@@ -92,4 +92,6 @@ def not_allowed(msg=None):
     return msg, http_status
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=False, threaded=False)
+    from waitress import serve
+    serve(app, host='0.0.0.0', port=8501)
+
