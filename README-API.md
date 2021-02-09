@@ -3,8 +3,7 @@
 ## Authentication
 
 A `token` parameter is used for authentication, which must be included in
-every request. A list of valid tokens are stored in the `./tokens.txt` file -
-one token per line.
+every request.
 
 ## API Routes
 
