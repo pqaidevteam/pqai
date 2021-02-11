@@ -228,7 +228,10 @@ class SearchRequest102(SearchRequest):
 
     def _add_mapping_if_needed(self, result):
         if self._need_mappings:
-            result.mapping = generate_mapping(self._query, result.full_text)
+            try:
+                result.mapping = generate_mapping(self._query, result.full_text)
+            except:
+                result.mapping = None
 
 
 class SearchRequest103(SearchRequest):
@@ -276,7 +279,10 @@ class SearchRequest103(SearchRequest):
         if not self._need_mappings:
             return
         for result in combination:
-            result.mapping = generate_mapping(self._query, result.full_text)
+            try:
+                result.mapping = generate_mapping(self._query, result.full_text)
+            except:
+                result.mapping = None
 
 
 class SimilarPatentsRequest(APIRequest):
