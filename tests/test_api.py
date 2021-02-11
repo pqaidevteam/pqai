@@ -111,6 +111,11 @@ class TestSearchRequest102Class(unittest.TestCase):
 		bad_req = lambda: SearchRequest102({ 'qry': self.query })
 		self.assertRaises(BadRequestError, bad_req)
 
+	def test_pagination(self):
+		results_a = self.search({ 'q': self.query, 'n': 10 })
+		results_b = self.search({ 'q': self.query, 'n': 10, 'offset': 5})
+		self.assertEqual(results_a[5:], results_b[:5])
+
 	def search(self, req):
 		req = SearchRequest102(req)
 		results = req.serve()['results']
@@ -134,6 +139,11 @@ class TestSearchRequest103Class(unittest.TestCase):
 	def test_return_custom_number_of_results(self):
 		combinations = self.search({ 'q': self.query, 'n': 8 })
 		self.assertEqual(8, len(combinations))
+
+	def test_pagination(self):
+		results_a = self.search({ 'q': self.query, 'n': 10 })
+		results_b = self.search({ 'q': self.query, 'n': 10, 'offset': 5})
+		self.assertEqual(results_a[5:], results_b[:5])
 
 	def search(self, req):
 		req = SearchRequest103(req)

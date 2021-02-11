@@ -22,6 +22,7 @@ Request parameters
 | `q`       | String  | Query                        | `"fire fighting drone"`             |
 | `lq`      | String  | Latent query                 | `"unmanned"`                        |
 | `n`       | Integer | No. of results               | `10`                                |
+| `offset`  | Integer | Pagination offset (0-indexed)| `10` (for skipping first 10 results)|
 | `index`   | String  | CPC subclass                 | `"H04W"` (`"auto"` for auto-select) |
 | `after`   | String  | Cutoff date 1                | `"2006-01-01"`                      |
 | `before`  | String  | Cutoff date 2                | `"2019-12-31"`                      |

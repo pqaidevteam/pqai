@@ -79,8 +79,12 @@ class SearchRequest(APIRequest):
         super().__init__(req_data)
         self._query = req_data.get('q', '')
         self._latent_query = req_data.get('lq', '')
-        self._n_results = int(req_data.get('n', 10))
         self._full_query = self._get_full_query()
+
+        self._offset = max(0, int(req_data.get('offset', 0)))
+        self._n_results = int(req_data.get('n', 10))
+        self._n_results += self._offset # for pagination
+        
         self._indexes = self._get_indexes()
         self._need_snippets = self._read_bool_value('snip')
         self._need_mappings = self._read_bool_value('maps')
@@ -175,11 +179,21 @@ class SearchRequest102(SearchRequest):
     def _searching_fn(self):
         results = self._get_results()
         results = self._rerank(results)
-        return results[:self._n_results]
+        results = results[:self._n_results]
+        return results[self._offset:]
 
     def _get_results(self):
         qvec = vectorize_text(self._full_query)
-        n = self._n_results
+
+        """
+        During reranking, lower ranked results may come up on top of the list.
+        This means that the first 10 results a user sees when only 10 results 
+        are search may differ from the first 10 results when, say, 50 results
+        are searched. To mitigate this issue, always search with at least 50
+        results.
+        """
+        n = max(50, self._n_results)
+
         results = []
         m = n
         while len(results) < n and m < self.MAX_RES_LIMIT:
@@ -228,9 +242,11 @@ class SearchRequest103(SearchRequest):
         docs = self._get_docs_to_combine()
         abstracts = [doc.abstract for doc in docs]
         combiner = Combiner(self._query, abstracts)
-        index_pairs = combiner.get_combinations(self._n_results)
+        n = max(50, self._n_results) # see SearchRequest102 for why max used
+        index_pairs = combiner.get_combinations(n)
         combinations = [(docs[i], docs[j]) for i, j in index_pairs]
-        return combinations
+        combinations = combinations[:self._n_results]
+        return combinations[self._offset:]
 
     def _get_docs_to_combine(self):
         params = self._get_interim_request_params()
@@ -243,6 +259,7 @@ class SearchRequest103(SearchRequest):
         params['n'] = 100
         params['maps'] = 0
         params['snip'] = 0
+        params['offset'] = 0
         return params
 
     def _formatting_fn(self, combinations):
