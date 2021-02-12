@@ -17,8 +17,6 @@ index_selection_disabled = False
 reranker_active = True
 gpu_disabled = True
 
-extensions = [
-	'http://3.215.231.221:5000/extension/'
-]
+extensions = []
 allow_outgoing_extension_requests = False
 allow_incoming_extension_requests = False
