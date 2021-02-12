@@ -5,8 +5,14 @@
 import unittest
 import requests
 
+import sys
+from pathlib import Path
+TEST_DIR = str(Path(__file__).parent.resolve())
+BASE_DIR = str(Path(__file__).parent.parent.resolve())
+sys.path.append(BASE_DIR)
+
+from config.config import port as PORT
 HOST = '127.0.0.1' 	# Server on which the PQAI server is running
-PORT = 5000
 API_TEST_TOKEN = 'test_token_asdf77bc3a9f'
 
 # @unittest.skip('Works only when the server is running')

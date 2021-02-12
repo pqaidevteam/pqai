@@ -93,5 +93,5 @@ def not_allowed(msg=None):
 
 if __name__ == '__main__':
     from waitress import serve
-    serve(app, host='0.0.0.0', port=8501)
+    serve(app, host='0.0.0.0', port=config.port)
 
