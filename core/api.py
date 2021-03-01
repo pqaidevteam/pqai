@@ -11,6 +11,11 @@ from core.datasets import PoC
 from core.documents import Patent
 from core.results import SearchResult
 import copy
+import boto3
+import io
+import re
+s3 = boto3.resource('s3')
+from config.config import PQAI_S3_BUCKET_NAME
 
 import core.remote as remote
 import core.utils as utils
@@ -64,6 +69,7 @@ class ServerError(Exception):
 
     def __init__(self, msg='Server error while handling request.'):
         self.message = msg
+
 
 class NotAllowedError(Exception):
 
@@ -358,6 +364,7 @@ class PassageRequest(APIRequest):
             raise BadRequestError(
                 'Request does not specify a document.')
 
+
 class SnippetRequest(PassageRequest):
 
     def __init__(self, req_data):
@@ -390,6 +397,7 @@ class MappingRequest(PassageRequest):
             'query': self._query,
             'id': self._doc_id,
             'mapping': mapping }
+
 
 class DatasetSampleRequest(APIRequest):
 
@@ -429,6 +437,7 @@ class DatasetSampleRequest(APIRequest):
             'abstract': patent.abstract
         }
 
+
 class IncomingExtensionRequest(SearchRequest102):
 
     def __init__(self, req_data):
@@ -437,3 +446,48 @@ class IncomingExtensionRequest(SearchRequest102):
                 'Server does not accept extension requests.')
         else:
             super().__init__(req_data)
+
+
+class DrawingRequest(APIRequest):
+
+    PATTERN = r'^US(RE)?\d{4,11}[AB]\d?$'
+    S3_BUCKET = s3.Bucket(PQAI_S3_BUCKET_NAME)
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+        self._pn = req_data['pn']
+        self._n = req_data['n']
+        self._cc = self._pn[:2]  # Country code
+
+    def _serving_fn(self):
+        img_file_name = self._get_file_name()
+        s3_path = f'images/{img_file_name}.tif'
+        local_path = f'/tmp/{img_file_name}.tif'
+        self.S3_BUCKET.download_file(s3_path, local_path)
+        return local_path
+
+    def _validation_fn(self):
+        if self._data['pn'][:2] != 'US':
+            raise BadRequestError('Only US patents supported.')
+        if not re.match(self.PATTERN, self._data['pn']):
+            raise BadRequestError('Could not parse patent number.')
+        if not re.match(r'\d+', str(self._data['n'])):
+            raise BadRequestError('Drawing number should be integer.')
+
+    def _formatting_fn(self, image_path):
+        return image_path
+
+    def _get_file_name(self):
+        prefix = self._get_8_digits() if self._is_granted_patent() else self._pn
+        return f'{prefix}-{self._n}'
+
+    def _is_granted_patent(self):
+        return len(self._pn) < 13
+
+    def _get_8_digits(self):
+        pattern = r'(.+?)(A|B)\d?'
+        digits = re.match(pattern, self._pn[2:])[1]    # extract digits
+        if len(digits) == 7:
+            digits = '0' + digits
+        return digits
+        

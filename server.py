@@ -12,7 +12,7 @@ if config.gpu_disabled:
 import core.api as API
 import auth
 
-from flask import request
+from flask import request, send_file
 from flask_api import FlaskAPI, status, exceptions
 app = FlaskAPI(__name__)
 
@@ -20,9 +20,19 @@ tokens = auth.read_tokens()
 
 @app.before_request
 def validate_token():
-    token = request.args.to_dict().get('token')
-    if not token in tokens:
-        return not_allowed('Invalid access token.')
+    url = request.base_url
+    extensions = ('.css', '.js', '.ico')
+    if '/drawings' in url:
+        pass
+    elif '/documents' in url:
+        pass
+    elif url.endswith(extensions):
+        pass
+    else:
+        token = request.args.to_dict().get('token')
+        if not token in tokens:
+            return not_allowed('Invalid access token.')
+
 
 @app.route('/search/102/', methods=['GET'])
 def search_102():
@@ -60,9 +70,22 @@ def get_sample():
 def handle_incoming_ext_request():
     return create_request_and_serve(request, API.IncomingExtensionRequest)
 
+@app.route('/patents/<pn>/drawings/<n>/', methods=['GET'])
+def get_patent_drawing(pn, n):
+    try:
+        local_path = API.DrawingRequest({'pn': pn, 'n': n}).serve()
+        return send_file(local_path, mimetype='image/tiff')
+    except Exception as err:
+        return bad_request(err.message)
+
+
 def create_request_and_serve(req, reqClass):
     try:
-        return success(reqClass(req.args.to_dict()).serve())
+        if isinstance(req, dict):
+            req_data = req
+        else:
+            req_data = req.args.to_dict()
+        return success(reqClass(req_data).serve())
     except API.BadRequestError as err:
         traceback.print_exc()
         return bad_request(err.message)

@@ -9,10 +9,10 @@ sys.path.append(BASE_DIR)
 from core.api import APIRequest, SearchRequest102, SearchRequest103
 from core.api import SnippetRequest, MappingRequest, DatasetSampleRequest
 from core.api import SimilarPatentsRequest, PatentPriorArtRequest, DocumentRequest
+from core.api import DrawingRequest
 from core.api import BadRequestError, ServerError
 from core.filters import PublicationDateFilter
 from dateutil.parser import parse as parse_date
-
 
 class TestRequestClass(unittest.TestCase):
 
@@ -47,7 +47,6 @@ class TestRequestClass(unittest.TestCase):
 	def test_raises_error_on_expection_during_serving(self):
 		req = self.GreetingRequest({ 'lang': 'hi' })
 		self.assertRaises(ServerError, req.serve)
-
 
 class TestSearchRequest102Class(unittest.TestCase):
 
@@ -126,7 +125,6 @@ class TestSearchRequest102Class(unittest.TestCase):
 		truth_arr = [condition(res) for res in results]
 		self.assertTrue(all(truth_arr))
 		
-
 class TestSearchRequest103Class(unittest.TestCase):
 
 	def setUp(self):
@@ -149,7 +147,6 @@ class TestSearchRequest103Class(unittest.TestCase):
 		req = SearchRequest103(req)
 		results = req.serve()['results']
 		return results
-
 
 class TestDatasetSampleRequestClass(unittest.TestCase):
 
@@ -176,7 +173,6 @@ class TestDatasetSampleRequestClass(unittest.TestCase):
 	def make_request(self, dataset, n):
 		request = DatasetSampleRequest({ 'dataset': dataset, 'n': n })
 		return request.serve()
-
 
 class TestSimilarPatentsRequestClass(unittest.TestCase):
 
@@ -210,6 +206,25 @@ class TestSnippetRequestClass(unittest.TestCase):
 
 class TestMappingRequestClass(unittest.TestCase):
 	pass
+
+class TestDrawingRequestClass(unittest.TestCase):
+
+	def setUp(self):
+		self.pat = 'US7654321B2'
+		self.app = 'US20130291398A1'
+
+	def test_get_patent_drawing(self):
+		response = DrawingRequest({'pn': self.pat, 'n': 1}).serve()
+		self.assertIsInstance(response, str)
+
+	def test_get_second_image(self):
+		response = DrawingRequest({'pn': self.pat, 'n': 2}).serve()
+		self.assertIsInstance(response, str)
+
+	def test_get_publication_drawing(self):
+		response = DrawingRequest({'pn': self.app, 'n': 1}).serve()
+		self.assertIsInstance(response, str)
+
 
 class TestDocumentRequestClass(unittest.TestCase):
 

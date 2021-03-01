@@ -20,3 +20,5 @@ gpu_disabled = True
 extensions = []
 allow_outgoing_extension_requests = False
 allow_incoming_extension_requests = False
+
+PQAI_S3_BUCKET_NAME = 'pqai.s3'
