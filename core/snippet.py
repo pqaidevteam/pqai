@@ -62,11 +62,16 @@ class SnippetExtractor():
 
     @classmethod
     def _get_mappable_sentences(cls, text):
-        sents = [sent for sent in utils.get_sentences(text)]
-        sents = [sent for sent in sents if len(sent)>=cls.MIN_SNIPPET_LENGTH]
-        sents = [sent for sent in sents if re.match('[A-Z]', sent)]
-        sents = [sent for sent in sents if not sent.endswith(':')]
+        sents = utils.get_sentences(text)
+        sents = [s for s in sents if cls._is_mappable(s)]
         return sents
+
+    @classmethod
+    def _is_mappable(cls, sent):
+        cond_1 = len(sent)>=cls.MIN_SNIPPET_LENGTH
+        cond_2 = re.match('[A-Z]', sent)
+        cond_3 = not sent.endswith(':')
+        return True if (cond_1 and cond_2 and cond_3) else False
 
     @classmethod
     def _last_few_words(cls, sent):
