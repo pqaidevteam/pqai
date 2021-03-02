@@ -117,3 +117,32 @@ Request parameters
 | Parameter | Value   | Meaning       | Example       |
 | --------- | ------- | ------------- | ------------- |
 | `id`      | String  | Document ID   | `US7654321B2` |
+
+###  9. Get a patent drawing
+
+Route: `/patents/:pn/drawings/:n`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Path parameters
+
+| Parameter | Value   | Meaning       | Example       |
+| --------- | ------- | ------------- | ------------- |
+| `pn`      | String  | Patent Number | `US7654321B2` |
+| `n`       | Integer | Drawing index | `3`           |
+
+###  10. Get list of drawings for a patent (to tell how may drawings are there)
+
+Route: `/patents/:pn/drawings`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Path parameters
+
+| Parameter | Value   | Meaning       | Example       |
+| --------- | ------- | ------------- | ------------- |
+| `pn`      | String  | Patent Number | `US7654321B2` |
