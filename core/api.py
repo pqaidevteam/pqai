@@ -14,8 +14,10 @@ import copy
 import boto3
 import io
 import re
+import os
 s3 = boto3.resource('s3')
 from config.config import PQAI_S3_BUCKET_NAME
+from PIL import Image
 
 import core.remote as remote
 import core.utils as utils
@@ -448,38 +450,24 @@ class IncomingExtensionRequest(SearchRequest102):
             super().__init__(req_data)
 
 
-class DrawingRequest(APIRequest):
+class AbstractDrawingRequest(APIRequest):
 
-    PATTERN = r'^US(RE)?\d{4,11}[AB]\d?$'
+    PN_PATTERN = r'^US(RE)?\d{4,11}[AB]\d?$'
     S3_BUCKET = s3.Bucket(PQAI_S3_BUCKET_NAME)
 
     def __init__(self, req_data):
         super().__init__(req_data)
         self._pn = req_data['pn']
-        self._n = req_data['n']
-        self._cc = self._pn[:2]  # Country code
-
-    def _serving_fn(self):
-        img_file_name = self._get_file_name()
-        s3_path = f'images/{img_file_name}.tif'
-        local_path = f'/tmp/{img_file_name}.tif'
-        self.S3_BUCKET.download_file(s3_path, local_path)
-        return local_path
 
     def _validation_fn(self):
         if self._data['pn'][:2] != 'US':
             raise BadRequestError('Only US patents supported.')
-        if not re.match(self.PATTERN, self._data['pn']):
+        if not re.match(self.PN_PATTERN, self._data['pn']):
             raise BadRequestError('Could not parse patent number.')
-        if not re.match(r'\d+', str(self._data['n'])):
-            raise BadRequestError('Drawing number should be integer.')
 
-    def _formatting_fn(self, image_path):
-        return image_path
-
-    def _get_file_name(self):
-        prefix = self._get_8_digits() if self._is_granted_patent() else self._pn
-        return f'{prefix}-{self._n}'
+    def _get_prefix(self):
+        number = self._get_8_digits() if self._is_granted_patent() else self._pn
+        return f'images/{number}-'
 
     def _is_granted_patent(self):
         return len(self._pn) < 13
@@ -490,4 +478,53 @@ class DrawingRequest(APIRequest):
         if len(digits) == 7:
             digits = '0' + digits
         return digits
-        
+
+
+class DrawingRequest(AbstractDrawingRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+        self._n = req_data['n']
+        self._tmp_file = None
+        self._local_file = None
+        self._filename = None
+
+    def _serving_fn(self):
+        self._download_file_from_s3()
+        self._convert_to_jpg()
+        return self._local_file
+
+    def _download_file_from_s3(self):
+        s3_prefix = self._get_prefix()
+        s3_suffix = f'{self._n}.tif'
+        s3_key = s3_prefix + s3_suffix
+        self._filename = s3_key.split('/')[-1]
+        self._tmp_file = f'/tmp/{self._filename}.tif'
+        self.S3_BUCKET.download_file(s3_key, self._tmp_file)
+
+    def _convert_to_jpg(self):
+        im = Image.open(self._tmp_file)
+        self._local_file = f'/tmp/{self._filename}.jpg'
+        im.convert("RGB").save(self._local_file, "JPEG", quality=50)
+        os.remove(self._tmp_file)
+        return self._local_file
+
+    def _validation_fn(self):
+        super()._validation_fn()
+        if not re.match(r'\d+', str(self._data['n'])):
+            raise BadRequestError('Drawing number should be integer.')
+
+
+class ListDrawingsRequest(AbstractDrawingRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        prefix = self._get_prefix()
+        indexes = [o.key.split('-')[-1].split('.')[0]
+                     for o in self.S3_BUCKET.objects.filter(Prefix=prefix)]
+        return {
+            'pn': self._pn,
+            'drawings': indexes
+        }

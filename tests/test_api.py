@@ -9,10 +9,11 @@ sys.path.append(BASE_DIR)
 from core.api import APIRequest, SearchRequest102, SearchRequest103
 from core.api import SnippetRequest, MappingRequest, DatasetSampleRequest
 from core.api import SimilarPatentsRequest, PatentPriorArtRequest, DocumentRequest
-from core.api import DrawingRequest
+from core.api import DrawingRequest, ListDrawingsRequest
 from core.api import BadRequestError, ServerError
 from core.filters import PublicationDateFilter
 from dateutil.parser import parse as parse_date
+
 
 class TestRequestClass(unittest.TestCase):
 
@@ -47,6 +48,7 @@ class TestRequestClass(unittest.TestCase):
 	def test_raises_error_on_expection_during_serving(self):
 		req = self.GreetingRequest({ 'lang': 'hi' })
 		self.assertRaises(ServerError, req.serve)
+
 
 class TestSearchRequest102Class(unittest.TestCase):
 
@@ -125,6 +127,7 @@ class TestSearchRequest102Class(unittest.TestCase):
 		truth_arr = [condition(res) for res in results]
 		self.assertTrue(all(truth_arr))
 		
+
 class TestSearchRequest103Class(unittest.TestCase):
 
 	def setUp(self):
@@ -147,6 +150,7 @@ class TestSearchRequest103Class(unittest.TestCase):
 		req = SearchRequest103(req)
 		results = req.serve()['results']
 		return results
+
 
 class TestDatasetSampleRequestClass(unittest.TestCase):
 
@@ -174,6 +178,7 @@ class TestDatasetSampleRequestClass(unittest.TestCase):
 		request = DatasetSampleRequest({ 'dataset': dataset, 'n': n })
 		return request.serve()
 
+
 class TestSimilarPatentsRequestClass(unittest.TestCase):
 
 	def test_invalid_query(self):
@@ -185,6 +190,7 @@ class TestSimilarPatentsRequestClass(unittest.TestCase):
 		self.assertIsInstance(response, dict)
 		self.assertIsInstance(response['results'], list)
 		self.assertGreater(len(response['results']), 0)
+
 
 class TestPatentPriorArtRequestClass(unittest.TestCase):
 
@@ -201,8 +207,10 @@ class TestPatentPriorArtRequestClass(unittest.TestCase):
 		truth_arr = [condition(res) for res in results]
 		self.assertTrue(all(truth_arr))
 
+
 class TestSnippetRequestClass(unittest.TestCase):
 	pass
+
 
 class TestMappingRequestClass(unittest.TestCase):
 	pass
@@ -224,6 +232,23 @@ class TestDrawingRequestClass(unittest.TestCase):
 	def test_get_publication_drawing(self):
 		response = DrawingRequest({'pn': self.app, 'n': 1}).serve()
 		self.assertIsInstance(response, str)
+
+
+class TestListDrawingsRequestClass(unittest.TestCase):
+
+	def setUp(self):
+		self.pat = 'US7654321B2'
+		self.app = 'US20130291398A1'
+
+	def test_list_drawings_of_patent(self):
+		response = ListDrawingsRequest({'pn': self.pat}).serve()
+		self.assertEqual(8, len(response['drawings']))
+		self.assertEqual(self.pat, response['pn'])
+
+	def test_list_drawings_of_application(self):
+		response = ListDrawingsRequest({'pn': self.app}).serve()
+		self.assertEqual(12, len(response['drawings']))
+		self.assertEqual(self.app, response['pn'])
 
 
 class TestDocumentRequestClass(unittest.TestCase):

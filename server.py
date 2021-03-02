@@ -74,8 +74,17 @@ def handle_incoming_ext_request():
 def get_patent_drawing(pn, n):
     try:
         local_path = API.DrawingRequest({'pn': pn, 'n': n}).serve()
-        return send_file(local_path, mimetype='image/tiff')
+        return send_file(local_path, mimetype='image/jpeg')
     except Exception as err:
+        traceback.print_exc()
+        return bad_request(err.message)
+
+@app.route('/patents/<pn>/drawings/', methods=['GET'])
+def list_patent_drawings(pn):
+    try:
+        return API.ListDrawingsRequest({'pn': pn}).serve()
+    except Exception as err:
+        traceback.print_exc()
         return bad_request(err.message)
 
 
