@@ -8,6 +8,7 @@ class SearchResult (Document):
 		self._index = index_id
 		self.snippet = None
 		self.mapping = None
+		self.image = None
 
 	def __str__(self):
 		return f'SearchResult: {self.id}, Score: {self.score}'

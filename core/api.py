@@ -227,6 +227,7 @@ class SearchRequest102(SearchRequest):
         for result in results:
             self._add_snippet_if_needed(result)
             self._add_mapping_if_needed(result)
+            self._add_drawing_link(result)
         results = [res.json() for res in results]
         results = self._add_remote_results_to(results)
         return {
@@ -240,6 +241,10 @@ class SearchRequest102(SearchRequest):
                 result.mapping = generate_mapping(self._query, result.full_text)
             except:
                 result.mapping = None
+
+    def _add_drawing_link(self, result):
+        if result.is_patent():
+            result.image = f'https://api.projectpq.ai/patents/{result.id}/drawings/1'
 
 
 class SearchRequest103(SearchRequest):

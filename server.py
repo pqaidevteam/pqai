@@ -34,6 +34,8 @@ def validate_token():
             return not_allowed('Invalid access token.')
 
 
+################################ SEARCH ROUTES ################################
+
 @app.route('/search/102/', methods=['GET'])
 def search_102():
     return create_request_and_serve(request, API.SearchRequest102)
@@ -50,10 +52,6 @@ def get_patent_prior_art():
 def get_similar_patents():
     return create_request_and_serve(request, API.SimilarPatentsRequest)
 
-@app.route('/documents/', methods=['GET'])
-def get_document():
-    return create_request_and_serve(request, API.DocumentRequest)
-
 @app.route('/snippets/', methods=['GET'])
 def get_snippet():
     return create_request_and_serve(request, API.SnippetRequest)
@@ -69,6 +67,13 @@ def get_sample():
 @app.route('/extension/', methods=['GET'])
 def handle_incoming_ext_request():
     return create_request_and_serve(request, API.IncomingExtensionRequest)
+
+
+################################# DATA ROUTES #################################
+
+@app.route('/documents/', methods=['GET'])
+def get_document():
+    return create_request_and_serve(request, API.DocumentRequest)
 
 @app.route('/patents/<pn>/drawings/<n>/', methods=['GET'])
 def get_patent_drawing(pn, n):
@@ -87,6 +92,7 @@ def list_patent_drawings(pn):
         traceback.print_exc()
         return bad_request(err.message)
 
+############################### ROUTES END HERE ###############################
 
 def create_request_and_serve(req, reqClass):
     try:

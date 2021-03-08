@@ -141,7 +141,8 @@ class Document:
 			abstract = self.abstract,
 			publication_date = self.publication_date,
 			www_link = self.www_link,
-			owner = self.owner
+			owner = self.owner,
+			image = self.image
 		)
 
 class Patent (Document):
