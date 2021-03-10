@@ -26,6 +26,8 @@ def validate_token():
         pass
     elif '/documents' in url:
         pass
+    elif '/thumbnails' in url:
+        pass
     elif url.endswith(extensions):
         pass
     else:
