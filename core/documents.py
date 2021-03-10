@@ -1,7 +1,7 @@
 from dateutil.parser import parse as parse_date
 from core import db
 from core import utils
-
+import re
 
 class Document:
 
@@ -142,7 +142,7 @@ class Document:
 			publication_date = self.publication_date,
 			www_link = self.www_link,
 			owner = self.owner,
-			image = self.image
+			image = self.image if hasattr(self, 'image') else None
 		)
 
 class Patent (Document):
@@ -161,12 +161,33 @@ class Patent (Document):
 	@property
 	def filing_date(self):
 		return self.data['filingDate']
-	
 
 	@property
 	def first_claim(self):
 		return self.claims[0]
 
+	@property
+	def description(self):
+		return self.data['description']
+
+	@property
+	def cpcs(self):
+		return self.data['cpcs']
+
+	@property
+	def independent_claims(self):
+		pattern = r'\bclaim(s|ed)?\b'
+		return [clm for clm in self.claims if not re.search(pattern, clm)]
+
+	@property
+	def forward_citations(self):
+		biblio = db.get_patent_data(self.id, True)
+		return biblio['forwardCitations']
+
+	@property
+	def backward_citations(self):
+		biblio = db.get_patent_data(self.id, True)
+		return biblio['backwardCitations']
 
 class Paper (Document):
 	pass

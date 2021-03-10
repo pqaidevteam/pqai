@@ -1,19 +1,22 @@
 from core.vectorizers import SentBERTVectorizer
+from core.vectorizers import CPCVectorizer
 from core.index_selection import SublassesBasedIndexSelector
 from core.filters import FilterArray, PublicationDateFilter, DocTypeFilter
 from core.obvious import Combiner
 from core.indexes import IndexesDirectory
 from core.search import VectorIndexSearcher
-from core.documents import Document
+from core.documents import Document, Patent
 from core.snippet import SnippetExtractor, CombinationalMapping
 from core.reranking import ConceptMatchRanker
+from core.encoders import default_boe_encoder
 from core.datasets import PoC
-from core.documents import Patent
 from core.results import SearchResult
+from core.encoders import default_embedding_matrix
 import copy
 import boto3
 import io
 import re
+import cv2
 import os
 s3 = boto3.resource('s3')
 from config.config import PQAI_S3_BUCKET_NAME
@@ -45,6 +48,10 @@ class APIRequest():
         try:
             response = self._serving_fn()
             return self._formatting_fn(response)
+        except BadRequestError as e:
+            raise e
+        except ResourceNotFoundError as e:
+            raise e
         except:
             raise ServerError()
 
@@ -76,6 +83,12 @@ class ServerError(Exception):
 class NotAllowedError(Exception):
 
     def __init__(self, msg="Request disallowed."):
+        self.message = msg
+
+
+class ResourceNotFoundError(Exception):
+
+    def __init__(self, msg="Resource not found."):
         self.message = msg
 
 
@@ -415,19 +428,16 @@ class DatasetSampleRequest(APIRequest):
 
     def _serving_fn(self):
         name = self._data['dataset']
-        if name.lower() == 'poc':
-            n = self._data['n']
-            return self.poc_dataset[int(n)]
-        else:
-            raise BadRequestError(f'No dataset named {name}.')
+        if name.lower() != 'poc':
+            raise ResourceNotFoundError(f'No dataset named {name}.')
+        n = self._data['n']
+        return self.poc_dataset[int(n)]
 
     def _validation_fn(self):
         if not 'dataset' in self._data:
-            raise BadRequestError(
-                'Request does not specify a dataset name.')
+            raise BadRequestError('Dataset name unspecified.')
         if not 'n' in self._data:
-            raise BadRequestError(
-                'Request does not specify the sample number.')
+            raise BadRequestError('Sample number unspecified.')
 
     def _formatting_fn(self, sample):
         formatted = {}
@@ -455,14 +465,14 @@ class IncomingExtensionRequest(SearchRequest102):
             super().__init__(req_data)
 
 
-class AbstractDrawingRequest(APIRequest):
+class AbstractPatentDataRequest(APIRequest):
 
     PN_PATTERN = r'^US(RE)?\d{4,11}[AB]\d?$'
-    S3_BUCKET = s3.Bucket(PQAI_S3_BUCKET_NAME)
 
     def __init__(self, req_data):
         super().__init__(req_data)
         self._pn = req_data['pn']
+        self._patent = Patent(self._pn)
 
     def _validation_fn(self):
         if self._data['pn'][:2] != 'US':
@@ -470,12 +480,25 @@ class AbstractDrawingRequest(APIRequest):
         if not re.match(self.PN_PATTERN, self._data['pn']):
             raise BadRequestError('Could not parse patent number.')
 
+    def _is_granted_patent(self):
+        return len(self._pn) < 13
+
+    def _formatting_fn(self, response):
+        if isinstance(response, dict):
+            response['pn'] = self._patent.publication_id
+        return response
+
+
+class AbstractDrawingRequest(AbstractPatentDataRequest):
+    
+    S3_BUCKET = s3.Bucket(PQAI_S3_BUCKET_NAME)
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
     def _get_prefix(self):
         number = self._get_8_digits() if self._is_granted_patent() else self._pn
         return f'images/{number}-'
-
-    def _is_granted_patent(self):
-        return len(self._pn) < 13
 
     def _get_8_digits(self):
         pattern = r'(.+?)(A|B)\d?'
@@ -493,6 +516,11 @@ class DrawingRequest(AbstractDrawingRequest):
         self._tmp_file = None
         self._local_file = None
         self._filename = None
+
+    def _validation_fn(self):
+        super()._validation_fn()
+        if not re.match(r'\d+', str(self._data['n'])):
+            raise BadRequestError('Drawing number should be integer.')
 
     def _serving_fn(self):
         self._download_file_from_s3()
@@ -514,11 +542,6 @@ class DrawingRequest(AbstractDrawingRequest):
         os.remove(self._tmp_file)
         return self._local_file
 
-    def _validation_fn(self):
-        super()._validation_fn()
-        if not re.match(r'\d+', str(self._data['n'])):
-            raise BadRequestError('Drawing number should be integer.')
-
 
 class ListDrawingsRequest(AbstractDrawingRequest):
 
@@ -529,7 +552,275 @@ class ListDrawingsRequest(AbstractDrawingRequest):
         prefix = self._get_prefix()
         indexes = [o.key.split('-')[-1].split('.')[0]
                      for o in self.S3_BUCKET.objects.filter(Prefix=prefix)]
-        return {
-            'pn': self._pn,
-            'drawings': indexes
+        return {'drawings': indexes}
+
+
+class PatentDataRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        patent_data = {
+            'title': self._patent.title,
+            'abstract': self._patent.abstract,
+            'description': self._patent.description,
+            'claims': self._patent.claims
         }
+        return patent_data
+        
+
+class TitleRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        return {'title': self._patent.title}
+
+
+class AbstractRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        return {'abstract': self._patent.abstract}
+
+
+class AllClaimsRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        return {'claims': self._patent.claims}
+
+
+class OneClaimRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+        self._n = req_data['n']
+
+    def _validation_fn(self):
+        super()._validation_fn()
+        if not 'n' in self._data:
+            raise BadRequestError('Claim number unspecified.')
+        if not isinstance(self._data['n'], int):
+            raise BadRequestError('Claim number should be integer')
+        if self._data['n'] < 1:
+            raise BadRequestError('Claim number cannot be <= 0')
+
+    def _serving_fn(self):
+        if self._n > len(self._patent.claims):
+            raise BadRequestError(f'{self._pn} has no claim #{self._n}')
+        return {
+            'claim': self._patent.claims[self._n-1],
+            'claim_num': self._n
+        }
+
+
+class IndependentClaimsRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        return {'claims': self._patent.independent_claims}
+
+
+class PatentDescriptionRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        return {'description': self._patent.description}
+
+
+class CitationsRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        back_cits = self._patent.backward_citations
+        for_cits = self._patent.forward_citations
+        return {
+            'citations_backward': back_cits,
+            'citations_forward': for_cits
+        }
+
+
+class BackwardCitationsRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        cits = self._patent.backward_citations
+        return {'citations_backward': cits}
+
+
+class ForwardCitationsRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        cits = self._patent.forward_citations
+        return {'citations_forward': cits}
+
+
+class ConceptsRequest(APIRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+        self._text = req_data['text']
+
+    def _validation_fn(self):
+        if not isinstance(self._data['text'], str):
+            raise BadRequestError('Invalid text.')
+        if not self._data['text'].strip():
+            raise BadRequestError('No text to work with.')
+
+    def _serving_fn(self):
+        return list(default_boe_encoder.encode(self._text))
+
+class AbstractConceptsRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        req = ConceptsRequest({'text': self._patent.abstract})
+        concepts = req.serve()
+        return {'concepts': concepts}
+
+class DescriptionConceptsRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        req = ConceptsRequest({'text': self._patent.description})
+        concepts = req.serve()
+        return {'concepts': concepts}
+
+class CPCsRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        return {'cpcs': self._patent.cpcs}
+
+class ListThumbnailsRequest(ListDrawingsRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        thumbnails = super()._serving_fn()['drawings']
+        return {'thumbnails': thumbnails}
+
+
+class ThumbnailRequest(DrawingRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+        self._h = 200
+        self._w = None
+
+    def _serving_fn(self):
+        im_path = super()._serving_fn()
+        im = cv2.imread(im_path)
+        im = self._do_scaling(im)
+        cv2.imwrite(im_path, im) # Overwrite the original
+        return im_path
+
+    def _do_scaling(self, im):
+        h, w = self._get_out_dims(im)
+        im = cv2.resize(im, (w, h), interpolation=cv2.INTER_AREA)
+        return im
+
+    def _get_out_dims(self, im):
+        h, w, channels = im.shape
+        r = w / h
+        if isinstance(self._h, int) and isinstance(self._w, int):
+            return (self._h, self._w)
+        elif isinstance(self._h, int):
+            width = max(1, int(self._h*r))
+            return (self._h, width)
+        elif isinstance(self._w, int):
+            height = max(1, int(self._w/r))
+            return (height, self._w)
+        else:
+            return (h, w)
+
+
+class PatentCPCVectorRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        cpcs = self._patent.cpcs
+        vector = CPCVectorizer().embed(cpcs)
+        return {'vector': vector.tolist()}
+
+
+class PatentAbstractVectorRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        abstract = self._patent.abstract
+        vector = SentBERTVectorizer().embed(abstract)
+        return {'vector': vector.tolist()}
+
+
+class ConceptRelatedRequest(APIRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+        self._concept = req_data['concept']
+
+    def _validation_fn(self):
+        if not isinstance(self._data['concept'], str):
+            raise BadRequestError('Concept must be a string.')
+        if not self._data['concept'].strip():
+            raise BadRequestError('Null string provided as concept')
+
+    def _formatting_fn(self, response):
+        if isinstance(response, dict):
+            response['concept'] = self._concept
+        return response
+
+
+class SimilarConceptsRequest(ConceptRelatedRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        if not self._concept in default_embedding_matrix:
+            raise ResourceNotFoundError(f'No vector for "{self._concept}"')
+
+        neighbours = default_embedding_matrix.similar_to_item(self._concept)
+        return {'similar': neighbours}
+
+
+class ConceptVectorRequest(ConceptRelatedRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        if not self._concept in default_embedding_matrix:
+            raise ResourceNotFoundError(f'No vector for "{self._concept}"')
+
+        vector = default_embedding_matrix[self._concept]
+        return {'vector': list(vector)}
