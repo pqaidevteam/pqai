@@ -43,7 +43,7 @@ def search_102():
     return create_request_and_serve(request, API.SearchRequest102)
 
 @app.route('/search/103/', methods=['GET'])
-def seach_103():
+def search_103():
     return create_request_and_serve(request, API.SearchRequest103)
 
 @app.route('/prior-art/patent/', methods=['GET'])
