@@ -257,7 +257,7 @@ class SearchRequest102(SearchRequest):
 
     def _add_drawing_link(self, result):
         if result.is_patent():
-            result.image = f'https://api.projectpq.ai/patents/{result.id}/drawings/1'
+            result.image = f'https://api.projectpq.ai/patents/{result.id}/thumbnails/1'
 
 
 class SearchRequest103(SearchRequest):
