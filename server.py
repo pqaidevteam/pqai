@@ -9,13 +9,16 @@ from config import config
 if config.gpu_disabled:
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-import core.api as API
-import auth
-
 from flask import request, send_file
 from flask_api import FlaskAPI, status, exceptions
-app = FlaskAPI(__name__)
 
+app = FlaskAPI(__name__)
+app.url_map.strict_slashes = False
+
+
+############################### AUTHENTICATION ###############################
+
+import auth
 tokens = auth.read_tokens()
 
 @app.before_request
@@ -37,6 +40,8 @@ def validate_token():
 
 
 ################################ SEARCH ROUTES ################################
+
+import core.api as API
 
 @app.route('/search/102/', methods=['GET'])
 def search_102():
@@ -204,4 +209,3 @@ def error(e):
 if __name__ == '__main__':
     from waitress import serve
     serve(app, host='0.0.0.0', port=config.port)
-
