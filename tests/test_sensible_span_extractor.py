@@ -5,6 +5,10 @@ TEST_DIR = str(Path(__file__).parent.resolve())
 BASE_DIR = str(Path(__file__).parent.parent.resolve())
 sys.path.append(BASE_DIR)
 
+# Run tests without using GPU
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 from core.sensible_span_extractor import SensibleSpanExtractor, SubsequenceExtractor
 
 

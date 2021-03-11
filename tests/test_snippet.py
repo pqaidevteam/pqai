@@ -1,5 +1,9 @@
 import unittest
 
+# Run tests without using GPU
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 import sys
 from pathlib import Path
 TEST_DIR = str(Path(__file__).parent.resolve())
