@@ -148,74 +148,58 @@ def get_concept_vec(concept):
 @app.route('/patents/<pn>/thumbnails', methods=['GET'])
 def get_thumbnails_list(pn):
     return create_request_and_serve({'pn': pn}, API.ListThumbnailsRequest)
-    
-@app.route('/patents/<pn>/thumbnails/<n>', methods=['GET'])
-def get_thumbnail(pn, n):
-    local_path = API.ThumbnailRequest({'pn': pn, 'n': n}).serve()
-    return send_file(local_path, mimetype='image/jpeg')
 
 @app.route('/patents/<pn>/drawings/', methods=['GET'])
 def list_patent_drawings(pn):
-    try:
-        return API.ListDrawingsRequest({'pn': pn}).serve()
-    except Exception as err:
-        traceback.print_exc()
-        return bad_request(err.message)
+    return create_request_and_serve({'pn': pn}, API.ListDrawingsRequest)
+
+@app.route('/patents/<pn>/thumbnails/<n>', methods=['GET'])
+def get_thumbnail(pn, n):
+    return create_request_and_serve_jpg({'pn': pn, 'n': n}, API.ThumbnailRequest)
 
 @app.route('/patents/<pn>/drawings/<n>/', methods=['GET'])
 def get_patent_drawing(pn, n):
-    try:
-        local_path = API.DrawingRequest({'pn': pn, 'n': n}).serve()
-        return send_file(local_path, mimetype='image/jpeg')
-    except Exception as err:
-        traceback.print_exc()
-        return bad_request(err.message)
+    return create_request_and_serve_jpg({'pn': pn, 'n': n}, API.DrawingRequest)
 
 ############################### ROUTES END HERE ###############################
 
 
 def create_request_and_serve(req, reqClass):
     try:
-        if isinstance(req, dict):
-            req_data = req
-        else:
-            req_data = req.args.to_dict()
+        req_data = req if isinstance(req, dict) else req.args.to_dict()
         return success(reqClass(req_data).serve())
-    except API.BadRequestError as err:
-        traceback.print_exc()
-        return bad_request(err.message)
-    except API.ServerError as err:
-        traceback.print_exc()
-        return server_error(err.message)
-    except API.NotAllowedError as err:
-        traceback.print_exc()
-        return not_allowed(err.message)
-    except API.ResourceNotFoundError as err:
-        traceback.print_exc()
-        return not_found(err.message)
+    except Exception as e:
+        return error(e)
+
+def create_request_and_serve_jpg(req, reqClass):
+    try:
+        req_data = req if isinstance(req, dict) else req.args.to_dict()
+        file_path_local = reqClass(req_data).serve()
+        return send_file(file_path_local, mimetype='image/jpeg')
+    except Exception as e:
+        return error(e)
 
 def success(response):
     return response, status.HTTP_200_OK
 
-def server_error(msg=None):
-    msg = msg if msg else 'Server error'
-    http_status = status.HTTP_500_INTERNAL_SERVER_ERROR
-    return msg, http_status
+def error(e):
+    traceback.print_exc()
+    if isinstance(e, API.BadRequestError):
+        msg = e.message if e.message else 'Bad Request'
+        return msg, status.HTTP_400_BAD_REQUEST
+    
+    elif isinstance(e, API.ServerError):
+        msg = e.message if e.message else 'Server error'
+        return msg, status.HTTP_500_INTERNAL_SERVER_ERROR
+    
+    elif isinstance(e, API.NotAllowedError):
+        msg = e.message if e.message else 'Request disallowed'
+        return msg, status.HTTP_403_FORBIDDEN
+    
+    elif isinstance(e, API.ResourceNotFoundError):
+        msg = e.message if e.message else 'Resource not found'
+        return msg, status.HTTP_404_NOT_FOUND
 
-def bad_request(msg=None):
-    msg = msg if msg else 'Bad request'
-    http_status = status.HTTP_400_BAD_REQUEST
-    return msg, http_status
-
-def not_allowed(msg=None):
-    msg = msg if msg else 'Request disallowed.'
-    http_status = status.HTTP_403_FORBIDDEN
-    return msg, http_status
-
-def not_found(msg=None):
-    msg = msg if msg else 'Resource not found.'
-    http_status = status.HTTP_404_NOT_FOUND
-    return msg, http_status
 
 if __name__ == '__main__':
     from waitress import serve

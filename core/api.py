@@ -21,6 +21,7 @@ import os
 s3 = boto3.resource('s3')
 from config.config import PQAI_S3_BUCKET_NAME
 from PIL import Image
+import botocore.exceptions
 
 import core.remote as remote
 import core.utils as utils
@@ -533,7 +534,10 @@ class DrawingRequest(AbstractDrawingRequest):
         s3_key = s3_prefix + s3_suffix
         self._filename = s3_key.split('/')[-1]
         self._tmp_file = f'/tmp/{self._filename}.tif'
-        self.S3_BUCKET.download_file(s3_key, self._tmp_file)
+        try:
+            self.S3_BUCKET.download_file(s3_key, self._tmp_file)
+        except botocore.exceptions.ClientError:
+            raise ResourceNotFoundError('Drawing unavailable.')
 
     def _convert_to_jpg(self):
         im = Image.open(self._tmp_file)
