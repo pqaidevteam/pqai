@@ -57,6 +57,8 @@ class Searcher():
 		return list(itertools.chain.from_iterable(list2d))
 
 	def _deduplicate(self, results):
+		if len(results) == 0:
+			return results
 		first_result = results[0]
 		arr = [first_result]
 		already_added = set([first_result.id])
