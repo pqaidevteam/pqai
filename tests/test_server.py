@@ -15,7 +15,11 @@ from config.config import port as PORT
 HOST = '127.0.0.1' 	# Server on which the PQAI server is running
 API_TEST_TOKEN = 'test_token_asdf77bc3a9f'
 
-@unittest.skip('Works only when the server is running')
+import socket
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_not_running = sock.connect_ex((HOST, PORT)) != 0
+
+@unittest.skipIf(server_not_running, 'Works only when true')
 class TestRoutes(unittest.TestCase):
 
 	def setUp(self):
@@ -70,9 +74,10 @@ class TestRoutes(unittest.TestCase):
 		self.assertSuccess(response)
 		self.assertEqual(8, len(response.json()['drawings']))
 
-	def api_get(self, route, params):
+	def api_get(self, route, params=None):
 		url = self.endpoint + route
-		params['token'] = API_TEST_TOKEN
+		if isinstance(params, dict):
+			params['token'] = API_TEST_TOKEN
 		response = requests.get(url, params)
 		return response
 
