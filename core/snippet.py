@@ -15,7 +15,7 @@ from core.documents import Document
 from core.encoders import default_boe_encoder
 from core.utils import get_sentences
 from core.sensible_span_extractor import SensibleSpanExtractor
-
+get_spans = SensibleSpanExtractor().return_ranked
 
 class SnippetExtractor():
 
@@ -51,12 +51,20 @@ class SnippetExtractor():
         mappings = []
         for i, element in enumerate(elements):
             mapping = {}
-            j = sent_idxs[i]
             mapping['element'] = element
-            mapping['mapping'] = sents[j]
-            mapping['ctx_before'] = sents[j-1] if j-1 > 0 else ''
-            mapping['ctx_after'] = sents[j+1] if j+1 < len(sents) else ''
-            mapping['similarity'] = float(cosine_sims[i][j])
+            try:
+                multi_snippet = SubsentSnippetExtractor(element, text).extract()
+                mapping['mapping'] = multi_snippet
+                mapping['ctx_before'] = ''
+                mapping['ctx_after'] = ''
+                mapping['similarity'] = 0.0
+            except Exception as e:
+                traceback.print_exc()
+                j = sent_idxs[i]
+                mapping['mapping'] = sents[j]
+                mapping['ctx_before'] = sents[j-1] if j-1 > 0 else ''
+                mapping['ctx_after'] = sents[j+1] if j+1 < len(sents) else ''
+                mapping['similarity'] = float(cosine_sims[i][j])
             mappings.append(mapping)
         return mappings
 
@@ -149,6 +157,7 @@ class CombinationalMapping (SnippetExtractor):
             table.append(row)
         return table
 
+
 class SubsentSnippetExtractor():
     
     def __init__(self, query, doc):
@@ -165,6 +174,10 @@ class SubsentSnippetExtractor():
 
     def _get_spliced_subsent_snippets(self, matches):
         sents = get_sentences(self.doc)
+
+        # select only sentences that do not contain references to drawings,
+        # i.e., which do not have reference numeral (digits) in them
+        sents = [s for s in sents if not re.search(r'\d{2,}', s)]
         sent_scores = [sum([1 for m in matches if m in s]) for s in sents]
         sent_ranked = [sents[i] for i in np.argsort(sent_scores)[::-1]]
         temp_str = ""

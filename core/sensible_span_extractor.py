@@ -110,7 +110,16 @@ class SensibleSpanExtractor():
 	def return_ranked(self, sentence):
 		candidates = self._encode_for_nn(sentence)
 		ns = self._rank(candidates)
-		return [self._strip_punctuations(' '.join(candidates[0][n])) for n in ns]
+		spans = [self._strip_punctuations(' '.join(candidates[0][n])) for n in ns]
+		spans = [s for s in spans if self._passes_post_filter(s)]
+		return spans
+
+	def _passes_post_filter(self, span):
+		if ')' in span and '(' not in span:
+			return False
+		if '(' in span and ')' not in span:
+			return False
+		return True
 
 	def _rank(self, candidates):
 		tokens, X_chargrams, X_word_vectors = candidates
@@ -193,7 +202,8 @@ class SensibleSpanExtractor():
 	def _encode_tokens(self, tokens):
 		encoded_tokens = []
 		for token in tokens:
-			encoded_tokens.append(self._dict[token])
+			default = self._dict['<unk>']
+			encoded_tokens.append(self._dict.get(token, default))
 		return encoded_tokens
 
 	def _to_int_array(self, sent_tokens):
@@ -217,11 +227,12 @@ class SensibleSpanExtractor():
 
 	def _strip_punctuations(self, text):
 		patterns = [
-			r'\s([\!\%\)\,\.\:\;\?\]\}\”])',
-			r'([\"\#\$\(\@\[\\\{\“])\s',
-			r'\s([\'\*\+\-\/\<\=\>\^\_\`\|\~])\s']
+			r'\s([\!\%\)\,\.\:\;\?\]\}\”])', # no space before these symbols
+			r'([\"\#\$\(\@\[\\\{\“])\s', # no space before or after these
+			r'\s([\'\*\+\-\/\<\=\>\^\_\`\|\~])\s'] # no space after these
 		for pattern in patterns:
 			text = re.sub(pattern, r'\1', text)
+		text = re.sub('  ', ' ', text) # remove double spaces
 		return text
 
 class SubsequenceExtractor():
