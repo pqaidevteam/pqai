@@ -228,8 +228,8 @@ class SensibleSpanExtractor():
 	def _strip_punctuations(self, text):
 		patterns = [
 			r'\s([\!\%\)\,\.\:\;\?\]\}\”])', # no space before these symbols
-			r'([\"\#\$\(\@\[\\\{\“])\s', # no space before or after these
-			r'\s([\'\*\+\-\/\<\=\>\^\_\`\|\~])\s'] # no space after these
+			r'([\"\#\$\(\@\[\\\{\“])\s', # no space after these
+			r'\s([\'\*\+\-\/\<\=\>\^\_\`\|\~])\s'] # no space before/after
 		for pattern in patterns:
 			text = re.sub(pattern, r'\1', text)
 		text = re.sub('  ', ' ', text) # remove double spaces
