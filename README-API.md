@@ -2,8 +2,7 @@
 
 ## Authentication
 
-A `token` parameter is used for authentication, which must be included in
-every request.
+A `token` parameter is used for authentication, which must be included in every request, except for requests where it is explicitly stated that it isn't need.
 
 ## API Routes
 
@@ -124,7 +123,7 @@ Route: `/patents/:pn/drawings/:n`
 
 Request type: `GET`
 
-Response type: `JSON` string
+Response type: `PNG` image (binary)
 
 Path parameters
 
@@ -133,7 +132,9 @@ Path parameters
 | `pn`      | String  | Patent Number | `US7654321B2` |
 | `n`       | Integer | Drawing index | `3`           |
 
-###  10. Get list of drawings for a patent (to tell how may drawings are there)
+NOTE: Authentication token is NOT required for this route.
+
+###  10. Get list of drawings for a patent (to tell how maNy drawings are there)
 
 Route: `/patents/:pn/drawings`
 
@@ -146,3 +147,132 @@ Path parameters
 | Parameter | Value   | Meaning       | Example       |
 | --------- | ------- | ------------- | ------------- |
 | `pn`      | String  | Patent Number | `US7654321B2` |
+
+NOTE: Authentication token is NOT required for this route.
+
+### 11. Get list of thumbnails available for a patent
+
+Route: `/patents/:pn/thumbnails`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Path parameters
+
+| Parameter | Value  | Meaning       | Example       |
+| --------- | ------ | ------------- | ------------- |
+| `pn`      | String | Patent Number | `US7654321B2` |
+
+NOTE: Authentication token is NOT required for this route.
+
+### 12. Get a thumbnail of a patent's drawing
+
+Route: `/patents/:pn/thumbnails/:n`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Path parameters
+
+| Parameter | Value   | Meaning                   | Example       |
+| --------- | ------- | ------------------------- | ------------- |
+| `pn`      | String  | Patent Number             | `US7654321B2` |
+| `n`       | Integer | Thumbnail (drawing) index | `3`           |
+
+NOTE: Authentication token is NOT required for this route.
+
+### 13. Get a patent's data
+
+Route: `/patents/:pn`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Path parameters
+
+| Parameter | Value  | Meaning       | Example       |
+| --------- | ------ | ------------- | ------------- |
+| `pn`      | String | Patent Number | `US7654321B2` |
+
+### 14. Get a patent's field (title, abstract, claims, etc.)
+
+Route: `/patents/:pn/:field`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Path parameters
+
+| Parameter | Value  | Meaning        | Example                                                   |
+| --------- | ------ | -------------- | --------------------------------------------------------- |
+| `pn`      | String | Patent Number  | `US7654321B2`                                             |
+| `field`   | String | Patent's field | `title`, `abstract`, `claims`, `description`, `citations` |
+
+**NOTES**
+
+* The `/claims` route can also take a suffix path parameter `/n` that can be used to fetch a particular claim. For example, the first claim can be retrieved with `/claims/1`.
+* The `/claims` route can also take a suffix path parameter `/independent` to get only independent claims.
+* The `/abstract` and `/description` routes can take a suffix path parameter `/concepts` that will return the entities identified by an ML model within these text fields.
+* The `/citation` route takes suffix path parameters `/backward` and `/forward` to return only one cited or citing patents.
+
+### 15. Get a patent's CPCs
+
+Route: `/patents/:pn/classification/cpcs`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Path parameters
+
+| Parameter | Value  | Meaning       | Example       |
+| --------- | ------ | ------------- | ------------- |
+| `pn`      | String | Patent Number | `US7654321B2` |
+
+### 16. Get a patent's vector
+
+Route: `/patents/:pn/vectors/:field`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Path parameters
+
+| Parameter | Value  | Meaning          | Example              |
+| --------- | ------ | ---------------- | -------------------- |
+| `pn`      | String | Patent Number    | `US7654321B2`        |
+| `field`   | String | Field vectorized | `cpcs` or `abstract` |
+
+### 17. Get a word (concept) vector
+
+Route: `/concepts/:concept/vector`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Path parameters
+
+| Parameter | Value  | Meaning    | Example                     |
+| --------- | ------ | ---------- | --------------------------- |
+| `concept` | String | Given word | `vehicle` or `mobile phone` |
+
+### 18. Get contextually similar words to a given word
+
+Route: `/concepts/:concept/similar`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Path parameters
+
+| Parameter | Value  | Meaning    | Example                     |
+| --------- | ------ | ---------- | --------------------------- |
+| `concept` | String | Given word | `vehicle` or `mobile phone` |
+
