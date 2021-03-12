@@ -15,6 +15,7 @@ from flask_api import FlaskAPI, status, exceptions
 app = FlaskAPI(__name__)
 app.url_map.strict_slashes = False
 
+import core.api as API
 
 ############################### AUTHENTICATION ###############################
 
@@ -23,25 +24,21 @@ tokens = auth.read_tokens()
 
 @app.before_request
 def validate_token():
-    url = request.base_url
+    route = request.base_url
     extensions = ('.css', '.js', '.ico')
-    if '/drawings' in url:
+    if '/drawings' in route:
         pass
-    elif '/documents' in url:
+    elif '/thumbnails' in route:
         pass
-    elif '/thumbnails' in url:
-        pass
-    elif url.endswith(extensions):
+    elif route.endswith(extensions):
         pass
     else:
         token = request.args.to_dict().get('token')
         if not token in tokens:
-            return not_allowed('Invalid access token.')
+            return error(API.NotAllowedError('Invalid token.'))
 
 
 ################################ SEARCH ROUTES ################################
-
-import core.api as API
 
 @app.route('/search/102/', methods=['GET'])
 def search_102():
