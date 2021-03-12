@@ -532,7 +532,8 @@ class DrawingRequest(AbstractDrawingRequest):
         s3_prefix = self._get_prefix()
         s3_suffix = f'{self._n}.tif'
         s3_key = s3_prefix + s3_suffix
-        self._filename = s3_key.split('/')[-1]
+        filename_with_ext = s3_key.split('/')[-1]
+        self._filename = filename_with_ext.split('.')[0]
         self._tmp_file = f'/tmp/{self._filename}.tif'
         try:
             self.S3_BUCKET.download_file(s3_key, self._tmp_file)
