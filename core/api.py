@@ -9,9 +9,9 @@ from core.documents import Document, Patent
 from core.snippet import SnippetExtractor, CombinationalMapping
 from core.reranking import ConceptMatchRanker
 from core.encoders import default_boe_encoder
-from core.datasets import PoC
 from core.results import SearchResult
 from core.encoders import default_embedding_matrix
+from core.datasets import PoC
 import copy
 import io
 import re
@@ -31,7 +31,8 @@ import core.utils as utils
 from config.config import indexes_dir, reranker_active, index_selection_disabled
 from config.config import allow_outgoing_extension_requests
 from config.config import allow_incoming_extension_requests
-from config.config import docs_file
+from config.config import docs_dir
+from bs4 import BeautifulSoup
 
 vectorize_text = SentBERTVectorizer().embed
 available_indexes = IndexesDirectory(indexes_dir)
@@ -842,9 +843,23 @@ class DocumentationRequest(APIRequest):
 
     def __init__(self, req_data):
         super().__init__(req_data)
+        self._template_file = f'{docs_dir}template.html'
+        self._docs_file = f'{docs_dir}README-API.md'
 
     def _serving_fn(self):
-        with open(docs_file, 'r') as f:
+        template = self._get_template()
+        contents = self._get_docs_html()
+        template.find('body').append(contents)
+        return str(template)
+
+    def _get_template(self):
+        with open(self._template_file, 'r') as f:
+            html = f.read()
+        return BeautifulSoup(html, 'html.parser')
+
+    def _get_docs_html(self):
+        with open(self._docs_file, 'r') as f:
             md = f.read()
-            html = markdown.markdown(md, extensions=['tables', 'toc', 'smarty'])
-        return html
+        exts = ['tables', 'toc', 'smarty']
+        html = markdown.markdown(md, extensions=exts)
+        return BeautifulSoup(html, 'html.parser')

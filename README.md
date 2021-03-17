@@ -10,7 +10,7 @@ Use [projectPQ.AI](https://projectpq.ai/search) to run prior-art searches.
 
 ## API Access
 
-PQAI can be plugged into other apps easily through API integration. Refer to the [API Usage Guide](README-API.md) for details.
+PQAI can be plugged into other apps easily through API integration. Refer to the [API Usage Guide](docs/README-API.md) for details.
 
 ## Create your own PQAI server
 

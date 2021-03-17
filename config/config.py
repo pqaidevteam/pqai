@@ -6,6 +6,7 @@ base_dir = str((Path(__file__).parent / '../').resolve())
 indexes_dir = base_dir + '/indexes/'
 models_dir = base_dir + '/models/'
 patents_dir = '/home/ubuntu/pqaidata/data/patents/'
+docs_dir = f'{base_dir}/docs/'
 
 mongo_host = 'localhost'
 mongo_port = 27017
@@ -22,5 +23,3 @@ allow_outgoing_extension_requests = False
 allow_incoming_extension_requests = False
 
 PQAI_S3_BUCKET_NAME = 'pqai.s3'
-
-docs_file = f'{base_dir}/README-API.md'
