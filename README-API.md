@@ -1,3 +1,5 @@
+[TOC]
+
 # API Usage Guide
 
 ## Authentication
@@ -134,7 +136,7 @@ Path parameters
 
 NOTE: Authentication token is NOT required for this route.
 
-###  10. Get list of drawings for a patent (to tell how maNy drawings are there)
+###  10. Get list of drawings for a patent (to tell how many drawings are there)
 
 Route: `/patents/:pn/drawings`
 
@@ -276,3 +278,12 @@ Path parameters
 | --------- | ------ | ---------- | --------------------------- |
 | `concept` | String | Given word | `vehicle` or `mobile phone` |
 
+### 19. Get API documentation
+
+Route: `/docs`
+
+Request type: `GET`
+
+Response type: `HTML` string
+
+Parameters: None

@@ -13,22 +13,25 @@ from core.datasets import PoC
 from core.results import SearchResult
 from core.encoders import default_embedding_matrix
 import copy
-import boto3
 import io
 import re
 import cv2
 import os
+import markdown
+
+import boto3
+import botocore.exceptions
 s3 = boto3.resource('s3')
 from config.config import PQAI_S3_BUCKET_NAME
-from PIL import Image
-import botocore.exceptions
 
+from PIL import Image
 import core.remote as remote
 import core.utils as utils
 
 from config.config import indexes_dir, reranker_active, index_selection_disabled
 from config.config import allow_outgoing_extension_requests
 from config.config import allow_incoming_extension_requests
+from config.config import docs_file
 
 vectorize_text = SentBERTVectorizer().embed
 available_indexes = IndexesDirectory(indexes_dir)
@@ -693,6 +696,7 @@ class ConceptsRequest(APIRequest):
     def _serving_fn(self):
         return list(default_boe_encoder.encode(self._text))
 
+
 class AbstractConceptsRequest(AbstractPatentDataRequest):
 
     def __init__(self, req_data):
@@ -702,6 +706,7 @@ class AbstractConceptsRequest(AbstractPatentDataRequest):
         req = ConceptsRequest({'text': self._patent.abstract})
         concepts = req.serve()
         return {'concepts': concepts}
+
 
 class DescriptionConceptsRequest(AbstractPatentDataRequest):
 
@@ -713,6 +718,7 @@ class DescriptionConceptsRequest(AbstractPatentDataRequest):
         concepts = req.serve()
         return {'concepts': concepts}
 
+
 class CPCsRequest(AbstractPatentDataRequest):
 
     def __init__(self, req_data):
@@ -720,6 +726,7 @@ class CPCsRequest(AbstractPatentDataRequest):
 
     def _serving_fn(self):
         return {'cpcs': self._patent.cpcs}
+
 
 class ListThumbnailsRequest(ListDrawingsRequest):
 
@@ -829,3 +836,15 @@ class ConceptVectorRequest(ConceptRelatedRequest):
 
         vector = default_embedding_matrix[self._concept]
         return {'vector': list(vector)}
+
+
+class DocumentationRequest(APIRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _serving_fn(self):
+        with open(docs_file, 'r') as f:
+            md = f.read()
+            html = markdown.markdown(md, extensions=['tables', 'toc', 'smarty'])
+        return html

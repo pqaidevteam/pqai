@@ -30,6 +30,8 @@ def validate_token():
         pass
     elif '/thumbnails' in route:
         pass
+    elif '/docs' in route:
+        pass
     elif route.endswith(extensions):
         pass
     else:
@@ -162,6 +164,10 @@ def get_thumbnail(pn, n):
 @app.route('/patents/<pn>/drawings/<n>/', methods=['GET'])
 def get_patent_drawing(pn, n):
     return create_request_and_serve_jpg({'pn': pn, 'n': n}, API.DrawingRequest)
+
+@app.route('/docs', methods=['GET'])
+def get_docs():
+    return create_request_and_serve(request, API.DocumentationRequest)
 
 ############################### ROUTES END HERE ###############################
 
