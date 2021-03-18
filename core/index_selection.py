@@ -1,6 +1,6 @@
 from core.classifiers import BERTSubclassPredictor
 
-class SublassesBasedIndexSelector():
+class SubclassBasedIndexSelector():
 
 	_subclass_predict_fn = BERTSubclassPredictor().predict_subclasses
 	

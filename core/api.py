@@ -1,6 +1,6 @@
 from core.vectorizers import SentBERTVectorizer
 from core.vectorizers import CPCVectorizer
-from core.index_selection import SublassesBasedIndexSelector
+from core.index_selection import SubclassBasedIndexSelector
 from core.filters import FilterArray, PublicationDateFilter, DocTypeFilter
 from core.obvious import Combiner
 from core.indexes import IndexesDirectory
@@ -18,6 +18,7 @@ import re
 import cv2
 import os
 import markdown
+import time
 
 import boto3
 import botocore.exceptions
@@ -36,7 +37,7 @@ from bs4 import BeautifulSoup
 
 vectorize_text = SentBERTVectorizer().embed
 available_indexes = IndexesDirectory(indexes_dir)
-select_indexes = SublassesBasedIndexSelector(available_indexes).select
+select_indexes = SubclassBasedIndexSelector(available_indexes).select
 vector_search = VectorIndexSearcher().search
 extract_snippet = SnippetExtractor.extract_snippet
 generate_mapping = SnippetExtractor.map
@@ -111,7 +112,11 @@ class SearchRequest(APIRequest):
         self._n_results = int(req_data.get('n', 10))
         self._n_results += self._offset # for pagination
         
+        t0 = time.time()
         self._indexes = self._get_indexes()
+        t1 = time.time()
+        print('Time to select indexes', t1-t0)
+
         self._need_snippets = self._read_bool_value('snip')
         self._need_mappings = self._read_bool_value('maps')
         self._filters = FilterExtractor(self._data).extract()
@@ -203,8 +208,17 @@ class SearchRequest102(SearchRequest):
         super().__init__(req_data)
 
     def _searching_fn(self):
+        start = time.time()
+        t0 = time.time()
         results = self._get_results()
+        t1 = time.time()
+        print('Time for search', t1-t0)
+
+        t0 = time.time()
         results = self._rerank(results)
+        t1 = time.time()
+        print('Time for reranking', t1-t0)
+
         results = results[:self._n_results]
         return results[self._offset:]
 
@@ -244,7 +258,10 @@ class SearchRequest102(SearchRequest):
     def _formatting_fn(self, results):
         for result in results:
             self._add_snippet_if_needed(result)
+            t0 = time.time()
             self._add_mapping_if_needed(result)
+            t1 = time.time()
+            print('Time for mapping extraction', t1-t0)
             self._add_drawing_link(result)
         results = [res.json() for res in results]
         results = self._add_remote_results_to(results)
