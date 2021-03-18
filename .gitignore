@@ -17,3 +17,5 @@ __pycache__
 !models/README.md
 
 /tokens.txt
+
+/.tmuxinator.yml
