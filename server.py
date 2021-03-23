@@ -50,6 +50,10 @@ def search_102():
 def search_103():
     return create_request_and_serve(request, API.SearchRequest103)
 
+@app.route('/search/102+103/', methods=['GET'])
+def search_102_103():
+    return create_request_and_serve(request, API.SearchRequestCombined102and103)
+
 @app.route('/prior-art/patent/', methods=['GET'])
 def get_patent_prior_art():
     return create_request_and_serve(request, API.PatentPriorArtRequest)

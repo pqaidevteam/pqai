@@ -273,9 +273,11 @@ class SearchRequest103(SearchRequest):
 
     def __init__(self, req_data):
         super().__init__(req_data)
+        self._results102 = None
 
     def _searching_fn(self):
         docs = self._get_docs_to_combine()
+        self._results102 = docs
         abstracts = [doc.abstract for doc in docs]
         combiner = Combiner(self._query, abstracts)
         n = max(50, self._n_results) # see SearchRequest102 for why max used
@@ -317,6 +319,63 @@ class SearchRequest103(SearchRequest):
                 result.mapping = generate_mapping(self._query, result.full_text)
             except:
                 result.mapping = None
+
+
+class SearchRequestCombined102and103(SearchRequest103):
+
+    _name = 'Combined Search Request'
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+
+    def _searching_fn(self):
+        results103 = super()._searching_fn()
+        results102 = self._results102[:self._n_results][self._offset:]
+        results = self._merge_102_and_103_results(results102, results103)
+        return results[:self._n_results][self._offset:]
+
+    def _merge_102_and_103_results(self, results102, results103):
+        results = []
+        p1 = 0
+        p2 = 0
+        while (p1 < len(results102) and p2 < len(results103)):
+            r1 = results102[p1]
+            r2 = results103[p2]
+            if (r1.score <= min(r2[0].score, r2[1].score)):
+                results.append(r1)
+                p1 += 1
+            else:
+                results.append(r2)
+                p2 += 1
+        results += results102[p1:] + results103[p2:]
+        return results
+
+    def _formatting_fn(self, results):
+        arr = []
+        for result in results:
+            if isinstance(result, SearchResult):
+                self._add_snippet_if_needed(result)
+                self._add_mapping_if_needed(result)
+                self._add_drawing_link(result)
+                arr.append(result.json())
+            else:
+                for r in result:
+                    self._add_snippet_if_needed(r)
+                    self._add_drawing_link(r)
+                    self._add_mapping_if_needed(result)
+                arr.append([r.json() for r in result])
+        return {
+            'results': arr,
+            'query': self._query,
+            'latent_query': self._latent_query }
+
+    def _add_mapping_if_needed(self, result):
+        if self._need_mappings:
+            try:
+                result.mapping = generate_mapping(self._query, result.full_text)
+            except:
+                result.mapping = None
+
 
 
 class SimilarPatentsRequest(APIRequest):
