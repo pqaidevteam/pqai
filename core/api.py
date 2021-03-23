@@ -112,10 +112,7 @@ class SearchRequest(APIRequest):
         self._n_results = int(req_data.get('n', 10))
         self._n_results += self._offset # for pagination
         
-        t0 = time.time()
         self._indexes = self._get_indexes()
-        t1 = time.time()
-        print('Time to select indexes', t1-t0)
 
         self._need_snippets = self._read_bool_value('snip')
         self._need_mappings = self._read_bool_value('maps')
@@ -170,6 +167,10 @@ class SearchRequest(APIRequest):
         if self._need_snippets:
             result.snippet = SnippetExtractor.extract_snippet(self._query, result.full_text)
 
+    def _add_drawing_link(self, result):
+        if result.is_patent():
+            result.image = f'https://api.projectpq.ai/patents/{result.id}/thumbnails/1'
+
 
 class FilterExtractor():
 
@@ -208,17 +209,8 @@ class SearchRequest102(SearchRequest):
         super().__init__(req_data)
 
     def _searching_fn(self):
-        start = time.time()
-        t0 = time.time()
         results = self._get_results()
-        t1 = time.time()
-        print('Time for search', t1-t0)
-
-        t0 = time.time()
         results = self._rerank(results)
-        t1 = time.time()
-        print('Time for reranking', t1-t0)
-
         results = results[:self._n_results]
         return results[self._offset:]
 
@@ -258,10 +250,7 @@ class SearchRequest102(SearchRequest):
     def _formatting_fn(self, results):
         for result in results:
             self._add_snippet_if_needed(result)
-            t0 = time.time()
             self._add_mapping_if_needed(result)
-            t1 = time.time()
-            print('Time for mapping extraction', t1-t0)
             self._add_drawing_link(result)
         results = [res.json() for res in results]
         results = self._add_remote_results_to(results)
@@ -276,10 +265,6 @@ class SearchRequest102(SearchRequest):
                 result.mapping = generate_mapping(self._query, result.full_text)
             except:
                 result.mapping = None
-
-    def _add_drawing_link(self, result):
-        if result.is_patent():
-            result.image = f'https://api.projectpq.ai/patents/{result.id}/thumbnails/1'
 
 
 class SearchRequest103(SearchRequest):
@@ -317,6 +302,7 @@ class SearchRequest103(SearchRequest):
         for combination in combinations:
             for result in combination:
                 self._add_snippet_if_needed(result)
+                self._add_drawing_link(result)
             self._add_mapping_if_needed(combination)
         return {
             'results': [[r.json() for r in c] for c in combinations],
