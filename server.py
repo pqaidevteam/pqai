@@ -1,6 +1,7 @@
 
 import os
 import traceback
+import json
 import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -25,19 +26,31 @@ tokens = auth.read_tokens()
 @app.before_request
 def validate_token():
     route = request.base_url
-    extensions = ('.css', '.js', '.ico')
-    if '/drawings' in route:
-        pass
-    elif '/thumbnails' in route:
-        pass
-    elif '/docs' in route:
-        pass
-    elif route.endswith(extensions):
-        pass
-    else:
-        token = request.args.to_dict().get('token')
+    if is_behind_auth(route):
+        token = extract_token(request)
         if not token in tokens:
             return error(API.NotAllowedError('Invalid token.'))
+        else:
+            pass
+    else:
+        pass
+
+def extract_token(req):
+    method = req.method
+    if method == 'GET':
+        return req.args.to_dict().get('token')
+    elif method == 'POST':
+        return req.json.get('token')
+    else:
+        return None
+
+def is_behind_auth(route):
+    if route.endswith(('.css', '.js', '.ico')) \
+        or '/drawings' in route \
+        or '/thumbnails' in route \
+        or '/docs' in route:
+        return False
+    return True
 
 
 ################################ SEARCH ROUTES ################################
@@ -172,6 +185,13 @@ def get_patent_drawing(pn, n):
 @app.route('/docs', methods=['GET'])
 def get_docs():
     return create_request_and_serve(request, API.DocumentationRequest)
+
+@app.route('/user-rating', methods=['POST'])
+def save_user_feedback():
+    with open('user-ratings.tsv', 'a') as f:
+        f.write(json.dumps(request.json))
+        f.write('\n')
+    return success({ 'success': True })
 
 ############################### ROUTES END HERE ###############################
 
