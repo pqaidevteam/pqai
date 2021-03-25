@@ -132,6 +132,17 @@ class Document:
 			text = self.title + '\n' + self.abstract
 		return text
 
+	@property
+	def inventors(self):
+		if self.type == 'patent':
+			return self.data['inventors']
+		else:
+			return [e['name'] for e in self.data['authors']]
+
+	@property
+	def alias(self):
+		return utils.get_faln(self.inventors)
+
 	def json(self):
 		return dict(
 			id = self.id,
@@ -142,7 +153,9 @@ class Document:
 			publication_date = self.publication_date,
 			www_link = self.www_link,
 			owner = self.owner,
-			image = self.image if hasattr(self, 'image') else None
+			image = self.image if hasattr(self, 'image') else None,
+			alias = self.alias,
+			inventors = self.inventors
 		)
 
 class Patent (Document):
