@@ -20,9 +20,14 @@ import os
 import markdown
 import time
 
+from config.config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 import boto3
 import botocore.exceptions
-s3 = boto3.resource('s3')
+session = boto3.Session(
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+)
+s3 = session.resource('s3')
 from config.config import PQAI_S3_BUCKET_NAME
 
 from PIL import Image

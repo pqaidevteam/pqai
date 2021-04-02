@@ -4,7 +4,14 @@ import json
 
 from config.config import mongo_host, mongo_port
 from config.config import mongo_dbname, mongo_pat_coll, mongo_npl_coll
-from config.config import patents_dir
+
+from config.config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+import boto3
+import botocore.exceptions
+botoclient = boto3.client('s3',
+						  aws_access_key_id=AWS_ACCESS_KEY_ID,
+						  aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+from config.config import PQAI_S3_BUCKET_NAME
 
 client = MongoClient(mongo_host, mongo_port)
 pat_coll = client[mongo_dbname][mongo_pat_coll]
@@ -30,10 +37,14 @@ def get_patent_data (pn, only_bib=False):
 		query = { 'publicationNumber': pn }
 		patent_data = pat_coll.find_one(query)
 	else:
-		path = f'{patents_dir}{pn}.json'
-		with open(path) as file:
-			patent_data = json.load(file)
-	return patent_data
+		try:
+			bucket = PQAI_S3_BUCKET_NAME
+			key = f'patents/{pn}.json'
+			obj = botoclient.get_object(Bucket=bucket, Key=key)
+			contents = obj["Body"].read().decode()
+			return json.loads(contents)
+		except botocore.exceptions.ClientError:
+		    return None
 
 def get_full_text (pn):
 	r"""Return abstract, claims, and description of the patent as a

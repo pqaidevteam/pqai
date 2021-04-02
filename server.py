@@ -1,10 +1,10 @@
-
+from waitress import serve
 import os
 import traceback
 import json
 import logging
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
+log = logging.getLogger('waitress')
+log.setLevel(logging.INFO)
 
 from config import config
 if config.gpu_disabled:
@@ -12,6 +12,17 @@ if config.gpu_disabled:
 
 from flask import request, send_file
 from flask_api import FlaskAPI, status, exceptions
+
+if config.sentry_url:
+    print('Sentry is active. Errors and performance data will be reported.')
+    import sentry_sdk
+    from flask import Flask
+    from sentry_sdk.integrations.flask import FlaskIntegration
+    sentry_sdk.init(
+        dsn=config.sentry_url,
+        integrations=[FlaskIntegration()],
+        traces_sample_rate=1.0
+    )
 
 app = FlaskAPI(__name__)
 app.url_map.strict_slashes = False
@@ -234,5 +245,4 @@ def error(e):
 
 
 if __name__ == '__main__':
-    from waitress import serve
     serve(app, host='0.0.0.0', port=config.port)

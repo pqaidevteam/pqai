@@ -19,3 +19,4 @@ __pycache__
 /tokens.txt
 
 /.tmuxinator.yml
+/.env
