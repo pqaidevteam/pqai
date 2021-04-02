@@ -139,7 +139,11 @@ class SearchRequest(APIRequest):
             index_in_req = self._data['idx']
             return available_indexes.get(index_in_req)
         elif index_selection_disabled:
-            return list(available_indexes.available())
+            idx_ids = available_indexes.available()
+            indexes = []
+            for idx_id in set(idx_ids):
+                indexes += available_indexes.get(idx_id)
+            return indexes
         else:
             return select_indexes(self._full_query, 3)
 
