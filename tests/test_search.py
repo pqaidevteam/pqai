@@ -1,6 +1,9 @@
 import unittest
 import numpy as np
 
+import os
+os.environ['TEST'] = '1'
+
 import sys
 from pathlib import Path
 TEST_DIR = str(Path(__file__).parent.resolve())
@@ -24,19 +27,19 @@ class TestVectorIndexSearcher(unittest.TestCase):
 		self.unitvec = np.ones(self.indexes.dims)
 
 	def test_can_search_in_one_index(self):
-		results = self.search(self.unitvec, 'H04W.abs', 10)
+		results = self.search(self.unitvec, 'Y02T.abs', 10)
 		self.assertGreater(len(results), 0)
 
 	def test_can_search_in_multiple_indexes(self):
-		results = self.search(self.unitvec, 'H04W', 10)
+		results = self.search(self.unitvec, 'Y02T', 10)
 		self.assertGreaterEqual(len(results), 10)
 
 	def test_ask_for_zero_results(self):
-		results = self.search(self.unitvec, 'H04W', 0)
+		results = self.search(self.unitvec, 'Y02T', 0)
 		self.assertCount(0, results)
 
 	def test_ask_for_negative_results(self):
-		results = self.search(self.unitvec, 'H04W', -1)
+		results = self.search(self.unitvec, 'Y02T', -1)
 		self.assertCount(0, results)
 
 	def search(self, needle, haystack, n):

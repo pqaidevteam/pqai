@@ -389,7 +389,7 @@ class TestPatentDescriptionRequestClass(unittest.TestCase):
 
 class TestCitationsRequestClass(unittest.TestCase):
     
-    def test_get_description(self):
+    def test_get_citations(self):
         pn = 'US7654321B2'
         response = CitationsRequest({'pn': pn}).serve()
         self.assertIsInstance(response['citations_backward'], list)

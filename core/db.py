@@ -36,6 +36,7 @@ def get_patent_data (pn, only_bib=False):
 	if only_bib:
 		query = { 'publicationNumber': pn }
 		patent_data = pat_coll.find_one(query)
+		return patent_data
 	else:
 		try:
 			bucket = PQAI_S3_BUCKET_NAME
@@ -45,6 +46,9 @@ def get_patent_data (pn, only_bib=False):
 			return json.loads(contents)
 		except botocore.exceptions.ClientError:
 		    return None
+
+def get_bibliography(pn):
+	return get_patent_data(pn, only_bib=True)
 
 def get_full_text (pn):
 	r"""Return abstract, claims, and description of the patent as a
