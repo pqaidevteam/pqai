@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   search_server:
-    image: pqai_api
+    image: pqai
     stdin_open: true
     tty: true
     restart: always
@@ -13,6 +13,11 @@ services:
     environment:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      API_PORT: ${API_PORT}
       PQAI_S3_BUCKET_NAME: ${PQAI_S3_BUCKET_NAME}
+      API_PORT: ${API_PORT}
       SENTRY_URL: ${SENTRY_URL}
+      MONGO_PORT: ${MONGO_PORT}
+      MONGO_HOST: ${MONGO_HOST}
+      MONGO_DBNAME: ${MONGO_DBNAME}
+      MONGO_PAT_COLL: ${MONGO_PAT_COLL}
+      MONGO_NPL_COLL: ${MONGO_NPL_COLL}
