@@ -1,0 +1,11 @@
+.git
+.env
+.gitignore
+*.md
+docker-compose.yml
+Dockerfile
+tokens.txt
+user-ratings.tsv
+/indexes
+/models
+/__pycache__
