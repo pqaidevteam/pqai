@@ -24,7 +24,7 @@ class TestVectorIndexSearcher(unittest.TestCase):
 		self.unitvec = np.ones(self.indexes.dims)
 
 	def test_can_search_in_one_index(self):
-		results = self.search(self.unitvec, 'H04W.ttl', 10)
+		results = self.search(self.unitvec, 'H04W.abs', 10)
 		self.assertGreater(len(results), 0)
 
 	def test_can_search_in_multiple_indexes(self):

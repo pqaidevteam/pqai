@@ -7,7 +7,12 @@ if os.path.isfile(env_file):
     from dotenv import load_dotenv
     load_dotenv(env_file)
 
-indexes_dir = f'{base_dir}/indexes/'
+if os.environ['TEST']:
+    indexes_dir = f'{base_dir}/tests/test_indexes/'
+    print('Application in test mode; Test indexes will be used.')
+else:
+    indexes_dir = f'{base_dir}/indexes/'
+
 models_dir = f'{base_dir}/models/'
 docs_dir = f'{base_dir}/docs/'
 tokens_file = f'{base_dir}/tokens.txt'

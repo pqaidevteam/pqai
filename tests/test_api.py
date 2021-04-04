@@ -3,6 +3,7 @@ import unittest
 # Run tests without using GPU
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ['TEST'] = "1"
 
 import sys
 from pathlib import Path
@@ -88,10 +89,10 @@ class TestRequestClass(unittest.TestCase):
 class TestSearchRequest102Class(unittest.TestCase):
 
     def setUp(self):
-        self.query = 'fire fighting drones'
-        self.date = '2012-12-12'
-        self.subclass = 'A62C'
-        self.latent_query = 'drone uses dry ice canisters'
+        self.query = 'reducing carbon emissions'
+        self.date = '2017-12-12'
+        self.subclass = 'Y02T'
+        self.latent_query = 'by using green technologies'
 
     def test_simple_search_request(self):
         results = self.search({ 'q': self.query })

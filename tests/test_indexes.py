@@ -1,5 +1,8 @@
 import unittest
 
+import os
+os.environ['TEST'] = "1"
+
 import sys
 from pathlib import Path
 TEST_DIR = str(Path(__file__).parent.resolve())
@@ -10,13 +13,14 @@ import numpy as np
 from core.indexes import Index, IndexesDirectory
 from core.indexes import AnnoyIndexReader, AnnoyIndex
 from core.query import VectorQuery
+from config.config import indexes_dir
 
 
 class TestAnnoyIndexReaderClass(unittest.TestCase):
 
 	def test_read_from_json_ann_files(self):
-		ann_file = f'{TEST_DIR}/test_Y04S.ttl.ann'
-		json_file = f'{TEST_DIR}/test_Y04S.ttl.items.json'
+		ann_file = f'{indexes_dir}Y02T.ttl.ann'
+		json_file = f'{indexes_dir}Y02T.ttl.items.json'
 		reader = AnnoyIndexReader(768, 'angular')
 		index = reader.read_from_ann_json(ann_file, json_file)
 		self.assertIsInstance(index, AnnoyIndex)
@@ -25,8 +29,8 @@ class TestAnnoyIndexReaderClass(unittest.TestCase):
 class TestAnnoyIndexClass(unittest.TestCase):
 
 	def setUp(self):
-		ann_file = f'{TEST_DIR}/test_Y04S.ttl.ann'
-		json_file = f'{TEST_DIR}/test_Y04S.ttl.items.json'
+		ann_file = f'{indexes_dir}/Y02T.ttl.ann'
+		json_file = f'{indexes_dir}/Y02T.ttl.items.json'
 		reader = AnnoyIndexReader(768, 'angular')
 		self.index = reader.read_from_ann_json(ann_file, json_file)
 
@@ -42,11 +46,10 @@ class TestAnnoyIndexClass(unittest.TestCase):
 class TestIndexesDirectory(unittest.TestCase):
 
 	def setUp(self):
-		path = f'{BASE_DIR}/indexes'
-		self.indexes = IndexesDirectory(path)
+		self.indexes = IndexesDirectory(indexes_dir)
 
 	def test_can_get_indexes(self):
-		indexes = self.get_index('H04W')
+		indexes = self.get_index('Y02T')
 		are_index_objects = [isinstance(idx, AnnoyIndex) for idx in indexes]
 		self.assertTrue(all(are_index_objects))
 		self.assertEqual(3, len(indexes))
