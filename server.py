@@ -32,38 +32,14 @@ import core.api as API
 ############################### AUTHENTICATION ###############################
 
 import auth
-tokens = auth.read_tokens()
 
 @app.before_request
 def validate_token():
-    route = request.base_url
-    if is_behind_auth(route):
-        token = extract_token(request)
-        if not token in tokens:
-            return error(API.NotAllowedError('Invalid token.'))
-        else:
-            pass
-    else:
+    if auth.validate_access(request):
         pass
-
-def extract_token(req):
-    method = req.method
-    if method == 'GET':
-        return req.args.to_dict().get('token')
-    elif method == 'POST':
-        return req.json.get('token')
     else:
-        return None
-
-def is_behind_auth(route):
-    if route.endswith(('.css', '.js', '.ico')) \
-        or '/drawings' in route \
-        or '/thumbnails' in route \
-        or '/docs' in route:
-        return False
-    return True
-
-
+        return error(API.NotAllowedError('Invalid token.'))
+   
 ################################ SEARCH ROUTES ################################
 
 @app.route('/search/102/', methods=['GET'])
@@ -245,4 +221,4 @@ def error(e):
 
 
 if __name__ == '__main__':
-    serve(app, host='0.0.0.0', port=config.port)
+    serve(app, host='0.0.0.0', port=config.port, asyncore_use_poll=True)
