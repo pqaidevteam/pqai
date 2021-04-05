@@ -25,7 +25,7 @@ mongo_pat_coll = os.environ['MONGO_PAT_COLL']
 mongo_npl_coll = os.environ['MONGO_NPL_COLL']
 
 index_selection_disabled = not bool(int(os.environ['SMART_INDEX_SELECTION']))
-if os.environ['TEST']:
+if os.environ.get('TEST'):
     index_selection_disabled = True
 if index_selection_disabled:
     print('WARNING: Index selection is inactive. Search may be slow.')
