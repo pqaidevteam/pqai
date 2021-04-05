@@ -2,6 +2,7 @@ import numpy as np
 import annoy
 import json
 import os
+import faiss
 
 from config.config import indexes_dir
 
@@ -31,7 +32,7 @@ class AnnoyIndexReader():
         self._dims = dims
         self._metric = metric
 
-    def read_from_ann_json(self, ann_file, json_file, name=None):
+    def read_from_files(self, ann_file, json_file, name=None):
         index = self._read_ann(ann_file)
         items = self._get_items_from_json(json_file)
         item_resolver = items.__getitem__
@@ -85,19 +86,70 @@ class AnnoyIndex(VectorIndex):
     @property
     def name(self):
         return self._name
-    
 
 
 class FaissIndexReader():
 
-    def __init__(self, directory, idx_name):
-        pass
+    def read_from_files(self, index_file, json_file, name=None):
+        index = faiss.read_index(index_file)
+        items = self._get_items_from_json(json_file)
+        item_resolver = items.__getitem__
+        return FaissIndex(index, item_resolver, name)
+
+    def _get_items_from_json(self, json_file):
+        with open(json_file) as fp:
+            items = json.load(fp)
+        return items
 
 
 class FaissIndex(VectorIndex):
 
-    def __init__(self):
-        pass
+    def __init__(self, index=None, resolver_fn=None, name=None):
+        self._id = name
+        self._index = index
+        self._index2label = resolver_fn
+        self._labels = None
+        self._dims = None
+
+    def _search_fn(self, qvec, n):
+        Q = self._preprocess([qvec])
+        ds, ns = self._index.search(Q, n)
+        items = [self._index2label(i) for i in ns[0]]
+        dists = [d for d in ds[0]]
+        return list(zip(items, dists))
+
+    # TODO: Move this to indexer
+    def add_vectors(self, vectors, labels):
+        if len(vectors) != len(labels):
+            raise ValueError('Vector must map one-to-one with labels.')
+        X = self._preprocess(vectors)
+        if self._index is None:
+            self._init(X)
+        self._index.add(X)
+        self._labels += labels
+        self._save()
+
+    def _init(self, X):
+        self._dims = X.shape[1]
+        self._labels = []
+        self._index = faiss.index_factory(self._dims, "OPQ16_64,HNSW32")
+        self._index.train(X)
+
+    def _preprocess(self, vectors):
+        X = np.array(vectors).astype('float32')
+        faiss.normalize_L2(X)
+        return X
+
+    def _save(self):
+        index_file = f'{self._index_dir}/{self._id}.faiss'
+        labels_file = f'{self._index_dir}/{self._id}.labels.json'
+        faiss.write_index(self._index, index_file)
+        with open(labels_file, 'w') as fp:
+            json.dump(self._labels, fp)
+
+    @property
+    def name(self):
+        return self._id
 
 
 class IndexesDirectory():
@@ -112,8 +164,9 @@ class IndexesDirectory():
 
     def _discover_indexes(self):
         files = os.scandir(self._folder)
-        ann_files = [f for f in files if f.name.endswith('.ann')]
-        index_ids = [f.name[:-4] for f in ann_files]
+        exts = ('.ann', '.faiss')
+        index_files = [f for f in files if f.name.endswith(exts)]
+        index_ids = ['.'.join(f.name.split('.')[:-1]) for f in index_files]
         return set(index_ids)
 
     def get(self, index_id):
@@ -127,12 +180,20 @@ class IndexesDirectory():
         return self._get_from_disk(index_id)
 
     def _get_from_disk(self, index_id):
-        ann_file = f'{self._folder}/{index_id}.ann'
+        index_file = self._get_index_file_path(index_id)
         json_file = f'{self._folder}/{index_id}.items.json'
-        reader = AnnoyIndexReader(self.dims, self.metric)
-        index = reader.read_from_ann_json(ann_file, json_file, name=index_id)
+        if index_file.endswith('faiss'):
+            reader = FaissIndexReader()
+        else:
+            reader = AnnoyIndexReader(self.dims, self.metric)
+        index = reader.read_from_files(index_file, json_file, name=index_id)
         self._cache_index(index_id, index)
         return index
+
+    def _get_index_file_path(self, index_id):
+        ann_file = f'{self._folder}/{index_id}.ann'
+        faiss_file = f'{self._folder}/{index_id}.faiss'
+        return faiss_file if (os.path.exists(faiss_file)) else ann_file
 
     def _cache_index(self, index_id, index):
         self.cache[index_id] = index
