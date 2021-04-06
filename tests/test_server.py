@@ -12,12 +12,20 @@ BASE_DIR = str(Path(__file__).parent.parent.resolve())
 sys.path.append(BASE_DIR)
 
 from config.config import port as PORT
-HOST = '127.0.0.1' 	# Server on which the PQAI server is running
+
+if len(sys.argv) > 1:
+	HOST = sys.argv[1]
+else:
+	HOST = '127.0.0.1'
+print(f'Testing PQAI API on {HOST}:{PORT}')
+
 API_TEST_TOKEN = 'test_token_asdf77bc3a9f'
 
 import socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_not_running = sock.connect_ex((HOST, PORT)) != 0
+if server_not_running:
+	print('Server is not running. All API tests will be skipped.')
 
 @unittest.skipIf(server_not_running, 'Works only when true')
 class TestRoutes(unittest.TestCase):
@@ -86,4 +94,6 @@ class TestRoutes(unittest.TestCase):
 
 
 if __name__ == '__main__':
+	while len(sys.argv) > 1:
+		sys.argv.pop()
 	unittest.main()
