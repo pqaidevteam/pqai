@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import sys
 base_dir = str((Path(__file__).parent / '../').resolve())
 
 env_file = f'{base_dir}/.env'
@@ -13,6 +14,13 @@ if os.environ.get('TEST'):
     print('Application in test mode. Test indexes will be used.')
 else:
     indexes_dir = f'{base_dir}/indexes/'
+
+use_faiss_indexes = bool(int(os.environ.get('USE_FAISS_INDEXES')))
+use_annoy_indexes = bool(int(os.environ.get('USE_ANNOY_INDEXES')))
+
+if not (use_faiss_indexes or use_annoy_indexes):
+    print('Bad config! At least one index type must be activated.')
+    sys.exit('App will now exit. Edit application config and try again')
 
 models_dir = f'{base_dir}/models/'
 docs_dir = f'{base_dir}/docs/'

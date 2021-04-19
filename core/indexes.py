@@ -115,7 +115,7 @@ class FaissIndex(VectorIndex):
         Q = self._preprocess([qvec])
         ds, ns = self._index.search(Q, n)
         items = [self._index2label(i) for i in ns[0]]
-        dists = [d for d in ds[0]]
+        dists = [float(d) for d in ds[0]]
         return list(zip(items, dists))
 
     # TODO: Move this to indexer
