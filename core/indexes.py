@@ -5,6 +5,7 @@ import os
 import faiss
 
 from config.config import indexes_dir
+from config import config
 
 class Index():
 
@@ -157,6 +158,8 @@ class IndexesDirectory():
     cache = {}
     dims = 768
     metric = 'angular'
+    use_faiss_indexes = config.use_faiss_indexes
+    use_annoy_indexes = config.use_annoy_indexes
 
     def __init__(self, folder):
         self._folder = folder
@@ -164,8 +167,11 @@ class IndexesDirectory():
 
     def _discover_indexes(self):
         files = os.scandir(self._folder)
-        exts = ('.ann', '.faiss')
-        index_files = [f for f in files if f.name.endswith(exts)]
+        index_files = []
+        if self.use_faiss_indexes:
+            index_files += [f for f in files if f.name.endswith('.faiss')]
+        if self.use_annoy_indexes:
+            index_files += [f for f in files if f.name.endswith('.ann')]
         index_ids = ['.'.join(f.name.split('.')[:-1]) for f in index_files]
         return set(index_ids)
 
