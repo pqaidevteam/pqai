@@ -39,7 +39,7 @@ Request type: `GET`
 
 Response type: `JSON` string
 
-Request parameters: [Same as for `/document/` route]
+Request parameters: [Same as for `/search/102/` route]
 
 ###  3. Retrieve prior-art for a patent  (documents published before the filing date)
 
