@@ -9,6 +9,7 @@ sys.path.append(str(BASE_DIR.resolve()))
 
 from core.filters import Filter, FilterArray
 from core.filters import PublicationDateFilter, FilingDateFilter
+from core.filters import KeywordFilter
 from core.documents import Document
 
 class TestFilter(unittest.TestCase):
@@ -110,6 +111,42 @@ class TestFilingDateFilter(unittest.TestCase):
 
 class TestPriorityDateFilter(unittest.TestCase):
 	pass
+
+
+class TestKeywordFilter(unittest.TestCase):
+	
+	def setUp(self):
+		self.doc = Document('US7654321B2')
+
+	def test_simplest_keyword_match(self):
+		criterion = KeywordFilter('downhole')
+		self.assertTrue(criterion.passed_by(self.doc))
+		criterion = KeywordFilter('downholes')
+		self.assertFalse(criterion.passed_by(self.doc))
+
+	def test_casing_doesnt_matter(self):
+		criterion = KeywordFilter('DoWnHoLE')
+		self.assertTrue(criterion.passed_by(self.doc))
+
+	def test_asterisk_usage(self):
+		criterion = KeywordFilter('downho*')
+		self.assertTrue(criterion.passed_by(self.doc))
+		criterion = KeywordFilter('dow*ole')
+		self.assertTrue(criterion.passed_by(self.doc))
+		criterion = KeywordFilter('downhole*')
+		self.assertTrue(criterion.passed_by(self.doc))
+
+	def test_underscore_usage(self):
+		criterion = KeywordFilter('down_hole')
+		self.assertTrue(criterion.passed_by(self.doc))
+		criterion = KeywordFilter('logging_while_drilling')
+		self.assertTrue(criterion.passed_by(self.doc))
+
+	def test_single_letter_wildcard_usage(self):
+		criterion = KeywordFilter('downhol?')
+		self.assertTrue(criterion.passed_by(self.doc))
+		criterion = KeywordFilter('downhole?')
+		self.assertTrue(criterion.passed_by(self.doc))
 
 
 if __name__ == '__main__':

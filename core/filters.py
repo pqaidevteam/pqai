@@ -1,4 +1,5 @@
 from dateutil.parser import parse as parse_date
+import re
 
 class Filter():
 
@@ -94,6 +95,24 @@ class AssigneeFilter(Filter):
 	def __init__(self, name):
 		self._name = name
 		self._filter_fn = lambda doc: doc.owner == self._name
+
+class KeywordFilter(Filter):
+
+	def __init__(self, keyword):
+		self._keyword = keyword
+		self._regex = self._create_regex(keyword)
+
+	def _filter_fn(self, doc):
+		text = doc.full_text.lower()
+		return re.search(self._regex, text)
+
+	def _create_regex(self, keyword):
+		regex = keyword.lower()
+		regex = re.sub(r'\*+', r'\\w*', regex)
+		regex = re.sub(r'\?+', r'\\w?', regex)
+		regex = re.sub('_+', r'[\\_\\-\\s]?', regex)
+		regex = rf'\b{regex}\b'
+		return regex
 
 class InventorFilter(Filter):
 	pass
