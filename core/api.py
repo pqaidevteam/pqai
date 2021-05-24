@@ -1,7 +1,8 @@
 from core.vectorizers import SentBERTVectorizer
 from core.vectorizers import CPCVectorizer
 from core.index_selection import SubclassBasedIndexSelector
-from core.filters import FilterArray, PublicationDateFilter, DocTypeFilter
+from core.filters import FilterArray, PublicationDateFilter
+from core.filters import DocTypeFilter, KeywordFilter
 from core.obvious import Combiner
 from core.indexes import IndexesDirectory
 from core.search import VectorIndexSearcher
@@ -190,10 +191,14 @@ class FilterExtractor():
         filters = FilterArray()
         date_filter = self._get_date_filter()
         doctype_filter = self._get_doctype_filter()
+        keyword_filters = self._get_keyword_filters()
         if date_filter:
             filters.add(date_filter)
         if doctype_filter:
             filters.add(doctype_filter)
+        if keyword_filters:
+            for fltr in keyword_filters:
+                filters.add(fltr)
         return filters
 
     def _get_date_filter(self):
@@ -208,6 +213,13 @@ class FilterExtractor():
         doctype = self._data.get('type')
         if doctype:
             return DocTypeFilter(doctype)
+
+    def _get_keyword_filters(self):
+        query = self._data.get('q', '')
+        keywords = re.findall(r'\`([\w\*\?]+)\`', query)
+        if not keywords:
+            return None
+        return [KeywordFilter(keyword) for keyword in keywords]
 
 
 class SearchRequest102(SearchRequest):
