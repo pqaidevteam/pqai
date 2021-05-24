@@ -886,14 +886,20 @@ class ConceptRelatedRequest(APIRequest):
 
 class SimilarConceptsRequest(ConceptRelatedRequest):
 
+    LIMIT = 100 # max similar concepts that can be returned
+
     def __init__(self, req_data):
         super().__init__(req_data)
+        self._n = int(self._data.get('n', 10))
+        self._n = min(self._n, self.LIMIT)
 
     def _serving_fn(self):
         if not self._concept in default_embedding_matrix:
             raise ResourceNotFoundError(f'No vector for "{self._concept}"')
 
-        neighbours = default_embedding_matrix.similar_to_item(self._concept)
+        n = 2*self._n  # because some will be filtered out
+        neighbours = default_embedding_matrix.similar_to_item(self._concept, n)
+        neighbours = [e for e in neighbours if self._concept not in e][:self._n]
         return {'similar': neighbours}
 
 

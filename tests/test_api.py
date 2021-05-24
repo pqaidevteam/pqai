@@ -482,7 +482,13 @@ class TestSimilarConceptsRequestClass(unittest.TestCase):
     def test_get_similar_concepts_to_vehicle(self):
         response = SimilarConceptsRequest({'concept': 'vehicle'}).serve()
         self.assertIsInstance(response['similar'], list)
-        self.assertEqual(10, len(response['similar']))
+        self.assertGreater(len(response['similar']), 0)
+
+    def test_return_custom_number_of_concepts(self):
+        request = {'concept': 'vehicle', 'n': 13}
+        response = SimilarConceptsRequest(request).serve()
+        self.assertIsInstance(response['similar'], list)
+        self.assertEqual(13, len(response['similar']))
 
     def test_raises_error_on_invalid_concept(self):
         attempt = lambda: SimilarConceptsRequest({'concept': 'django'}).serve()
