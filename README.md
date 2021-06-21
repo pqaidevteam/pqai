@@ -23,7 +23,7 @@ You would need the following:
 
 ## License
 
-The project is licensed under the [TBD] license.
+The project is licensed under the MIT license.
 
 ## Support
 
