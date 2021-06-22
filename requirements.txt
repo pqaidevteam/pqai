@@ -81,7 +81,7 @@ torch==1.8.1
 tqdm==4.59.0
 transformers==4.4.2
 typing-extensions==3.7.4.3
-urllib3==1.26.4
+urllib3==1.26.5
 waitress==2.0.0
 Werkzeug==1.0.1
 wrapt==1.12.1
