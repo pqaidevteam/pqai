@@ -2,7 +2,7 @@
 
 An AI-powered tool for running prior-art checks.
 
-PQAI takes plain language invention description as input and finds similar prior work within patents and research articles. It uses a number of ML models to parse the input, find similar prior-art, and present the results. The models have been trained on publicly available patent examination records of USPTO.
+PQAI takes plain language invention description as input and finds similar prior work within patents and other technical literature. It uses a number of machine learning (ML) models to parse the input, find similar prior-art, and present the results. The ML models of PQAI have been trained on past patent examination records.
 
 ## Web-app
 
@@ -23,7 +23,7 @@ You would need the following:
 
 ## License
 
-The project is licensed under the MIT license.
+The project is open-source under the MIT license.
 
 ## Support
 
@@ -31,7 +31,7 @@ Please create an issue if you need help.
 
 ## Contribute
 
-We welcome contributions. Please take a look at our [contributions guide](./CONTRIBUTING.md).
+We welcome contributions. Please take a look at our [guidelines](./CONTRIBUTING.md) to understand how you can contribute to PQAI.
 
 ## Contact
 
