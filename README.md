@@ -4,6 +4,8 @@ An AI-powered tool for running prior-art checks.
 
 PQAI takes plain language invention description as input and finds similar prior work within patents and other technical literature. It uses a number of machine learning (ML) models to parse the input, find similar prior-art, and present the results. The ML models of PQAI have been trained on past patent examination records.
 
+![PQAI Architecture](docs/architecture.png)
+
 ## Web-app
 
 Use [projectPQ.AI](https://projectpq.ai/search) to run prior-art searches.
