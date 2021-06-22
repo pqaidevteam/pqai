@@ -31,7 +31,7 @@ Please create an issue if you need help.
 
 ## Contribute
 
-We welcome contributions. Please take a look at our contributions guide.
+We welcome contributions. Please take a look at our [contributions guide](./CONTRIBUTING.md).
 
 ## Contact
 
