@@ -8,7 +8,7 @@ PQAI takes plain language invention description as input and finds similar prior
 
 ## Web-app
 
-Use [projectPQ.AI](https://projectpq.ai/search) to run prior-art searches.
+Use [search.projectpq.ai](https://search.projectpq.ai) to run prior-art searches.
 
 ## API Access
 
