@@ -51,9 +51,13 @@ Response type: `JSON` string
 
 Request parameters
 
-| Parameter | Value  | Meaning            | Example         |
-| --------- | ------ | ------------------ | --------------- |
-| `pn`      | String | Publication number | `"US7654321B2"` |
+| Parameter | Value   | Meaning                       | Example                              |
+| --------- | ------- | ----------------------------- | ------------------------------------ |
+| `pn`      | String  | Publication number            | `"US7654321B2"`                      |
+| `n`       | Integer | No. of results                | `10`                                 |
+| `offset`  | Integer | Pagination offset (0-indexed) | `10` (for skipping first 10 results) |
+| `index`   | String  | CPC subclass                  | `"H04W"` (`"auto"` for auto-select)  |
+| `type`    | String  | Document type                 | `"patent"` or `"npl"`                |
 
 ###  4. Retrieve similar documents to a patent
 
@@ -63,7 +67,7 @@ Request type: `GET`
 
 Response type: `JSON` string
 
-Request parameters: [Same as `/prior-art/` route]
+Request parameters: [Same as `/prior-art/patent/` route]
 
 ###  5. Retrieve snippet for a query-document pair
 
@@ -178,10 +182,14 @@ Response type: `JSON` string
 
 Path parameters
 
-| Parameter | Value   | Meaning                   | Example       |
-| --------- | ------- | ------------------------- | ------------- |
-| `pn`      | String  | Patent Number             | `US7654321B2` |
-| `n`       | Integer | Thumbnail (drawing) index | `3`           |
+| Parameter | Value   | Meaning                                | Example       |
+| --------- | ------- | -------------------------------------- | ------------- |
+| `pn`      | String  | Patent Number                          | `US7654321B2` |
+| `n`       | Integer | Thumbnail (drawing) index              | `3`           |
+| `h`       | Integer | Thumbnail height (in pixels, optional) | `300`         |
+| `w`       | Integer | Thumbnail width (in pixels, optional)  | `400`         |
+
+To maintain the aspect ratio of the thumbnail, it is recommended to send only of the two parameters `h` and `w`. The other will be computed automatically. If both parameters are supplied and they violate the original aspect ratio of the image, then the thumbnail would look unnaturally stretched along x- or the y-axis.
 
 NOTE: Authentication token is NOT required for this route.
 
