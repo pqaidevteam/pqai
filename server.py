@@ -163,11 +163,11 @@ def list_patent_drawings(pn):
 
 @app.route('/patents/<pn>/thumbnails/<n>', methods=['GET'])
 def get_thumbnail(pn, n):
-    return create_request_and_serve_jpg({'pn': pn, 'n': n}, API.ThumbnailRequest)
+    return create_request_and_serve_jpg(request, API.ThumbnailRequest)
 
 @app.route('/patents/<pn>/drawings/<n>/', methods=['GET'])
 def get_patent_drawing(pn, n):
-    return create_request_and_serve_jpg({'pn': pn, 'n': n}, API.DrawingRequest)
+    return create_request_and_serve_jpg(request, API.DrawingRequest)
 
 @app.route('/docs', methods=['GET'])
 def get_docs():
@@ -192,7 +192,7 @@ def create_request_and_serve(req, reqClass):
 
 def create_request_and_serve_jpg(req, reqClass):
     try:
-        req_data = req if isinstance(req, dict) else req.args.to_dict()
+        req_data = {**request.view_args, **req.args.to_dict()} 
         file_path_local = reqClass(req_data).serve()
         return send_file(file_path_local, mimetype='image/jpeg')
     except Exception as e:

@@ -398,7 +398,6 @@ class SearchRequestCombined102and103(SearchRequest103):
                 result.mapping = None
 
 
-
 class SimilarPatentsRequest(APIRequest):
 
     def __init__(self, req_data):
@@ -824,19 +823,35 @@ class ListThumbnailsRequest(ListDrawingsRequest):
 
 class ThumbnailRequest(DrawingRequest):
 
+    DEFAULT_HEIGHT = 200
+
     def __init__(self, req_data):
         super().__init__(req_data)
-        self._h = 200
-        self._w = None
+        self._h = req_data.get('h')
+        self._w = req_data.get('w')
+        self._h = None if self._h is None else int(self._h)
+        self._w = None if self._w is None else int(self._w)
+        if self._h is None and self._w is None:
+            self._h = self.DEFAULT_HEIGHT
+
+    def _validation_fn(self):
+        super()._validation_fn()
+        for dimension in ('w', 'h'):
+            if self._data.get(dimension) is None:
+                continue
+            if not re.match(r'^\d+$', str(self._data[dimension])):
+                raise BadRequestError('Thumbnail size must be an integer')
+            elif int(self._data[dimension]) > 800:
+                raise BadRequestError('Thumbnail dimensions must be <= 800')
 
     def _serving_fn(self):
         im_path = super()._serving_fn()
         im = cv2.imread(im_path)
-        im = self._do_scaling(im)
+        im = self._downscale(im)
         cv2.imwrite(im_path, im) # Overwrite the original
         return im_path
 
-    def _do_scaling(self, im):
+    def _downscale(self, im):
         h, w = self._get_out_dims(im)
         im = cv2.resize(im, (w, h), interpolation=cv2.INTER_AREA)
         return im
