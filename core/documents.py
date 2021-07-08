@@ -193,6 +193,14 @@ class Patent (Document):
 		return [clm for clm in self.claims if not re.search(pattern, clm)]
 
 	@property
+	def art_unit(self):
+		try:
+			examiner = self.data['examinersDetails']['details'][0]
+			return examiner['name']['department']
+		except:
+			return None
+
+	@property
 	def forward_citations(self):
 		biblio = db.get_patent_data(self.id, True)
 		return biblio['forwardCitations']
