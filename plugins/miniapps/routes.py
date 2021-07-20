@@ -1,3 +1,9 @@
+import sys
+from pathlib import Path
+BASE_DIR = str(Path(__file__).parent.resolve())
+sys.path.append(BASE_DIR)
+
+from flask import request
 from __main__ import app, create_request_and_serve
 import api as API
 

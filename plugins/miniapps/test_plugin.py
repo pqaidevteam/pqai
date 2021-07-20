@@ -2,7 +2,6 @@ import unittest
 
 import sys
 from pathlib import Path
-test_dir = str(Path(__file__).parent.resolve())
 BASE_DIR = str(Path(__file__).parent.parent.parent.resolve())
 sys.path.append(BASE_DIR)
 

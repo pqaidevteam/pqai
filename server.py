@@ -219,7 +219,7 @@ def error(e):
         msg = e.message if e.message else 'Resource not found'
         return msg, status.HTTP_404_NOT_FOUND
 
-from plugins.miniapps.routes
+import plugins.miniapps.routes
 
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=config.port, asyncore_use_poll=True)
