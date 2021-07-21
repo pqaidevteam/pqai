@@ -40,10 +40,10 @@ class CPCDefinitionRetriever(metaclass=Singleton):
         return definition
 
     def _partial_def(self, symbol):
-        return self._lut.get(symbol)['title_full']
+        return self._lut.get(symbol)['title_part']
 
     def _full_def(self, symbol):
-        return self._lut.get(symbol)['title_part']
+        return self._lut.get(symbol)['title_full']
 
     def _get_parents(self, symbol):
         return self._lut.get(symbol)['parents']
