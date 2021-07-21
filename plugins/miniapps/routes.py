@@ -22,3 +22,7 @@ def suggest_synonyms():
 @app.route('/extract/concepts/', methods=['GET'])
 def extract_concepts():
     return create_request_and_serve(request, API.ExtractConcepts)
+
+@app.route('/definitions/cpcs/', methods=['GET'])
+def define_cpc():
+    return create_request_and_serve(request, API.DefineCPC)

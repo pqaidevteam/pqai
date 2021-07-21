@@ -1,15 +1,18 @@
 from collections import Counter
 import sys
+import re
 from pathlib import Path
 
 BASE_DIR = str(Path(__file__).parent.parent.parent.resolve())
-print(BASE_DIR)
+THIS_DIR = str(Path(__file__).parent.resolve())
 sys.path.append(BASE_DIR)
+sys.path.append(THIS_DIR)
 
 from core.api import APIRequest, BadRequestError
 from core.api import SearchRequest102, SimilarConceptsRequest
 from core.documents import Patent
 from core.encoders import default_boe_encoder
+from cpc_definitions import CPCDefinitionRetriever
 
 class TextBasedRequest(APIRequest):
 
@@ -34,13 +37,17 @@ class SuggestCPCs(TextBasedRequest):
         for patent in patents:
             cpcs += patent.cpcs
         distribution = Counter(cpcs).most_common(10)
-        return [cpc for cpc, freq in distribution]
+        output = []
+        for cpc, freq in distribution:
+            definition = DefineCPC({'cpc': cpc}).serve()
+            output.append({'cpc': cpc, 'definition': definition})
+        return output
 
     def _similar_patents(self):
         search_req = {'q': self._text }
         search_req['after'] = '2015-12-31' # base inference on recent data
         search_req['type'] = 'patent'
-        search_req['n'] = 50
+        search_req['n'] = 25
         results = SearchRequest102(search_req).serve()['results']
         patents = [Patent(res['id']) for res in results]
         return patents
@@ -62,7 +69,7 @@ class PredictGAUs(TextBasedRequest):
         search_req = {'q': self._text }
         search_req['after'] = '2015-12-31' # base inference on recent data
         search_req['type'] = 'patent'
-        search_req['n'] = 50
+        search_req['n'] = 25
         results = SearchRequest102(search_req).serve()['results']
         patents = [Patent(res['id']) for res in results]
         return patents
@@ -85,3 +92,21 @@ class ExtractConcepts(TextBasedRequest):
 
     def _serving_fn(self):
         return list(default_boe_encoder.encode(self._text))
+
+
+class DefineCPC(APIRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+        self._cpc_code = req_data['cpc'].strip()
+        self._cpc_data = None
+
+    def _validation_fn(self):
+        if not isinstance(self._data.get('cpc'), str):
+            raise BadRequestError('Invalid request')
+        cpc_pattern = r'[ABCDEFGHY]\d\d[A-Z]\d+\/\d+'
+        if not re.match(cpc_pattern, self._data.get('cpc').strip()):
+            raise BadRequestError('Invalid CPC code')
+
+    def _serving_fn(self):
+        return CPCDefinitionRetriever().define(self._cpc_code)

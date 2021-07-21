@@ -6,6 +6,8 @@ BASE_DIR = str(Path(__file__).parent.parent.parent.resolve())
 sys.path.append(BASE_DIR)
 
 from api import SuggestCPCs, PredictGAUs, SuggestSynonyms, ExtractConcepts
+from api import DefineCPC
+
 
 class TestSuggestCPCsRequest(unittest.TestCase):
 
@@ -25,7 +27,6 @@ class TestExtractConceptRequest(unittest.TestCase):
         self.assertIsInstance(concepts, list)
         self.assertGreater(len(concepts), 0)
 
-
 class TestPredictGAUsRequest(unittest.TestCase):
 
     def setUp(self):
@@ -35,7 +36,6 @@ class TestPredictGAUsRequest(unittest.TestCase):
         gaus = PredictGAUs({'text': self.text}).serve()
         self.assertIsInstance(gaus, list)
         self.assertGreater(len(gaus), 0)
-
 
 class TestSuggestSynonymsRequest(unittest.TestCase):
 
@@ -47,6 +47,14 @@ class TestSuggestSynonymsRequest(unittest.TestCase):
         self.assertIsInstance(synonyms, list)
         self.assertGreater(len(synonyms), 0)
 
+
+class TestDefineCPCRequest(unittest.TestCase):
+    
+    def test_normal_operation(self):
+        cpc = 'H04W52/02'
+        definition = DefineCPC({'cpc': cpc}).serve()
+        self.assertIsInstance(definition, list)
+        self.assertEqual(5, len(definition))
 
 if __name__ == '__main__':
     unittest.main()
