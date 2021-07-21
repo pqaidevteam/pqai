@@ -897,7 +897,7 @@ class ConceptRelatedRequest(APIRequest):
 
     def __init__(self, req_data):
         super().__init__(req_data)
-        self._concept = req_data['concept']
+        self._concept = req_data['concept'].lower()
 
     def _validation_fn(self):
         if not isinstance(self._data['concept'], str):
