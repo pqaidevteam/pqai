@@ -56,5 +56,10 @@ class TestDefineCPCRequest(unittest.TestCase):
         self.assertIsInstance(definition, list)
         self.assertEqual(5, len(definition))
 
+    def test_get_short_form_definitions(self):
+        cpc = 'H04W52/02'
+        definition = DefineCPC({'cpc': cpc, 'short': '1'}).serve()
+        self.assertIsInstance(definition, str)
+
 if __name__ == '__main__':
     unittest.main()

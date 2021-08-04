@@ -99,6 +99,7 @@ class DefineCPC(APIRequest):
     def __init__(self, req_data):
         super().__init__(req_data)
         self._cpc_code = req_data['cpc'].strip()
+        self._short = bool(int(req_data.get('short', 0)))
         self._cpc_data = None
 
     def _validation_fn(self):
@@ -109,4 +110,5 @@ class DefineCPC(APIRequest):
             raise BadRequestError('Invalid CPC code')
 
     def _serving_fn(self):
-        return CPCDefinitionRetriever().define(self._cpc_code)
+        segmented = not self._short
+        return CPCDefinitionRetriever().define(self._cpc_code, segmented)
