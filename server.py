@@ -5,6 +5,7 @@ import json
 import logging
 log = logging.getLogger('waitress')
 log.setLevel(logging.INFO)
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from config import config
 if config.gpu_disabled:
@@ -124,6 +125,10 @@ def get_backcits(pn):
 @app.route('/patents/<pn>/citations/forward', methods=['GET'])
 def get_for_cits(pn):
     return create_request_and_serve({'pn': pn}, API.ForwardCitationsRequest)
+
+@app.route('/patents/<pn>/citations/aggregated', methods=['GET'])
+def get_aggregated_cits(pn):
+    return create_request_and_serve(request, API.AggregatedCitationsRequest)
     
 @app.route('/patents/<pn>/abstract/concepts', methods=['GET'])
 def get_abs_concepts(pn):
@@ -185,7 +190,8 @@ def save_user_feedback():
 
 def create_request_and_serve(req, reqClass):
     try:
-        req_data = req if isinstance(req, dict) else req.args.to_dict()
+        # req_data = req if isinstance(req, dict) else req.args.to_dict()
+        req_data = {**request.view_args, **req.args.to_dict()}
         return success(reqClass(req_data).serve())
     except Exception as e:
         return error(e)

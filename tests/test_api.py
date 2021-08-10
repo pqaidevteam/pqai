@@ -49,6 +49,7 @@ from core.api import SimilarConceptsRequest
 from core.api import ConceptVectorRequest
 from core.api import DrawingRequest
 from core.api import ListDrawingsRequest
+from core.api import AggregatedCitationsRequest
 
 
 class TestRequestClass(unittest.TestCase):
@@ -505,6 +506,41 @@ class TestConceptVectorRequestClass(unittest.TestCase):
     def test_raises_error_on_invalid_concept(self):
         attempt = lambda: ConceptVectorRequest({'concept': 'django'}).serve()
         self.assertRaises(ResourceNotFoundError, attempt)
+
+
+class TestAggregatedCitationsRequest(unittest.TestCase):
+    
+    def test_get_one_level_citations(self):
+        req_data = {'levels': 1, 'pn': 'US7654321B2'}
+        response = AggregatedCitationsRequest(req_data).serve()
+        self.assertIsInstance(response, list)
+        self.assertEqual(len(response), 73)
+
+    def test_get_two_level_citations(self):
+        req_data = {'levels': 2, 'pn': 'US7654321B2'}
+        response = AggregatedCitationsRequest(req_data).serve()
+        self.assertIsInstance(response, list)
+        self.assertGreater(len(response), 73)
+
+    def test_raises_error_if_level_parameter_missing(self):
+        req_data = {'pn': 'US7654321B2'}
+        attempt = lambda: AggregatedCitationsRequest(req_data).serve()
+        self.assertRaises(BadRequestError, attempt)
+
+    def test_raises_error_if_no_level_specified(self):
+        req_data = {'pn': 'US7654321B2', 'levels': None}
+        attempt = lambda: AggregatedCitationsRequest(req_data).serve()
+        self.assertRaises(BadRequestError, attempt)
+
+    def test_raises_error_if_level_out_of_range(self):
+        req_data = {'levels': 5, 'pn': 'US7654321B2'}
+        attempt = lambda: AggregatedCitationsRequest(req_data).serve()
+        self.assertRaises(BadRequestError, attempt)
+
+    def test_raises_error_if_citations_grow_a_lot(self):
+        req_data = {'levels': 4, 'pn': 'US7654321B2'}
+        attempt = lambda: AggregatedCitationsRequest(req_data).serve()
+        self.assertRaises(ServerError, attempt)
 
 
 if __name__ == '__main__':

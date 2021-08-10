@@ -21,6 +21,7 @@ import os
 import markdown
 import time
 
+
 from config.config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 import boto3
 import botocore.exceptions
@@ -967,3 +968,37 @@ class DocumentationRequest(APIRequest):
         exts = ['tables', 'toc', 'smarty']
         html = markdown.markdown(md, extensions=exts)
         return BeautifulSoup(html, 'html.parser')
+
+
+class AggregatedCitationsRequest(AbstractPatentDataRequest):
+
+    def __init__(self, req_data):
+        super().__init__(req_data)
+        self._n = int(req_data['levels'])
+
+    def _serving_fn(self):
+        cits = set([self._pn])
+        n = self._n
+        while n > 0:
+            if len(cits) > 10000:
+                raise ServerError('Too many citations, try lower levels')
+            for c in cits:
+                try:
+                    cits = cits.union(set(Patent(c).backward_citations))
+                    cits = cits.union(set(Patent(c).forward_citations))
+                except:
+                    continue # if data unavailable for any patent
+            n = n - 1
+        cits.remove(self._pn)
+        return list(cits)
+
+    def _validation_fn(self):
+        super()._validation_fn()
+        if not self._data.get('levels'):
+            raise BadRequestError('Expected a levels parameter')
+        if not isinstance(self._data['levels'], int): # coming from web api
+            if not re.match(r'^\d+$', self._data['levels']):
+                raise BadRequestError('Invalid levels value')
+        n = int(self._data['levels'])
+        if n < 1 or n > 4:
+            raise BadRequestError('Levels should be in range [1, 4]')
