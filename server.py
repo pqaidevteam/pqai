@@ -193,14 +193,14 @@ def save_user_feedback():
 def create_request_and_serve(req, reqClass):
     try:
         # req_data = req if isinstance(req, dict) else req.args.to_dict()
-        req_data = {**request.view_args, **req.args.to_dict()}
+        req_data = {**request.view_args, **request.args.to_dict()}
         return success(reqClass(req_data).serve())
     except Exception as e:
         return error(e)
 
 def create_request_and_serve_jpg(req, reqClass):
     try:
-        req_data = {**request.view_args, **req.args.to_dict()} 
+        req_data = {**request.view_args, **request.args.to_dict()} 
         file_path_local = reqClass(req_data).serve()
         return send_file(file_path_local, mimetype='image/jpeg')
     except Exception as e:
