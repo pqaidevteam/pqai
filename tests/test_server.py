@@ -50,6 +50,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertSuccess(response)
 		self.assertGreater(len(response.json()['results']), 0)
 
+	@unittest.skip('temp')
 	def test_103_search_route(self):
 		response = self.api_get('/search/103', {'q': self.query})
 		self.assertSuccess(response)
@@ -115,6 +116,19 @@ class TestRoutes(unittest.TestCase):
 		data = response.json()
 		self.assertTrue('claims' in data)
 		self.assertEqual(len(data['claims']), 6)
+
+	def test_patent_one_claims_route(self):
+		url = '/patents/US7654321B2/claims/26'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('claim' in data)
+		self.assertIsInstance(data['claim'], str)
+		self.assertTrue(data['claim'].startswith('26.'))
+
+		self.assertTrue('claim_num' in data)
+		self.assertIsInstance(data['claim_num'], int)
+		self.assertEqual(data['claim_num'], 26)
 
 	def test_patent_description_route(self):
 		url = '/patents/US7654321B2/description'

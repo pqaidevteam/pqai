@@ -90,43 +90,43 @@ def get_document():
 
 @app.route('/patents/<pn>', methods=['GET'])
 def get_patent_data(pn):
-    return create_request_and_serve({'pn': pn}, API.PatentDataRequest)
+    return create_request_and_serve(request, API.PatentDataRequest)
     
 @app.route('/patents/<pn>/title', methods=['GET'])
 def get_title(pn):
-    return create_request_and_serve({'pn': pn}, API.TitleRequest)
+    return create_request_and_serve(request, API.TitleRequest)
     
 @app.route('/patents/<pn>/abstract', methods=['GET'])
 def get_abstract(pn):
-    return create_request_and_serve({'pn': pn}, API.AbstractRequest)
+    return create_request_and_serve(request, API.AbstractRequest)
     
 @app.route('/patents/<pn>/claims/', methods=['GET'])
 def get_claims(pn):
-    return create_request_and_serve({'pn': pn}, API.AllClaimsRequest)
+    return create_request_and_serve(request, API.AllClaimsRequest)
     
 @app.route('/patents/<pn>/claims/<n>', methods=['GET'])
 def get_one_claim(pn, n):
-    return create_request_and_serve({'pn': pn, 'n': int(n)}, API.OneClaimRequest)
+    return create_request_and_serve({'n': int(n)}, API.OneClaimRequest)
     
 @app.route('/patents/<pn>/claims/independent', methods=['GET'])
 def get_ind_claims(pn):
-    return create_request_and_serve({'pn': pn}, API.IndependentClaimsRequest)
+    return create_request_and_serve(request, API.IndependentClaimsRequest)
     
 @app.route('/patents/<pn>/description', methods=['GET'])
 def get_description(pn):
-    return create_request_and_serve({'pn': pn}, API.PatentDescriptionRequest)
+    return create_request_and_serve(request, API.PatentDescriptionRequest)
     
 @app.route('/patents/<pn>/citations', methods=['GET'])
 def get_citations(pn):
-    return create_request_and_serve({'pn': pn}, API.CitationsRequest)
+    return create_request_and_serve(request, API.CitationsRequest)
     
 @app.route('/patents/<pn>/citations/backward', methods=['GET'])
 def get_backcits(pn):
-    return create_request_and_serve({'pn': pn}, API.BackwardCitationsRequest)
+    return create_request_and_serve(request, API.BackwardCitationsRequest)
     
 @app.route('/patents/<pn>/citations/forward', methods=['GET'])
 def get_for_cits(pn):
-    return create_request_and_serve({'pn': pn}, API.ForwardCitationsRequest)
+    return create_request_and_serve(request, API.ForwardCitationsRequest)
 
 @app.route('/patents/<pn>/citations/aggregated', methods=['GET'])
 def get_aggregated_cits(pn):
@@ -134,39 +134,39 @@ def get_aggregated_cits(pn):
     
 @app.route('/patents/<pn>/abstract/concepts', methods=['GET'])
 def get_abs_concepts(pn):
-    return create_request_and_serve({'pn': pn}, API.AbstractConceptsRequest)
+    return create_request_and_serve(request, API.AbstractConceptsRequest)
 
 @app.route('/patents/<pn>/description/concepts', methods=['GET'])
 def get_desc_concepts(pn):
-    return create_request_and_serve({'pn': pn}, API.DescriptionConceptsRequest)
+    return create_request_and_serve(request, API.DescriptionConceptsRequest)
     
 @app.route('/patents/<pn>/classification/cpcs', methods=['GET'])
 def get_cpcs(pn):
-    return create_request_and_serve({'pn': pn}, API.CPCsRequest)
+    return create_request_and_serve(request, API.CPCsRequest)
     
 @app.route('/patents/<pn>/vectors/cpcs', methods=['GET'])
 def get_pat_cpc_vec(pn):
-    return create_request_and_serve({'pn': pn}, API.PatentCPCVectorRequest)
+    return create_request_and_serve(request, API.PatentCPCVectorRequest)
     
 @app.route('/patents/<pn>/vectors/abstract', methods=['GET'])
 def get_pat_abs_vec(pn):
-    return create_request_and_serve({'pn': pn}, API.PatentAbstractVectorRequest)
+    return create_request_and_serve(request, API.PatentAbstractVectorRequest)
     
 @app.route('/concepts/<concept>/similar', methods=['GET'])
 def get_similar_concepts(concept):
-    return create_request_and_serve({'concept': concept}, API.SimilarConceptsRequest)
+    return create_request_and_serve(request, API.SimilarConceptsRequest)
     
 @app.route('/concepts/<concept>/vector', methods=['GET'])
 def get_concept_vec(concept):
-    return create_request_and_serve({'concept': concept}, API.ConceptVectorRequest)
+    return create_request_and_serve(request, API.ConceptVectorRequest)
 
 @app.route('/patents/<pn>/thumbnails', methods=['GET'])
 def get_thumbnails_list(pn):
-    return create_request_and_serve({'pn': pn}, API.ListThumbnailsRequest)
+    return create_request_and_serve(request, API.ListThumbnailsRequest)
 
 @app.route('/patents/<pn>/drawings/', methods=['GET'])
 def list_patent_drawings(pn):
-    return create_request_and_serve({'pn': pn}, API.ListDrawingsRequest)
+    return create_request_and_serve(request, API.ListDrawingsRequest)
 
 @app.route('/patents/<pn>/thumbnails/<n>', methods=['GET'])
 def get_thumbnail(pn, n):
@@ -192,8 +192,9 @@ def save_user_feedback():
 
 def create_request_and_serve(req, reqClass):
     try:
-        # req_data = req if isinstance(req, dict) else req.args.to_dict()
         req_data = {**request.view_args, **request.args.to_dict()}
+        if isinstance(req, dict):
+            req_data = {**req_data, **req}
         return success(reqClass(req_data).serve())
     except Exception as e:
         return error(e)
