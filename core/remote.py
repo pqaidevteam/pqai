@@ -4,15 +4,16 @@ from config.config import extensions as EXTENSIONS
 HTTP_SUCCESS = 200
 
 def search_extensions (search_params):
-	results = [search_extension(extension, search_params)
+	results = [search_extension(host, search_params)
 			for extension in EXTENSIONS]
 	return merge(results)
 
 
-def search_extension (extension, search_params):
-	response = requests.get(extension, search_params)
+def search_extension (host, search_params):
+	url = f'{host}/extension'
+	response = requests.get(url, search_params)
 	if response.status_code != HTTP_SUCCESS:
-		print(f'Error in getting data from extension {extension}')
+		print(f'Error in getting data from extension {host}')
 		return []
 	return response.json().results
 
