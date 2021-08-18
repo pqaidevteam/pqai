@@ -36,7 +36,9 @@ import auth
 
 @app.before_request
 def validate_token():
-    if auth.validate_access(request):
+    if not config.token_authentication_active:
+        pass
+    elif auth.validate_access(request):
         pass
     else:
         return error(API.NotAllowedError('Invalid token.'))
