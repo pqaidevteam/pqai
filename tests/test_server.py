@@ -73,6 +73,159 @@ class TestRoutes(unittest.TestCase):
 		self.assertSuccess(response)
 		self.assertTrue('anc' in response.json())
 
+	def test_patent_data_route(self):
+		url = '/patents/US7654321B2'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('title' in data)
+		self.assertTrue('abstract' in data)
+		self.assertTrue('claims' in data)
+		self.assertTrue('description' in data)
+		self.assertTrue('publication_date' in data)
+
+	def test_patent_title_route(self):
+		url = '/patents/US7654321B2/title'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('title' in data)
+		self.assertTrue('sampling' in data['title'])
+
+	def test_patent_abstract_route(self):
+		url = '/patents/US7654321B2/abstract'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('abstract' in data)
+		self.assertTrue('formation' in data['abstract'])
+
+	def test_patent_claims_route(self):
+		url = '/patents/US7654321B2/claims'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('claims' in data)
+		self.assertEqual(len(data['claims']), 26)
+
+	def test_patent_ind_claims_route(self):
+		url = '/patents/US7654321B2/claims/independent'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('claims' in data)
+		self.assertEqual(len(data['claims']), 6)
+
+	def test_patent_description_route(self):
+		url = '/patents/US7654321B2/description'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('description' in data)
+		self.assertIsInstance(data['description'], str)
+
+	def test_patent_citations_route(self):
+		url = '/patents/US7654321B2/citations'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('citations_backward' in data)
+		self.assertIsInstance(data['citations_backward'], list)
+		self.assertGreater(len(data['citations_backward']), 0)
+
+		self.assertTrue('citations_forward' in data)
+		self.assertIsInstance(data['citations_forward'], list)
+		self.assertGreater(len(data['citations_forward']), 0)
+
+	def test_patent_backward_citations_route(self):
+		url = '/patents/US7654321B2/citations/backward'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('citations_backward' in data)
+		self.assertIsInstance(data['citations_backward'], list)
+		self.assertGreater(len(data['citations_backward']), 0)
+
+	def test_patent_forward_citations_route(self):
+		url = '/patents/US7654321B2/citations/forward'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('citations_forward' in data)
+		self.assertIsInstance(data['citations_forward'], list)
+		self.assertGreater(len(data['citations_forward']), 0)
+
+	def test_patent_aggregated_citations_route(self):
+		url = '/patents/US7654321B2/citations/aggregated?levels=3'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertIsInstance(data, list)
+		self.assertGreater(len(data), 1000)
+
+	def test_patent_concepts_in_abstracts_route(self):
+		url = '/patents/US7654321B2/abstract/concepts'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('concepts' in data)
+		self.assertIsInstance(data['concepts'], list)
+		self.assertGreater(len(data['concepts']), 0)
+
+	def test_patent_concepts_in_description_route(self):
+		url = '/patents/US7654321B2/description/concepts'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('concepts' in data)
+		self.assertIsInstance(data['concepts'], list)
+		self.assertGreater(len(data['concepts']), 0)
+
+	def test_patent_cpcs_route(self):
+		url = '/patents/US7654321B2/classification/cpcs'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('cpcs' in data)
+		self.assertIsInstance(data['cpcs'], list)
+		self.assertGreater(len(data['cpcs']), 0)
+
+	def test_patent_cpc_vector_route(self):
+		url = '/patents/US7654321B2/vectors/cpcs'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('vector' in data)
+		self.assertIsInstance(data['vector'], list)
+		self.assertGreater(len(data['vector']), 0)
+
+	def test_patent_abstract_vector_route(self):
+		url = '/patents/US7654321B2/vectors/abstract'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('vector' in data)
+		self.assertIsInstance(data['vector'], list)
+		self.assertGreater(len(data['vector']), 0)
+
+	def test_similar_concepts_route(self):
+		url = '/concepts/vehicle/similar'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('similar' in data)
+		self.assertIsInstance(data['similar'], list)
+		self.assertGreater(len(data['similar']), 0)
+
+	def test_concept_vector_route(self):
+		url = '/concepts/vehicle/vector'
+		response = self.api_get(url)
+		self.assertSuccess(response)
+		data = response.json()
+		self.assertTrue('vector' in data)
+		self.assertIsInstance(data['vector'], list)
+		self.assertGreater(len(data['vector']), 0)
+
 	def test_drawing_route(self):
 		response = self.api_get('/patents/US7654321B2/drawings/1')
 		self.assertSuccess(response)
@@ -81,6 +234,15 @@ class TestRoutes(unittest.TestCase):
 		response = self.api_get('/patents/US7654321B2/drawings/')
 		self.assertSuccess(response)
 		self.assertEqual(8, len(response.json()['drawings']))
+
+	def test_thumbnail_route(self):
+		response = self.api_get('/patents/US7654321B2/thumbnails/1')
+		self.assertSuccess(response)
+
+	def test_list_thumbnails_route(self):
+		response = self.api_get('/patents/US7654321B2/thumbnails/')
+		self.assertSuccess(response)
+		self.assertEqual(8, len(response.json()['thumbnails']))
 
 	def api_get(self, route, params=None):
 		url = self.endpoint + route
