@@ -20,6 +20,7 @@ import cv2
 import os
 import markdown
 import time
+import math
 
 
 from config.config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
@@ -973,33 +974,58 @@ class DocumentationRequest(APIRequest):
 
 class AggregatedCitationsRequest(AbstractPatentDataRequest):
 
+    LIMIT = 10000
+
     def __init__(self, req_data):
         super().__init__(req_data)
         self._n = int(req_data['levels'])
+        if req_data.get('fanout'):
+            self._fanout_limit = int(req_data['fanout'])
+        else:
+            self._fanout_limit = math.inf # no limit
 
     def _serving_fn(self):
         cits = set([self._pn])
-        n = self._n
-        while n > 0:
-            if len(cits) > 10000:
-                raise ServerError('Too many citations, try lower levels')
+        for i in range(self._n):
             for c in cits:
+                if len(cits) > self.LIMIT:
+                    raise ServerError('Too many citations, try lower levels')
                 try:
-                    cits = cits.union(set(Patent(c).backward_citations))
-                    cits = cits.union(set(Patent(c).forward_citations))
-                except:
-                    continue # if data unavailable for any patent
-            n = n - 1
+                    patent = Patent(c)
+                    if len(patent.backward_citations) <= self._fanout_limit or i == 1:
+                        cits = cits.union(set(patent.backward_citations))
+                    if len(patent.forward_citations) <= self._fanout_limit or i == 1:
+                        cits = cits.union(set(patent.forward_citations))
+
+                except: # if data unavailable for any patent
+                    continue
         cits.remove(self._pn)
         return list(cits)
 
     def _validation_fn(self):
         super()._validation_fn()
-        if not self._data.get('levels'):
+        self._check_levels_param()
+        self._check_fanout_param()
+
+    def _check_levels_param(self):
+        self._check_levels_param_exists()
+        self._check_levels_param_is_valid()
+
+    def _check_levels_param_exists(self):
+        levels = self._data.get('levels')
+        if levels is None :
             raise BadRequestError('Expected a levels parameter')
-        if not isinstance(self._data['levels'], int): # coming from web api
-            if not re.match(r'^\d+$', self._data['levels']):
+
+    def _check_levels_param_is_valid(self):
+        levels = self._data.get('levels')
+        if isinstance(levels, str): # coming from web api
+            if not re.match(r'^\d+$', levels):
                 raise BadRequestError('Invalid levels value')
-        n = int(self._data['levels'])
+        n = int(levels)
         if n < 1 or n > 4:
             raise BadRequestError('Levels should be in range [1, 4]')
+
+    def _check_fanout_param(self):
+        if self._data.get('fanout'):
+            if not re.match(r'^\d+$', self._data['fanout']):
+                raise BadRequestError('Invalid fanout value')
