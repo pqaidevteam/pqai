@@ -432,11 +432,15 @@ class PatentPriorArtRequest(SimilarPatentsRequest):
 
     def __init__(self, req_data):
         super().__init__(req_data)
-        self._before = Patent(self._pn).filing_date
 
     def _serving_fn(self):
-        search_request = self._create_text_query_request()
-        search_request['before'] = self._before
+        try:
+            search_request = self._create_text_query_request()
+            cutoff_date = Patent(self._pn).filing_date
+            search_request['before'] = cutoff_date
+        except:
+            err_msg = f'Data unavailable for patent {self._pn}'
+            raise ResourceNotFoundError(err_msg)
         return SearchRequest102(search_request).serve()
 
 
