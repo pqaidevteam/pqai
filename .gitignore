@@ -20,3 +20,5 @@ __pycache__
 
 /.tmuxinator.yml
 /.env
+
+/plugins/custom/
