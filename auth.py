@@ -20,7 +20,7 @@ def extract_token(req):
     method = req.method
     if method == 'GET':
         return req.args.to_dict().get('token')
-    elif method == 'POST':
+    elif method == 'POST' and req.json:
         return req.json.get('token')
     else:
         return None
