@@ -8,8 +8,8 @@ THIS_DIR = str(Path(__file__).parent.resolve())
 sys.path.append(BASE_DIR)
 sys.path.append(THIS_DIR)
 
-from core.api import APIRequest, BadRequestError
-from core.api import SearchRequest102, SimilarConceptsRequest
+from core.api import APIRequest, SearchRequest102, SimilarConceptsRequest
+from core.api import BadRequestError, ResourceNotFoundError
 from core.documents import Patent
 from core.encoders import default_boe_encoder
 from cpc_definitions import CPCDefinitionRetriever
@@ -100,7 +100,6 @@ class DefineCPC(APIRequest):
         super().__init__(req_data)
         self._cpc_code = req_data['cpc'].strip()
         self._short = bool(int(req_data.get('short', 0)))
-        self._cpc_data = None
 
     def _validation_fn(self):
         if not isinstance(self._data.get('cpc'), str):
@@ -111,4 +110,8 @@ class DefineCPC(APIRequest):
 
     def _serving_fn(self):
         segmented = not self._short
-        return CPCDefinitionRetriever().define(self._cpc_code, segmented)
+        definition = CPCDefinitionRetriever().define(self._cpc_code, segmented)
+        if definition is None:
+            err_msg = f'Could not find definition for {self._cpc_code}'
+            raise ResourceNotFoundError(err_msg)
+        return definition
