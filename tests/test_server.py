@@ -50,7 +50,6 @@ class TestRoutes(unittest.TestCase):
 		self.assertSuccess(response)
 		self.assertGreater(len(response.json()['results']), 0)
 
-	@unittest.skip('temp')
 	def test_103_search_route(self):
 		response = self.api_get('/search/103', {'q': self.query})
 		self.assertSuccess(response)
@@ -260,8 +259,9 @@ class TestRoutes(unittest.TestCase):
 
 	def api_get(self, route, params=None):
 		url = self.endpoint + route
-		if isinstance(params, dict):
-			params['token'] = API_TEST_TOKEN
+		if not isinstance(params, dict):
+			params = dict()
+		params['token'] = API_TEST_TOKEN
 		response = requests.get(url, params)
 		return response
 
