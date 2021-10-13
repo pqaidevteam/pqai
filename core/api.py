@@ -233,7 +233,8 @@ class SearchRequest102(SearchRequest):
 
     def _searching_fn(self):
         results = self._get_results()
-        results = self._rerank(results)
+        if self._n_results < 100:
+            results = self._rerank(results)
         results = results[:self._n_results]
         return results[self._offset:]
 
