@@ -178,7 +178,7 @@ Route: `/patents/:pn/thumbnails/:n`
 
 Request type: `GET`
 
-Response type: `JSON` string
+Response type: `PNG` image (binary) 
 
 Path parameters
 
