@@ -1,4 +1,4 @@
-# PQAI: Patent Quality through AI
+# PQAI: Patent Quality Artificial Intelligence
 
 An AI-powered tool for running prior-art checks.
 
