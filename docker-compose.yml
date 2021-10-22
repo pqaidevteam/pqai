@@ -11,6 +11,7 @@ services:
       - ${INDEXES_DIR}:/app/indexes
       - ${TOKENS_FILE}:/app/tokens.txt
     environment:
+      ENVIRONMENT: ${ENVIRONMENT}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       PQAI_S3_BUCKET_NAME: ${PQAI_S3_BUCKET_NAME}

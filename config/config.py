@@ -15,6 +15,8 @@ if os.environ.get('TEST'):
 else:
     indexes_dir = f'{base_dir}/indexes/'
 
+environment = os.environ.get('ENVIRONMENT')
+
 use_faiss_indexes = bool(int(os.environ.get('USE_FAISS_INDEXES')))
 use_annoy_indexes = bool(int(os.environ.get('USE_ANNOY_INDEXES')))
 

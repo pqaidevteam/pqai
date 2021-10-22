@@ -20,6 +20,7 @@ if config.sentry_url:
     from flask import Flask
     from sentry_sdk.integrations.flask import FlaskIntegration
     sentry_sdk.init(
+        environment=config.environment,
         dsn=config.sentry_url,
         integrations=[FlaskIntegration()],
         traces_sample_rate=1.0
