@@ -2,6 +2,7 @@ import numpy as np
 import re
 import json
 import os
+from functools import lru_cache
 from tensorflow.keras.models import load_model
 from tensorflow.keras.models import Model
 import tensorflow.keras.backend as K
@@ -61,7 +62,7 @@ class SensibleSpanExtractor():
 			'”': 'edinvc'
 		}
 		self.chars = 'abcdefghijklmnopqrstuvwxyz'
-		self.MIN_LEN = 5
+		self.MIN_LEN = 6
 		self.MAX_LEN = 30
 
 		self._load_model()
@@ -108,6 +109,7 @@ class SensibleSpanExtractor():
 		i = self._rank(candidates)[0]
 		return self._strip_punctuations(' '.join(candidates[0][i]))
 
+	@lru_cache(maxsize=50000)
 	def return_ranked(self, sentence):
 		candidates = self._encode_for_nn(sentence)
 		ns = self._rank(candidates)
@@ -143,14 +145,6 @@ class SensibleSpanExtractor():
 		tokens = re.findall(r'(\w+|\W+)', sentence)
 		tokens = [t for t in tokens if t.strip()]
 		return tokens
-
-	def _get_possible_span_lengths(self, n_tokens):
-		if n_tokens <= self.MIN_LEN:
-			return [n_tokens]
-		elif self.MIN_LEN < n_tokens <= self.MAX_LEN:
-			return list(range(self.MIN_LEN, n_tokens+1))
-		else: # n_tokens > self.MAX_LEN
-			return list(range(self.MIN_LEN, self.MAX_LEN))
 
 	def _span2chargram(self, span):
 		span_len = min(len(span), self.MAX_LEN)

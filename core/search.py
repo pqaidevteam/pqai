@@ -42,9 +42,6 @@ class Searcher():
 			return True
 		if isinstance(haystack, list) or isinstance(haystack, set):
 			return False
-
-	def _results_from_one(self, needle, haystack, n):
-		return self._search_fn(needle, haystack, n)
 	
 	def _results_from_many(self, needle, haystack, n):
 		list_of_lists = [self._results_from_one(needle, hs, n) for hs in haystack]
@@ -53,23 +50,26 @@ class Searcher():
 		results = self._deduplicate(results)
 		return results[:n]
 
+	def _results_from_one(self, needle, haystack, n):
+		return self._search_fn(needle, haystack, n)
+
 	def _flatten(self, list2d):
 		return list(itertools.chain.from_iterable(list2d))
 
 	def _deduplicate(self, results):
-		if len(results) == 0:
-			return results
-		first_result = results[0]
-		arr = [first_result]
-		already_added = set([first_result.id])
-		for this in results:
-			last = arr[-1]
-			if this.score == last.score or this.id in already_added:
-				continue
-			else:
-				arr.append(this)
-				already_added.add(this.id)
-		return arr
+		output = []
+		added = set()
+		for r in results:
+			if len(output) > 0:
+				previous = output[-1]
+				if r.score == previous.score:
+					continue
+				if r.id in added:
+					continue
+
+			output.append(r)
+			added.add(r.id)
+		return output
 
 
 class VectorIndexSearcher(Searcher):

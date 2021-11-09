@@ -48,6 +48,7 @@ class SnippetExtractor():
         cosine_sims = np.dot(A, B.T)
         sent_idxs = cosine_sims.argmax(axis=1)
         
+        
         mappings = []
         for i, element in enumerate(elements):
             mapping = {}
@@ -66,6 +67,7 @@ class SnippetExtractor():
                 mapping['ctx_after'] = sents[j+1] if j+1 < len(sents) else ''
                 mapping['similarity'] = float(cosine_sims[i][j])
             mappings.append(mapping)
+
         return mappings
 
     @classmethod
@@ -169,8 +171,14 @@ class SubsentSnippetExtractor():
         subs = self._get_spliced_subsent_snippets(keyphrases)
         return self._join(subs)
 
-    def _join(self, subs):
-        return '...' + '... '.join(subs) + '...'
+    def _find_keyphrases_in_doc(self):
+        query_concepts = self._extract_concepts(self.query)
+        doc_concepts = self._extract_concepts(self.doc)
+        keyphrases = []
+        for concept in query_concepts:
+            dists = [conceptmatch_ranker.score(concept, target) for target in doc_concepts]
+            keyphrases.append(doc_concepts[np.argmin(dists)])
+        return keyphrases
 
     def _get_spliced_subsent_snippets(self, matches):
         sents = get_sentences(self.doc)
@@ -178,6 +186,7 @@ class SubsentSnippetExtractor():
         # select only sentences that do not contain references to drawings,
         # i.e., which do not have reference numeral (digits) in them
         sents = [s for s in sents if not re.search(r'\d{2,}', s)]
+
         sent_scores = [sum([1 for m in matches if m in s]) for s in sents]
         sent_ranked = [sents[i] for i in np.argsort(sent_scores)[::-1]]
         temp_str = ""
@@ -201,17 +210,11 @@ class SubsentSnippetExtractor():
                 target_concepts.add(c)
         return list(target_concepts)
 
-    def _find_keyphrases_in_doc(self):
-        query_concepts = self._extract_concepts(self.query)
-        doc_concepts = self._extract_concepts(self.doc)
-        keyphrases = []
-        for concept in query_concepts:
-            dists = [conceptmatch_ranker.score(concept, target) for target in doc_concepts]
-            keyphrases.append(doc_concepts[np.argmin(dists)])
-        return keyphrases
-
     def _span_containing(self, entity, sent):
         spans = get_spans(sent)
         for span in spans:
             if entity in span:
                 return span
+
+    def _join(self, subs):
+        return '...' + '... '.join(subs) + '...'
