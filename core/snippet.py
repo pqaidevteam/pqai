@@ -17,6 +17,8 @@ from core.utils import get_sentences
 from core.sensible_span_extractor import SensibleSpanExtractor
 get_spans = SensibleSpanExtractor().return_ranked
 
+import time
+
 class SnippetExtractor():
 
     MIN_SNIPPET_LENGTH = 50

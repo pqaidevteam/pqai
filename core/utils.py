@@ -2,6 +2,7 @@ import json
 import numpy as np
 import re
 from annoy import AnnoyIndex
+from functools import lru_cache
 
 from config.config import models_dir
 
@@ -102,7 +103,7 @@ def is_generic(word):
     """
     return True if word in stopword_dict else False
 
-
+@lru_cache(maxsize=1000)
 def get_sentences(text):
     """Split a given (English) text (possibly multiline) into sentences.
     

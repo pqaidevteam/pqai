@@ -2,6 +2,7 @@ from config.config import models_dir
 from core import utils
 import re
 import numpy as np
+from functools import lru_cache
 
 from core.representations import BagOfEntities
 
@@ -83,6 +84,7 @@ class BagOfEntitiesEncoder(Encoder):
 		if not isinstance(self._vocab, list):
 			self._load_vocab()
 
+	@lru_cache(maxsize=50000)
 	def _get_entities(self, text):
 		self._load_vocab_if_unloaded()
 		entities = []
