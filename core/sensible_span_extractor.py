@@ -62,8 +62,8 @@ class SensibleSpanExtractor():
 			'”': 'edinvc'
 		}
 		self.chars = 'abcdefghijklmnopqrstuvwxyz'
-		self.MIN_LEN = 6
-		self.MAX_LEN = 30
+		self.MIN_LEN = 5
+		self.MAX_LEN = 10
 
 		self._load_model()
 		self._load_dict()
@@ -117,19 +117,6 @@ class SensibleSpanExtractor():
 		spans = [s for s in spans if self._passes_post_filter(s)]
 		return spans
 
-	def _passes_post_filter(self, span):
-		if ')' in span and '(' not in span:
-			return False
-		if '(' in span and ')' not in span:
-			return False
-		return True
-
-	def _rank(self, candidates):
-		tokens, X_chargrams, X_word_vectors = candidates
-		pred = self._model.predict([X_word_vectors, X_chargrams]).flatten()
-		pred = K.softmax(pred)
-		return np.argsort(pred)[::-1]
-
 	def _encode_for_nn(self, sentence):
 		cased = self._tokenize(sentence, lower=False)
 		uncased = [t.lower() for t in cased]
@@ -139,6 +126,19 @@ class SensibleSpanExtractor():
 		chargrams = [self._span2chargram(span) for span in spans]
 		word_vectors = [self._embed_words(span) for span in spans]
 		return tokens, np.array(chargrams), np.array(word_vectors)
+
+	def _rank(self, candidates):
+		tokens, X_chargrams, X_word_vectors = candidates
+		pred = self._model.predict([X_word_vectors, X_chargrams], batch_size=256).flatten()
+		pred = K.softmax(pred)
+		return np.argsort(pred)[::-1]
+
+	def _passes_post_filter(self, span):
+		if ')' in span and '(' not in span:
+			return False
+		if '(' in span and ')' not in span:
+			return False
+		return True
 
 	def _tokenize(self, sentence, lower=True):
 		sentence = sentence.lower() if lower else sentence
@@ -215,7 +215,7 @@ class SensibleSpanExtractor():
 
 	def _padding_int_arr(self, int_arr):
 		pad_token = self._get_pad_token(int_arr)
-		for j in range(self.MAX_LEN-len(int_arr)):
+		for j in range(30-len(int_arr)):
 			int_arr.append(pad_token)
 		int_arr = np.array(int_arr)
 		return int_arr

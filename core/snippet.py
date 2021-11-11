@@ -190,9 +190,11 @@ class SubsentSnippetExtractor():
         sents = [s for s in sents if not re.search(r'\d{2,}', s)]
 
         sent_scores = [sum([1 for m in matches if m in s]) for s in sents]
-        sent_ranked = [sents[i] for i in np.argsort(sent_scores)[::-1]]
+        sent_ranked = [sents[i] for i in np.argsort(sent_scores)[::-1]
+                                if sent_scores[i] > 0]
         temp_str = ""
         subs = []
+
         for match in matches:
             if match in temp_str:
                 continue
