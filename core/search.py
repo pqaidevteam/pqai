@@ -22,7 +22,7 @@ class Searcher():
 		self._check_haystack_compatibility(haystack)
 		haystack = [haystack] if self._is_one_haystack(haystack) else haystack
 		n_results = max(0, n_results)
-		return self._results_from_many(needle, haystack, n_results)
+		return self._search_many(needle, haystack, n_results)
 
 	def _check_needle_compatibility(self, needle):
 		if not self._needle_compatibility_fn(needle):
@@ -43,14 +43,14 @@ class Searcher():
 		if isinstance(haystack, list) or isinstance(haystack, set):
 			return False
 	
-	def _results_from_many(self, needle, haystack, n):
-		list_of_lists = [self._results_from_one(needle, hs, n) for hs in haystack]
+	def _search_many(self, needle, haystack, n):
+		list_of_lists = [self._search_one(needle, hs, n) for hs in haystack]
 		results = self._flatten(list_of_lists)
 		results = self._sort_fn(results)
 		results = self._deduplicate(results)
 		return results[:n]
 
-	def _results_from_one(self, needle, haystack, n):
+	def _search_one(self, needle, haystack, n):
 		return self._search_fn(needle, haystack, n)
 
 	def _flatten(self, list2d):
