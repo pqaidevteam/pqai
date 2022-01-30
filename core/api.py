@@ -274,8 +274,6 @@ class SearchRequest102(SearchRequest):
                 continue
             deduplicated.append(result)
             titles.add(result.title.lower())
-        print('Original result count', len(results))
-        print('Deduplicated result count', len(deduplicated))
         return deduplicated
 
     def _add_remote_results_to(self, local_results):
