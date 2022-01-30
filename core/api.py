@@ -235,6 +235,7 @@ class SearchRequest102(SearchRequest):
         results = self._get_results()
         if self._n_results < 100:
             results = self._rerank(results)
+        results = self._deduplicate(results)
         results = results[:self._n_results]
         return results[self._offset:]
 
@@ -258,18 +259,30 @@ class SearchRequest102(SearchRequest):
             m *= 2
         return results
 
-    def _add_remote_results_to(self, local_results):
-        if not allow_outgoing_extension_requests:
-            return local_results
-        remote_results = remote.search_extensions(self._data)
-        return remote.merge([local_results, remote_results])
-
     def _rerank(self, results):
         if not reranker:
             return results
         result_texts = [r.abstract for r in results]
         ranks = reranker.rank(self._query, result_texts)
         return [results[i] for i in ranks]
+
+    def _deduplicate(self, results):
+        deduplicated = []
+        titles = set()
+        for result in results:
+            if result.title.lower() in titles:
+                continue
+            deduplicated.append(result)
+            titles.add(result.title.lower())
+        print('Original result count', len(results))
+        print('Deduplicated result count', len(deduplicated))
+        return deduplicated
+
+    def _add_remote_results_to(self, local_results):
+        if not allow_outgoing_extension_requests:
+            return local_results
+        remote_results = remote.search_extensions(self._data)
+        return remote.merge([local_results, remote_results])
 
     def _formatting_fn(self, results):
         for result in results:
