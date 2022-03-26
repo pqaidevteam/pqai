@@ -85,7 +85,7 @@ tqdm==4.62.2
 transformers==4.10.2
 typing-extensions==3.7.4.3
 urllib3==1.26.6
-waitress==2.0.0
+waitress==2.1.1
 Werkzeug==2.0.1
 wrapt==1.12.1
 zipp==3.5.0
