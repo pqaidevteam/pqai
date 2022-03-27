@@ -43,14 +43,14 @@ keras-transformer==0.39.0
 llvmlite==0.37.0
 Markdown==3.3.4
 MarkupSafe==2.0.1
-nltk==3.6.4
+nltk==3.6.6
 numba==0.54.0
-numpy==1.19.5
+numpy==1.21.0
 oauthlib==3.1.1
 opencv-python==4.5.3.56
 opt-einsum==3.3.0
 packaging==21.0
-Pillow==8.3.2
+Pillow==9.0.1
 protobuf==3.17.3
 psutil==5.9.0
 pyasn1==0.4.8
@@ -76,7 +76,7 @@ soupsieve==2.2.1
 tensorboard==2.6.0
 tensorboard-data-server==0.6.1
 tensorboard-plugin-wit==1.8.0
-tensorflow==2.6.1
+tensorflow==2.6.3
 tensorflow-estimator==2.6.0
 termcolor==1.1.0
 threadpoolctl==2.2.0
@@ -86,7 +86,7 @@ tqdm==4.62.2
 transformers==4.10.2
 typing-extensions==3.7.4.3
 urllib3==1.26.6
-waitress==2.0.0
+waitress==2.1.1
 Werkzeug==2.0.1
 wrapt==1.12.1
 zipp==3.5.0
