@@ -30,6 +30,12 @@ tokens_file = f'{base_dir}/tokens.txt'
 
 mongo_host = os.environ['MONGO_HOST']
 mongo_port = int(os.environ['MONGO_PORT'])
+mongo_user = os.environ['MONGO_USER']
+mongo_password = os.environ['MONGO_PASSWORD']
+if mongo_user and mongo_password:
+    mongo_uri = f'mongodb://{mongo_user}:{mongo_password}@{mongo_host}:{mongo_port}'
+else:
+    mongo_uri = f'mongodb://{mongo_host}:{mongo_port}'
 mongo_dbname = os.environ['MONGO_DBNAME']
 mongo_pat_coll = os.environ['MONGO_PAT_COLL']
 mongo_npl_coll = os.environ['MONGO_NPL_COLL']

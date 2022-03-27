@@ -2,7 +2,7 @@ from pymongo import MongoClient
 from operator import itemgetter
 import json
 
-from config.config import mongo_host, mongo_port
+from config.config import mongo_uri
 from config.config import mongo_dbname, mongo_pat_coll, mongo_npl_coll
 
 from config.config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
@@ -13,7 +13,7 @@ botoclient = boto3.client('s3',
 						  aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 from config.config import PQAI_S3_BUCKET_NAME
 
-client = MongoClient(mongo_host, mongo_port)
+client = MongoClient(mongo_uri)
 pat_coll = client[mongo_dbname][mongo_pat_coll]
 npl_coll = client[mongo_dbname][mongo_npl_coll]
 
