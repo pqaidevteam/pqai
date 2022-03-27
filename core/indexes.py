@@ -3,9 +3,12 @@ import annoy
 import json
 import os
 import faiss
+import psutil
 
 from config.config import indexes_dir
 from config import config
+
+CHECK_MARK = u'\u2713'
 
 class Index():
 
@@ -186,6 +189,7 @@ class IndexesDirectory():
         return self._get_from_disk(index_id)
 
     def _get_from_disk(self, index_id):
+        print(f'Loading vector index: {index_id}')
         index_file = self._get_index_file_path(index_id)
         json_file = f'{self._folder}/{index_id}.items.json'
         if index_file.endswith('faiss'):
@@ -194,6 +198,7 @@ class IndexesDirectory():
             reader = AnnoyIndexReader(self.dims, self.metric)
         index = reader.read_from_files(index_file, json_file, name=index_id)
         self._cache_index(index_id, index)
+        print(f"  {CHECK_MARK} RAM usage: {psutil.virtual_memory()._asdict().get('percent')}%")
         return index
 
     def _get_index_file_path(self, index_id):
