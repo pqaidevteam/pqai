@@ -19,7 +19,7 @@ PQAI can be plugged into other apps easily through API integration. Refer to the
 You would need the following:
 
 1. PQAI code: clone this repository
-2. ML models: download and extract the [models](https://s3.amazonaws.com/pqai.s3/public/pqai-models-2020-12-10.zip) to the `./models/` directory in the cloned repository.
+2. ML models: download and extract the [models](https://s3.amazonaws.com/pqai.s3/public/pqai-assets-latest.zip) to the `./models/` directory in the cloned repository.
 3. A database of prior-art documents
 4. Searchable indexes: create using `indexes` module.
 
