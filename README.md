@@ -14,14 +14,54 @@ Use [search.projectpq.ai](https://search.projectpq.ai) to run prior-art searches
 
 PQAI can be plugged into other apps easily through API integration. Refer to the [API Usage Guide](docs/README-API.md) for details.
 
-## Create your own PQAI server
+## Deploy locally for testing or development
 
-You would need the following:
+1. Clone the git repository and move into it
 
-1. PQAI code: clone this repository
-2. ML models: download and extract the [models](https://s3.amazonaws.com/pqai.s3/public/pqai-assets-latest.zip) to the `./models/` directory in the cloned repository.
-3. A database of prior-art documents
-4. Searchable indexes: create using `indexes` module.
+   ```bash
+   git clone https://github.com/pqaidevteam/pqai.git
+   cd pqai
+   ```
+
+2. Create a conda environment and install dependencies
+
+   ```bash
+   conda create --name pqai python=3.8
+   conda activate pqai
+   pip install -r requirements.txt
+   ```
+
+3. Download the models
+
+   ```bash
+   curl -o assets.zip "https://s3.amazonaws.com/pqai.s3/public/pqai-assets-latest.zip"
+   unzip assets.zip -d models/
+   rm assets.zip
+   ```
+
+4. Set up Mongo database for patent (bibliography) data
+
+   ```bash
+   curl -o mongodump.tar.gz "https://s3.amazonaws.com/pqai.s3/public/pqai-mongo-dump.tar.gz"
+   tar -x --use-compress-program=pigz -f mongodump.tar.gz
+   mongorestore
+   ```
+
+5. Download sample indexes (for testing)
+
+   ```bash
+   curl -o index.zip "https://s3.amazonaws.com/pqai.s3/public/sample-index.zip"
+   unzip index.zip -d indexes/
+   rm index.zip
+   ```
+
+6. Define environment variables in the included `env` file and rename it to `.env`
+
+7. Run the server
+
+   ```bash
+   python server.py
+   ```
 
 ## License
 
