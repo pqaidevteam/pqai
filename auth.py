@@ -1,7 +1,10 @@
 from config.config import tokens_file
 import re
+import os
 
 def read_tokens():
+    if not os.path.isfile(tokens_file):
+        return set()
     with open(tokens_file, 'r') as f:
         lines = f.read().strip().splitlines()
         tokens = [re.split(r'\s+', line)[0] for line in lines]
