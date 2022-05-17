@@ -28,6 +28,8 @@ PQAI can be plugged into other apps easily through API integration. Refer to the
    ```bash
    conda create --name pqai python=3.8
    conda activate pqai
+   sudo apt-get update && apt-get install gcc g++ -y
+   sudo apt-get install libgl1-mesa-glx libglib2.0-0 libsm6 libxrender1 libxext6 -y
    pip install -r requirements.txt
    ```
 
