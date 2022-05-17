@@ -7,15 +7,17 @@ AWS_SECRET_ACCESS_KEY=           # (not needed for testing)
 API_PORT=                        # port to be used by PQAI, default=8501
 MONGO_PORT=                      # port for Mongo service, default=27017
 MONGO_HOST=                      # default=localhost
+MONGO_USER=                      # leave blank if no username needed for connection
+MONGO_PASSWORD=                  # leave blank if no password needed
 MONGO_DBNAME=                    # default=pqai
 MONGO_PAT_COLL=                  # default=bibliography
 MONGO_NPL_COLL=                  # default=npl
-SMART_INDEX_SELECTION=           # 1 or 0
+SMART_INDEX_SELECTION=           # 1 or 0; set as 0 if indexes not split at subclass level
 USE_RERANKER=                    # 1 or 0
 DISABLE_GPU=                     # 1 or 0
-SENTRY_URL=                      # optional
-OUTGOING_EXT=                    # 1 or 0
-INCOMING_EXT=                    # 1 0r 0
+SENTRY_URL=                      # optional; leave blank is not needed
+OUTGOING_EXT=                    # 1 or 0; set as 0 for local testing
+INCOMING_EXT=                    # 1 0r 0; set as 0 for local testing
 USE_FAISS_INDEXES=1              # 1 or 0
 USE_ANNOY_INDEXES=0              # 1 or 0
-TOKEN_AUTHENTICATION=            # 1 or 0
+TOKEN_AUTHENTICATION=            # 1 or 0; can disable for local testing
