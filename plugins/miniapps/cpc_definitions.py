@@ -21,7 +21,7 @@ class CPCDefinitionRetriever(metaclass=Singleton):
     """
     def __init__(self):
         self._lut = None
-        self.cpc_data = None     
+        self.cpc_data = None
 
     def define(self, cpc, segmented=True):
         if not self._lut:

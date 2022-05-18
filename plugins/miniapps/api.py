@@ -39,8 +39,11 @@ class SuggestCPCs(TextBasedRequest):
         distribution = Counter(cpcs).most_common(10)
         output = []
         for cpc, freq in distribution:
-            definition = DefineCPC({'cpc': cpc}).serve()
-            output.append({'cpc': cpc, 'definition': definition})
+            try:
+                definition = DefineCPC({'cpc': cpc}).serve()
+                output.append({'cpc': cpc, 'definition': definition})
+            except:
+                continue
         return output
 
     def _similar_patents(self):
