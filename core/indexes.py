@@ -146,7 +146,7 @@ class FaissIndex(VectorIndex):
 
     def _save(self):
         index_file = f'{self._index_dir}/{self._id}.faiss'
-        labels_file = f'{self._index_dir}/{self._id}.labels.json'
+        labels_file = f'{self._index_dir}/{self._id}.items.json'
         faiss.write_index(self._index, index_file)
         with open(labels_file, 'w') as fp:
             json.dump(self._labels, fp)
