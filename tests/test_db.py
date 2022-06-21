@@ -7,8 +7,14 @@ os.environ['TEST'] = "1"
 
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
 TEST_DIR = str(Path(__file__).parent.resolve())
 BASE_DIR = str(Path(__file__).parent.parent.resolve())
+ENV_PATH = "{}/.env".format(BASE_DIR)
+
+load_dotenv(ENV_PATH)
+
 sys.path.append(BASE_DIR)
 
 from core import db
@@ -48,6 +54,10 @@ class TestDBModule(unittest.TestCase):
     def test_get_first_claim(self):
         clm = db.get_first_claim('US7654321B2')
         self.assertIsInstance(clm, str)
+
+    def test_get_document(self):
+        doc = db.get_document('US7654321B2')
+        self.assertIsInstance(doc, dict)
 
 
 if __name__ == '__main__':
