@@ -19,7 +19,7 @@ class Document:
 			self._data = db.get_document(self.id)
 
 	def is_patent (self):
-		return False if len(self._id) == 40 else True
+		return bool(re.match(r'US\d+', self._id))
 
 	def is_npl (self):
 		return not self.is_patent()
