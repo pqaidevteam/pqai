@@ -51,6 +51,6 @@ port = int(os.environ['API_PORT'])
 PQAI_S3_BUCKET_NAME = os.environ['PQAI_S3_BUCKET_NAME']
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
-sentry_url = os.environ.get('SENTRY_URL')
+sentry_url = os.environ.get('SENTRY_URL').strip()
 
 token_authentication_active = bool(int(os.environ['TOKEN_AUTHENTICATION']))

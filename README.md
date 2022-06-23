@@ -57,6 +57,8 @@ PQAI can be plugged into other apps easily through API integration. Refer to the
    rm index.zip
    ```
 
+   (Look at `scripts/mongo2faiss.py` on how to create your own indexes)
+
 6. Define environment variables in the included `env` file and rename it to `.env`
 
 7. Run the server
