@@ -1,11 +1,11 @@
-from pathlib import Path
 import os
 import sys
+from pathlib import Path
+from dotenv import load_dotenv
 base_dir = str((Path(__file__).parent / '../').resolve())
 
 env_file = f'{base_dir}/.env'
 if os.path.isfile(env_file):
-    from dotenv import load_dotenv
     load_dotenv(env_file)
     print('Created environment from .env file.')
 
@@ -48,9 +48,6 @@ if allow_incoming_extension_requests:
     print('Server has been configured to accept extension requests.')
 
 port = int(os.environ['API_PORT'])
-PQAI_S3_BUCKET_NAME = os.environ['PQAI_S3_BUCKET_NAME']
-AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
 sentry_url = os.environ.get('SENTRY_URL').strip()
 
 token_authentication_active = bool(int(os.environ['TOKEN_AUTHENTICATION']))

@@ -1,3 +1,13 @@
+import os
+import io
+import re
+import time
+import math
+import copy
+import cv2
+import markdown
+import boto3
+import botocore.exceptions
 from core.vectorizers import SentBERTVectorizer
 from core.vectorizers import CPCVectorizer
 from core.index_selection import SubclassBasedIndexSelector
@@ -13,25 +23,16 @@ from core.encoders import default_boe_encoder
 from core.results import SearchResult
 from core.encoders import default_embedding_matrix
 from core.datasets import PoC
-import copy
-import io
-import re
-import cv2
-import os
-import markdown
-import time
-import math
 
+PQAI_S3_BUCKET_NAME = os.environ['PQAI_S3_BUCKET_NAME']
+AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
 
-from config.config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
-import boto3
-import botocore.exceptions
 session = boto3.Session(
     aws_access_key_id=AWS_ACCESS_KEY_ID,
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY
 )
 s3 = session.resource('s3')
-from config.config import PQAI_S3_BUCKET_NAME
 
 from PIL import Image
 import core.remote as remote
