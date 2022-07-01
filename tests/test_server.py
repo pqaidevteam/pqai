@@ -11,7 +11,7 @@ TEST_DIR = str(Path(__file__).parent.resolve())
 BASE_DIR = str(Path(__file__).parent.parent.resolve())
 sys.path.append(BASE_DIR)
 
-from config.config import port as PORT
+PORT = int(os.environ['API_PORT'])
 
 if len(sys.argv) > 1:
 	HOST = sys.argv[1]

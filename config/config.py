@@ -47,7 +47,4 @@ allow_incoming_extension_requests = bool(int(os.environ['INCOMING_EXT']))
 if allow_incoming_extension_requests:
     print('Server has been configured to accept extension requests.')
 
-port = int(os.environ['API_PORT'])
-sentry_url = os.environ.get('SENTRY_URL').strip()
-
 token_authentication_active = bool(int(os.environ['TOKEN_AUTHENTICATION']))

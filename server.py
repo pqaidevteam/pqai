@@ -11,17 +11,17 @@ from config import config
 if config.gpu_disabled:
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-from flask import request, send_file
+from flask import Flask, request, send_file
 from flask_api import FlaskAPI, status, exceptions
 
-if config.sentry_url:
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+SENTRY_URL = os.environ.get('SENTRY_URL').strip()
+if SENTRY_URL:
     print('Sentry is active. Errors and performance data will be reported.')
-    import sentry_sdk
-    from flask import Flask
-    from sentry_sdk.integrations.flask import FlaskIntegration
     sentry_sdk.init(
         environment=config.environment,
-        dsn=config.sentry_url,
+        dsn=SENTRY_URL,
         integrations=[FlaskIntegration()],
         traces_sample_rate=1.0
     )
@@ -232,4 +232,5 @@ def error(e):
 import plugins.miniapps.routes
 
 if __name__ == '__main__':
-    serve(app, host='0.0.0.0', port=config.port, asyncore_use_poll=True)
+    PORT = int(os.environ['API_PORT'])
+    serve(app, host='0.0.0.0', port=PORT, asyncore_use_poll=True)
