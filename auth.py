@@ -1,23 +1,29 @@
-from config.config import tokens_file
-import re
 import os
+import re
+from config.config import tokens_file
+
+TOKENS = set()
 
 def read_tokens():
+    global TOKENS
     if not os.path.isfile(tokens_file):
         return set()
     with open(tokens_file, 'r') as f:
         lines = f.read().strip().splitlines()
-        tokens = [re.split(r'\s+', line)[0] for line in lines]
-    return set(tokens)
-
-tokens = read_tokens()
+        tokens = [re.split(r'\s+', l)[0] for l in lines if l.strip()]
+        TOKENS = TOKENS.union(tokens)
 
 def validate_access(request):
     route = request.base_url
     if not is_behind_auth(route):
         return True
     token = extract_token(request)
-    return token in tokens
+    if token is None:
+        return False
+    if token in TOKENS:
+        return True
+    read_tokens() # to account for tokens added after server started
+    return token in TOKENS
 
 def extract_token(req):
     method = req.method
