@@ -1,3 +1,4 @@
+import os
 import re
 import numpy as np
 import json
@@ -5,8 +6,9 @@ from sklearn.decomposition import TruncatedSVD
 from sentence_transformers import SentenceTransformer
 
 from core.encoders import Encoder
-
 from config.config import models_dir
+
+DEFAULT_SBERT_MODEL = os.environ["DEFAULT_SBERT_MODEL"]
 
 class Vectorizer(Encoder):
 
@@ -27,16 +29,15 @@ class Vectorizer(Encoder):
 class SentBERTVectorizer:
 
     class __impl(Vectorizer):
-
-        sentbert_model_path = models_dir + 'vectorizer_distilbert_poc/'
         
-        def __init__(self):
+        def __init__(self, model=DEFAULT_SBERT_MODEL):
             super().__init__()
+            self._model_path = models_dir + model
             self._name = 'SentBERTVectorizer'
             self._model = None # Lazy loads
 
         def load (self):
-            self._model = SentenceTransformer(self.sentbert_model_path)
+            self._model = SentenceTransformer(self._model_path)
 
         def embed (self, text):
             self._load_if_needed()
@@ -154,12 +155,12 @@ class SIFTextVectorizer:
 
         def embed (self, text, unique=True, remove_pc=False, average=False):
             words = self.tokenize(text)
-            if len(words) is 0:
+            if len(words) == 0:
                 return self.gray
             if unique:
                 words = list(set(words))
             idxs = [self.lut[w] for w in words if w in self.lut]
-            if len(idxs) is 0:
+            if len(idxs) == 0:
                 return self.gray
             if not average:
                 matrix = np.array([self.vecs[i]*self.sifs[i] for i in idxs])

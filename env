@@ -13,6 +13,7 @@ MONGO_DBNAME=                    # default=pqai
 MONGO_PAT_COLL=                  # default=bibliography
 MONGO_NPL_COLL=                  # default=npl
 SMART_INDEX_SELECTION=           # 1 or 0; set as 0 if indexes not split at subclass level
+DEFAULT_SBERT_MODEL=             # any of the SBERT models present in /models directory
 USE_RERANKER=                    # 1 or 0
 DISABLE_GPU=                     # 1 or 0
 SENTRY_URL=                      # optional; leave blank is not needed
