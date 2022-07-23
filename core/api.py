@@ -676,7 +676,8 @@ class PatentDataRequest(AbstractPatentDataRequest):
             'abstract': self._patent.abstract,
             'description': self._patent.description,
             'claims': self._patent.claims,
-            'publication_date': self._patent.publication_date
+            'publication_date': self._patent.publication_date,
+            'filing_date': self._patent.filing_date
         }
         return patent_data
         
