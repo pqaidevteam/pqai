@@ -1,7 +1,7 @@
 
-[![Python](https://img.shields.io/badge/python-v3.10-blue)]()
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Python](https://img.shields.io/badge/python-v3.10-blue)](https://www.python.org/)
 [![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/PyCQA/pylint)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 # PQAI: Patent Quality Artificial Intelligence
 
