@@ -103,8 +103,8 @@ class KeywordFilter(Filter):
 		self._regex = self._create_regex(keyword)
 
 	def _filter_fn(self, doc):
-		text = doc.abstract.lower()
-		return re.search(self._regex, text)
+		text = doc.full_text.lower()
+		return bool(re.search(self._regex, text))
 
 	def _create_regex(self, keyword):
 		regex = keyword.lower()

@@ -1,11 +1,21 @@
 import unittest
 import json
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ['TEST'] = "1"
+
 import sys
 from pathlib import Path
-test_dir = str(Path(__file__).parent.resolve())
-BASE_DIR = Path(__file__).parent.parent
-sys.path.append(str(BASE_DIR.resolve()))
+from dotenv import load_dotenv
+
+TEST_DIR = str(Path(__file__).parent.resolve())
+BASE_DIR = str(Path(__file__).parent.parent.resolve())
+ENV_PATH = "{}/.env".format(BASE_DIR)
+
+load_dotenv(ENV_PATH)
+
+sys.path.append(BASE_DIR)
 
 from core.filters import Filter, FilterArray
 from core.filters import PublicationDateFilter, FilingDateFilter
