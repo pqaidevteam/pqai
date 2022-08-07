@@ -1,5 +1,5 @@
 from core.documents import Document, Patent
-from core.classifiers import BERTSubclassPredictor
+from core.classifiers import BOWSubclassPredictor
 from collections import Counter
 import re
 
@@ -44,7 +44,7 @@ class SearchResult (Document):
 				subclasses = [cpc[:4] for cpc in cpcs]
 				return Counter(subclasses).most_common(1)[0][0]
 
-		return BERTSubclassPredictor().predict_subclasses(self.abstract)[0]
+		return BOWSubclassPredictor().predict_subclasses(self.abstract)[0]
 
 	def satisfies(self, conditions):
 		return conditions.passed_by(self)
