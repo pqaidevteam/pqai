@@ -169,13 +169,13 @@ class IndexesDirectory():
         self._available = self._discover_indexes()
 
     def _discover_indexes(self):
-        files = os.scandir(self._folder)
+        files = [f.name for f in os.scandir(self._folder)]
         index_files = []
         if self.use_faiss_indexes:
-            index_files += [f for f in files if f.name.endswith('.faiss')]
+            index_files += [f for f in files if f.endswith('.faiss')]
         if self.use_annoy_indexes:
-            index_files += [f for f in files if f.name.endswith('.ann')]
-        index_ids = ['.'.join(f.name.split('.')[:-1]) for f in index_files]
+            index_files += [f for f in files if f.endswith('.ann')]
+        index_ids = ['.'.join(f.split('.')[:-1]) for f in index_files]
         return set(index_ids)
 
     def get(self, index_id):
