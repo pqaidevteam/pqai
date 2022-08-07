@@ -35,7 +35,7 @@ class SearchResult (Document):
 		return bool(re.match(r'^[A-HY]\d\d[A-Z]$', string))
 
 	def _assign_index(self):
-		if self._is_subclass(self._index):
+		if self._is_subclass(self._index[:4]):
 			return self._index
 
 		if self.type == 'patent':
