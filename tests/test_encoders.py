@@ -1,15 +1,25 @@
 import unittest
 
-import sys
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ['TEST'] = "1"
+
 from pathlib import Path
-test_dir = str(Path(__file__).parent.resolve())
-BASE_DIR = Path(__file__).parent.parent
-sys.path.append(str(BASE_DIR.resolve()))
+TEST_DIR = str(Path(__file__).parent.resolve())
+BASE_DIR = str(Path(__file__).parent.parent.resolve())
+ENV_PATH = "{}/.env".format(BASE_DIR)
+
+from dotenv import load_dotenv
+load_dotenv(ENV_PATH)
+
+import sys
+sys.path.append(BASE_DIR)
 
 from core.encoders import Encoder
 from core.encoders import BagOfEntitiesEncoder
 from core.encoders import EmbeddingMatrix
 from core.encoders import BagOfVectorsEncoder
+
 
 class TestEncoderClass(unittest.TestCase):
 
@@ -56,7 +66,7 @@ class TestEncoderClass(unittest.TestCase):
 class TestBagOfEntitiesEncoderClass(unittest.TestCase):
 
 	def setUp(self):
-		file = f'{test_dir}/test_entities.vocab'
+		file = f'{TEST_DIR}/test_entities.vocab'
 		self.boe_encoder = BagOfEntitiesEncoder.from_vocab_file(file)
 
 	def test_can_encode_string(self):
@@ -99,7 +109,7 @@ class TestBagOfEntitiesEncoderClass(unittest.TestCase):
 class TestEmbeddingMatrixClass(unittest.TestCase):
 
 	def setUp(self):
-		file = f'{test_dir}/test_embs.tsv'
+		file = f'{TEST_DIR}/test_embs.tsv'
 		self.emb = EmbeddingMatrix.from_tsv(file)
 
 	def test_get_embedding_by_word(self):
@@ -128,7 +138,7 @@ class TestEmbeddingMatrixClass(unittest.TestCase):
 class TestBagOfVectorsEncoder(unittest.TestCase):
 
 	def setUp(self):
-		emb_matrix_file = f'{test_dir}/test_embs.tsv'
+		emb_matrix_file = f'{TEST_DIR}/test_embs.tsv'
 		emb_matrix = EmbeddingMatrix.from_tsv(emb_matrix_file)
 		self.encoder = BagOfVectorsEncoder(emb_matrix)
 		
