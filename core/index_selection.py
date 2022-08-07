@@ -1,8 +1,8 @@
-from core.classifiers import BERTSubclassPredictor
+from core.classifiers import BOWSubclassPredictor
 
 class SubclassBasedIndexSelector():
 
-	_subclass_predict_fn = BERTSubclassPredictor().predict_subclasses
+	_subclass_predict_fn = BOWSubclassPredictor().predict_subclasses
 	
 	def __init__(self, indexes):
 		self._indexes = indexes
