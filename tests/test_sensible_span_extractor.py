@@ -1,13 +1,19 @@
 import unittest
-import sys
+
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ['TEST'] = "1"
+
 from pathlib import Path
 TEST_DIR = str(Path(__file__).parent.resolve())
 BASE_DIR = str(Path(__file__).parent.parent.resolve())
-sys.path.append(BASE_DIR)
+ENV_PATH = "{}/.env".format(BASE_DIR)
 
-# Run tests without using GPU
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+from dotenv import load_dotenv
+load_dotenv(ENV_PATH)
+
+import sys
+sys.path.append(BASE_DIR)
 
 from core.sensible_span_extractor import SensibleSpanExtractor, SubsequenceExtractor
 
