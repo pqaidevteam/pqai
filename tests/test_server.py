@@ -173,12 +173,12 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(data['citations_forward']), 0)
 
 	def test_patent_aggregated_citations_route(self):
-		url = '/patents/US7654321B2/citations/aggregated?levels=3'
+		url = '/patents/US7654321B2/citations/aggregated?levels=2'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
 		self.assertIsInstance(data, list)
-		self.assertGreater(len(data), 1000)
+		self.assertGreater(len(data), 50)
 
 	def test_patent_concepts_in_abstracts_route(self):
 		url = '/patents/US7654321B2/abstract/concepts'
