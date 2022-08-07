@@ -1,15 +1,21 @@
 import unittest
+import numpy as np
 
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 os.environ['TEST'] = "1"
 
-import sys
 from pathlib import Path
 TEST_DIR = str(Path(__file__).parent.resolve())
 BASE_DIR = str(Path(__file__).parent.parent.resolve())
+ENV_PATH = "{}/.env".format(BASE_DIR)
+
+from dotenv import load_dotenv
+load_dotenv(ENV_PATH)
+
+import sys
 sys.path.append(BASE_DIR)
 
-import numpy as np
 from core.indexes import Index, IndexesDirectory
 from core.indexes import AnnoyIndexReader, AnnoyIndex
 from core.indexes import FaissIndexReader, FaissIndex
