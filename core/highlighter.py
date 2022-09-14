@@ -1,9 +1,13 @@
+"""
+Selects which keywords can be highlighted in a search result snippet on the
+basis of query contents
+"""
+
 import re
 import json
 import numpy as np
 
 from config.config import models_dir
-import core.utils
 from core.utils import is_generic
 from core.vectorizers import SIFTextVectorizer
 
@@ -13,84 +17,81 @@ dictionary = json.load(open(models_dir + 'glove-dictionary.json'))
 l_vocab = json.load(open(models_dir + 'glove-vocab.lemmas.json'))
 l_variations = json.load(open(models_dir + 'glove-dictionary.variations.json'))
 
-def variations (word):
-	"""Get syntactic variations of a word.
-	
-	Args:
-	    word (str): The word, e.g., "creating"
-	
-	Returns:
-	    list: Variations, e.g., ["create", "created", "creates", ... ]
-	"""
-	if not word in dictionary:
-		return [word]
-	else:
-		lemma = l_vocab[dictionary[word]]
-		return l_variations[lemma]
+def variations(word):
+    """Get syntactic variations of a word.
+
+    Args:
+        word (str): The word, e.g., "creating"
+
+    Returns:
+        list: Variations, e.g., ["create", "created", "creates", ... ]
+    """
+    if not word in dictionary:
+        return [word]
+    lemma = l_vocab[dictionary[word]]
+    return l_variations[lemma]
 
 
-def highlight (query, text):
-	"""Given a query, highlight some relevant words in the given text
-	snippet which would help user judge the relevancy of the snippet for
-	the given query. 
-	
-	Args:
-	    query (str): Query
-	    text (str): Snippet of text.
-	
-	Returns:
-	    str: Snippet with relevant words wrapped in <strong></strong>
-	    	tags (to show as html).
-	"""
-	words = list(set(re.findall(r'[a-z]+', query.lower())))
-	terms = list(set(re.findall(r'[a-z]+', text.lower())))
+def highlight(query, text):
+    """Given a query, highlight some relevant words in the given text
+    snippet which would help user judge the relevancy of the snippet for
+    the given query.
 
-	words = [word for word in words if not is_generic(word)]
-	terms = [term for term in terms if not is_generic(term)]
+    Args:
+        query (str): Query
+        text (str): Snippet of text.
 
-	qvecs = [embed(word) for word in words]
-	tvecs = [embed(term) for term in terms]
-	
-	qvecs = qvecs / np.linalg.norm(qvecs, ord=2, axis=1, keepdims=True)
-	tvecs = tvecs / np.linalg.norm(tvecs, ord=2, axis=1, keepdims=True)
+    Returns:
+        str: Snippet with relevant words wrapped in <strong></strong>
+            tags (to show as html).
+    """
+    words = list(set(re.findall(r'[a-z]+', query.lower())))
+    terms = list(set(re.findall(r'[a-z]+', text.lower())))
 
-	sims = np.matmul(qvecs, tvecs.transpose())
-	to_highlight = []
-	for i in range(sims.shape[0]):
-		j = np.argmax(sims[i])
-		if sims[i][j] > 0.6:
-			to_highlight.append(terms[j])
+    words = [word for word in words if not is_generic(word)]
+    terms = [term for term in terms if not is_generic(term)]
 
-	replacement = '<dGn9zx>\\1</dGn9zx>'
-	for term in to_highlight:
-		pattern = r'\b(' + term + r')\b'
-		text = re.sub(pattern, replacement, text, count=1, flags=re.IGNORECASE)
+    qvecs = [embed(word) for word in words]
+    tvecs = [embed(term) for term in terms]
 
-	while True:
-		flag = False
-		matches = re.findall(r'([a-z]+)\s\<dGn9zx\>', text, re.IGNORECASE)
-		for match in matches:
-			if not is_generic(match.lower()):
-				flag = True
-				pattern = match + ' <dGn9zx>'
-				replacement = '<dGn9zx>' + match + ' '
-				text = re.sub(pattern, replacement, text, count=1, flags=re.IGNORECASE)
-		if not flag:
-			break
+    qvecs = qvecs / np.linalg.norm(qvecs, ord=2, axis=1, keepdims=True)
+    tvecs = tvecs / np.linalg.norm(tvecs, ord=2, axis=1, keepdims=True)
 
-	while True:
-		flag = False
-		matches = re.findall(r'\<\/dGn9zx\>\s([a-z]+)', text, re.IGNORECASE)
-		for match in matches:
-			if not is_generic(match.lower()):
-				flag = True
-				pattern =  '</dGn9zx> ' + match
-				replacement =  ' ' + match + '</dGn9zx>'
-				text = re.sub(pattern, replacement, text, count=1, flags=re.IGNORECASE)
-		if not flag:
-			break
+    sims = np.matmul(qvecs, tvecs.transpose())
+    to_highlight = []
+    for i in range(sims.shape[0]):
+        j = np.argmax(sims[i])
+        if sims[i][j] > 0.6:
+            to_highlight.append(terms[j])
 
-	pattern = r'dGn9zx'
-	replacement = 'strong'
-	text = re.sub(pattern, replacement, text)
-	return (text, to_highlight)
+    replacement = '<dGn9zx>\\1</dGn9zx>'
+    for term in to_highlight:
+        pattern = r'\b(' + term + r')\b'
+        text = re.sub(pattern, replacement, text, count=1, flags=re.IGNORECASE)
+
+    while True:
+        flag = False
+        matches = re.findall(r'([a-z]+)\s\<dGn9zx\>', text, re.IGNORECASE)
+        for match in matches:
+            if not is_generic(match.lower()):
+                flag = True
+                pattern = match + ' <dGn9zx>'
+                replacement = '<dGn9zx>' + match + ' '
+                text = re.sub(pattern, replacement, text, count=1, flags=re.IGNORECASE)
+        if not flag:
+            break
+
+    while True:
+        flag = False
+        matches = re.findall(r'\<\/dGn9zx\>\s([a-z]+)', text, re.IGNORECASE)
+        for match in matches:
+            if not is_generic(match.lower()):
+                flag = True
+                pattern = f'</dGn9zx> {match}'
+                replacement = f' {match}</dGn9zx>'
+                text = re.sub(pattern, replacement, text, count=1, flags=re.IGNORECASE)
+        if not flag:
+            break
+
+    text = re.sub(r'dGn9zx', 'strong', text)
+    return (text, to_highlight)
