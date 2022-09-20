@@ -16,18 +16,28 @@
 
 conda create --name pqai python=3.8
 conda activate pqai
-sudo apt-get update && apt-get install gcc g++ -y
+sudo apt-get update
+sudo apt-get install unzip
+sudo apt-get install gcc g++ -y
 sudo apt-get install libgl1-mesa-glx libglib2.0-0 libsm6 libxrender1 libxext6 -y
 pip install -r requirements.txt
 
-curl -o assets.zip "https://s3.amazonaws.com/pqai.s3/public/pqai-assets-latest.zip"
+FILE=assets.zip
+if [ ! -f "$FILE" ]; then
+    curl -o assets.zip "https://s3.amazonaws.com/pqai.s3/public/pqai-assets-latest.zip"
 unzip assets.zip -d models/
-rm assets.zip
 
-curl -o mongodump.tar.gz "https://s3.amazonaws.com/pqai.s3/public/pqai-mongo-dump.tar.gz"
+FILE=mongodump.tar.gz
+if [ ! -f "$FILE" ]; then
+    curl -o mongodump.tar.gz "https://s3.amazonaws.com/pqai.s3/public/pqai-mongo-dump.tar.gz"
 tar -x --use-compress-program=pigz -f mongodump.tar.gz
 mongorestore
 
-curl -o index.zip "https://s3.amazonaws.com/pqai.s3/public/sample-index.zip"
+FILE=index.zip
+if [ ! -f "$FILE" ]; then
+    curl -o index.zip "https://s3.amazonaws.com/pqai.s3/public/sample-index.zip"
 unzip index.zip -d indexes/
+
 rm index.zip
+rm assets.zip
+rm mongodump.tar.gz
