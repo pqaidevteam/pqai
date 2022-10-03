@@ -91,7 +91,7 @@ soupsieve==2.3.2.post1
 tensorboard==2.8.0
 tensorboard-data-server==0.6.1
 tensorboard-plugin-wit==1.8.1
-tensorflow==2.8.0
+tensorflow==2.8.1
 tensorflow-io-gcs-filesystem==0.27.0
 termcolor==2.0.1
 tf-estimator-nightly==2.8.0.dev2021122109
