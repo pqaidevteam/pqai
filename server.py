@@ -197,16 +197,20 @@ def create_request_and_serve(req, reqClass):
         if isinstance(req, dict):
             req_data = {**req_data, **req}
         return success(reqClass(req_data).serve())
-    except Exception as e:
-        return error(e)
+    except API.ResourceNotFoundError:
+        return "Resource not found", status.HTTP_404_NOT_FOUND
+    except:
+        return "Server error", status.HTTP_500_INTERNAL_SERVER_ERROR
 
 def create_request_and_serve_jpg(req, reqClass):
     try:
         req_data = {**request.view_args, **request.args.to_dict()} 
         file_path_local = reqClass(req_data).serve()
         return send_file(file_path_local, mimetype='image/jpeg')
-    except Exception as e:
-        return error(e)
+    except API.ResourceNotFoundError:
+        return "Drawing unavailable", status.HTTP_404_NOT_FOUND
+    except:
+        return "Server error", status.HTTP_500_INTERNAL_SERVER_ERROR
 
 def success(response):
     return response, status.HTTP_200_OK
