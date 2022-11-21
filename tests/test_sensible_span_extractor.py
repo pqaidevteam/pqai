@@ -33,6 +33,18 @@ class TestSensibleSpanExtractor(unittest.TestCase):
 		span = 'a fire fighting drone.'
 		self.assertSpan(sent, span)
 
+	def test_return_ranked_1(self):
+		sent = 'Another) object of the present invention is to provide a fire fighting drone.'
+		span = 'a fire fighting drone.'
+		res = self.extractor.return_ranked(sent)
+		self.assertEqual(res[0], span)
+
+	def test_return_ranked_2(self):
+		sent = 'Another (object of the present invention is to provide a fire fighting drone.'
+		span = 'a fire fighting drone.'
+		res = self.extractor.return_ranked(sent)
+		self.assertEqual(res[0], span)
+
 	def assertSpan(self, sent, span):
 		self.assertEqual(span, self.extractor.extract_from(sent))
 
