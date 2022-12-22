@@ -286,7 +286,64 @@ Path parameters
 | --------- | ------ | ---------- | --------------------------- |
 | `concept` | String | Given word | `vehicle` or `mobile phone` |
 
-### 19. Get API documentation
+
+### 19. Suggest CPCs for a text excerpt
+
+Route: `/suggest/cpcs`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Request parameters
+
+| Parameter | Value  | Meaning      | Example                     |
+| --------- | ------ | ------------ | --------------------------- |
+| `text`    | String | Text Excerpt | `fire fighting drones`      |
+
+### 20. Suggest Group Art Units for a text excerpt
+
+Route: `/predict/gaus`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Request parameters
+
+| Parameter | Value  | Meaning      | Example                     |
+| --------- | ------ | ------------ | --------------------------- |
+| `text`    | String | Text Excerpt | `fire fighting drones`      |
+
+### 21. Extract technical concepts from a text excerpt
+
+Route: `/extract/concepts`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Request parameters
+
+| Parameter | Value  | Meaning      | Example                     |
+| --------- | ------ | ------------ | --------------------------- |
+| `text`    | String | Text Excerpt | `fire fighting drones`      |
+
+### 22. Get definition of a CPC class
+
+Route: `/definitions/cpcs`
+
+Request type: `GET`
+
+Response type: `JSON` string
+
+Request parameters
+
+| Parameter | Value  | Meaning      | Example                     |
+| --------- | ------ | ------------ | --------------------------- |
+| `text`    | String | Text Excerpt | `fire fighting drones`      |
+
+### 23. Get API documentation
 
 Route: `/docs`
 
