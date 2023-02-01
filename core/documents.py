@@ -198,7 +198,7 @@ class Patent (Document):
 		try:
 			examiner = self.data['examinersDetails']['details'][0]
 			return examiner['name']['department']
-		except:
+		except KeyError:
 			return None
 
 	@property
