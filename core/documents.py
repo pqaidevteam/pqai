@@ -186,7 +186,7 @@ class Patent (Document):
 	@property
 	def cpcs(self):
 		biblio = db.get_patent_data(self.id, True)
-		return biblio['cpcs']
+		return biblio.get("cpcs", [])
 
 	@property
 	def independent_claims(self):
