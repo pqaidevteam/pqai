@@ -37,66 +37,23 @@ class SuggestCPCs(TextBasedRequest):
         for patent in patents:
             all_cpcs += patent.cpcs
 
-        sections = [cpc[0] for cpc in all_cpcs]
-        classes = [cpc[:3] for cpc in all_cpcs]
-        subclasses = [cpc[:4] for cpc in all_cpcs]
-        groups = [cpc.split("/")[0] + "/00" for cpc in all_cpcs]
-        subgroups = all_cpcs.copy()
-
-        section_dist = Counter(sections).most_common()
-        class_dist = Counter(classes).most_common()
-        subclass_dist = Counter(subclasses).most_common()
-        group_dist = Counter(groups).most_common()
-        subgroup_dist = Counter(subgroups).most_common()
-
-        confidence = {}
-        for section, count in section_dist:
-            total = len(sections)
-            confidence[section] = count/total
-
-        for clas, count in class_dist:
-            section = clas[0]
-            total = len([c for c in classes if c.startswith(section)])
-            alpha = confidence[section]
-            confidence[clas] = alpha*count/total
-
-        for subclass, count in subclass_dist:
-            clas = subclass[:3]
-            total = len([c for c in subclasses if c.startswith(clas)])
-            alpha = confidence[clas]
-            confidence[subclass] = alpha*count/total
-
-        for group, count in group_dist:
-            subclass = group[:4]
-            total = len([g for g in groups if g.startswith(subclass)])
-            alpha = confidence[subclass]
-            confidence[group] = alpha*count/total
-
-        for subgroup, count in subgroup_dist:
-            group = subgroup[:4]
-            total = len([sg for sg in subgroups if sg.startswith(group)])
-            alpha = confidence[group]
-            confidence[subgroup] = alpha*count/total
-
+        cpc_dist = Counter(all_cpcs).most_common()
         output = []
-        for cpc, value in confidence.items():
-            val = round(value, 2)
-            if val < 0.01:
-                continue
+        for cpc, count in cpc_dist:
+            score = round(count/len(all_cpcs), 2)
             try:
                 definition = DefineCPC({"cpc": cpc}).serve()
-                output.append({"cpc": cpc, "definition": definition, "confidence": val})
             except:
                 continue
-
-        output = sorted(output, key=lambda x: x["confidence"], reverse=True)
+            else:
+                output.append({"cpc": cpc, "definition": definition, "confidence": score})
         return output[:50]
 
     def _similar_patents(self):
         search_req = {'q': self._text }
-        search_req['after'] = '2010-01-01' # base inference on recent data
+        search_req['after'] = '2009-01-01' # base inference on recent data
         search_req['type'] = 'patent'
-        search_req['n'] = 100
+        search_req['n'] = 25
         results = SearchRequest102(search_req).serve()['results']
         patents = [Patent(res['id']) for res in results]
         return patents
