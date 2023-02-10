@@ -985,7 +985,7 @@ class DocumentationRequest(APIRequest):
     def _get_docs_html(self):
         with open(self._docs_file, 'r') as f:
             md = f.read()
-        exts = ['tables', 'toc', 'smarty']
+        exts = ['tables', 'toc', 'smarty', 'codehilite']
         html = markdown.markdown(md, extensions=exts)
         return BeautifulSoup(html, 'html.parser')
 

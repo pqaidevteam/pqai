@@ -1,6 +1,6 @@
-[TOC]
-
 # PQAI: API Usage Guide
+
+[TOC]
 
 ## Introduction
 
@@ -93,61 +93,59 @@ Most endpoints return JSON responses.
 
 Here is an example of making an API request in Python:
 
-```python
-import requests
+    :::python
+    import requests
 
-token = "392cd21128f44cc496331c4c9c772b62" # fake; replace with yours
-endpoint = "https://api.projectpq.ai"      # address of the PQAI API
-route = "/search/102"                      # search route
-url = endpoint + route
+    token = "392cd21128f44cc496331c4c9c772b62" # fake; replace with yours
+    endpoint = "https://api.projectpq.ai"      # address of the PQAI API
+    route = "/search/102"                      # search route
+    url = endpoint + route
 
-query = "a fire fighting drone" # search query (can be paragraph long)
-n = 10                          # no. of results to return
-result_type = "patent"          # exclude research papers
-after = "2016-01-01"            # return patents published post-2016
+    query = "a fire fighting drone" # search query (can be paragraph long)
+    n = 10                          # no. of results to return
+    result_type = "patent"          # exclude research papers
+    after = "2016-01-01"            # return patents published post-2016
 
-params = {                      # create parameter object
-    "q": query,
-    "n": n,
-    "type": result_type,
-    "after": after,
-    "token": token
-}
-response = requests.get(url, params=params)  # send the request
-assert response.status_code == 200           # error check
+    params = {                      # create parameter object
+        "q": query,
+        "n": n,
+        "type": result_type,
+        "after": after,
+        "token": token
+    }
+    response = requests.get(url, params=params)  # send the request
+    assert response.status_code == 200           # error check
 
-results = response.json().get("results")     # decode response
-print(results)
-```
+    results = response.json().get("results")     # decode response
+    print(results)
 
 #### Javascript
 
 Here is the same example in Javascript:
 
-```javascript
-var request = require('request');
+    :::javascript
+    var request = require('request');
 
-const endpoint = "https://api.projectpq.ai";
-const route = "/search/102";
-const url = endpoint + route;
+    const endpoint = "https://api.projectpq.ai";
+    const route = "/search/102";
+    const url = endpoint + route;
 
-const qs = {
-    q: "a fire fighting drone", // search query
-    n: 10,                      // return 10 results
-    type: "patent",             // exclude research papers
-    after: "2016-01-01",        // return patents published post-2016
-    token: "392cd21128f44cc496331c4c9c772b62" // fake; replace with yours
-}
-
-request({ url, qs }, (err, res, body) => {
-    if(err) {
-        console.log(err);
-        return;
+    const qs = {
+        q: "a fire fighting drone", // search query
+        n: 10,                      // return 10 results
+        type: "patent",             // exclude research papers
+        after: "2016-01-01",        // return patents published post-2016
+        token: "392cd21128f44cc496331c4c9c772b62" // fake; replace with yours
     }
-    const results = JSON.parse(body).results;
-    console.log(results);
-});
-```
+
+    request({ url, qs }, (err, res, body) => {
+        if(err) {
+            console.log(err);
+            return;
+        }
+        const results = JSON.parse(body).results;
+        console.log(results);
+    });
 
 #### Browser
 
