@@ -1,22 +1,99 @@
 [TOC]
 
-# API Usage Guide
+# PQAI: API Usage Guide
 
-## Authentication
+## Introduction
 
-A `token` parameter is used for authentication, which must be included in every request, except for requests where it is explicitly stated that it isn't need.
+PQAI API enables you to use the data and functionality of PQAI in a programmatic way.
 
-## API Routes
+You can use it to obtain patent data (only US patents as of now), run similarity searches, predict CPCs given some technical text, etc. This guide shows all you can do with it.
+
+## Getting started
+
+To get started the first thing you will need is an API access token.
+
+The token is a unique ID that verifies real API users. It looks like this: `392cd21128f44cc496331c4c9c772b62`. You can request one for free by filling [this form](https://projectpq.ai/get-involved) on our website.
+
+Make sure you include your email address, because that's where we are going to send your token.
+
+Typically it will take us about a day to send you your token. In some instances (such as holidays) it may take us up to 2 days. If you haven't received your token after 2 days, feel free to email [sam@projectpq.ai](mailto:sam@projectpq.ai).
+
+Once you get your token, you can begin using with the API.
+
+Some programming experience is needed to make use of this API, although, its functionality can pretty much be *tried out* without writing any code by sending request via a web browser.
+
+## How to use the API?
+
+### How to formulate requests?
+
+Every request has to go to one of the API routes.
+
+The endpoints are listed in the [next section](#Endpoints). Each route specifies some parameters. They can be of two types:
+
+1. Path parameters
+2. Query string parameters
+
+**Path parameters** are part of the URL. In this guide, they are preceded by a colon in the route URL. For example, the route below is one for getting a patent drawing:
+
+`/patents/:pn/drawings/:n`
+
+It contains two parameters, `pn` and `n`. To make a request, we have to replace them (along with the preceding colons) with their values.
+
+To get drawing #4 of patent no. US7654321B2, the route will become: `/patents/US7654321B2/drawings/4`.
+
+By adding this route to the PQAI endpoint, which is `http://api.projectpq.ai`, you get the final URL:
+
+https://api.projectpq.ai/patents/US7654321B2/drawings/4
+
+(if you open the above route in your browser, you should see the drawing returned by the API - try changing the patent and drawing number to get a hang of it)
+
+**Query string parameters** come after the URL and are separated from it with a `?` symbol.
+
+Let's demonstrate with an example. There is another route in PQAI API similar to the one above. It returns thumbnails of drawings:
+
+https://api.projectpq.ai/patents/US7654321B2/thumbnails/4
+
+This route also accepts query string parameters. They are `w` and `h`, which specify the width and height of the thumbnail to be returned.
+
+Let's try sending the `w` parameter with this route.
+
+https://api.projectpq.ai/patents/US7654321B2/thumbnails/4?w=300
+
+Note that query string parameters are sent by specifying their symbol, followed by `=` sign, and then followed by their value, which in this case, was 300.
+
+To send multiple query string parameters, separate them with the `&` symbol, like so:
+
+https://api.projectpq.ai/patents/US7654321B2/thumbnails/4?w=300&h=300
+
+### How to send requests?
+
+Most endpoints accept HTTP GET requests, which you can make by using an appropriate HTTP client in any programming language (e.g., Python, Javascript, etc.).
+
+Since these are GET requests, they can also be made by typing in a URL in your browser. Example:
+
+https://api.projectpq.ai/patents/US10112730B2/thumbnails/2?w=400
+
+### How to use access token?
+
+All requests (except a few, see note below) need to be authenticated with a `token` parameter, like so:
+
+https://api.projectpq.ai/patents/US11154408B2?token=392cd21128f44cc496331c4c9c772b62
+
+(note that the above request won't work because it uses a fake token)
+
+Some requests, such as those for a patent drawing, do not require a token. In the next section, unless specified explicitly, the endpoint requires a valid token to be passed.
+
+### How to process responses?
+
+Most endpoints return JSON responses.
+
+## Routes
 
 ###  1. Retrieve prior-art documents with text query
 
 Route: `/search/102/`
 
-Request type: `GET`
-
-Response type: `JSON` string
-
-Request parameters
+Query string parameters
 
 | Parameter | Value   | Meaning                      | Example                             |
 | --------- | ------- | ---------------------------- | ----------------------------------- |
@@ -35,21 +112,13 @@ Request parameters
 
 Route: `/search/103/`
 
-Request type: `GET`
-
-Response type: `JSON` string
-
-Request parameters: [Same as for `/search/102/` route]
+Parameters: [Same as for `/search/102/` route]
 
 ###  3. Retrieve prior-art for a patent  (documents published before the filing date)
 
 Route: `/prior-art/patent/`
 
-Request type: `GET`
-
-Response type: `JSON` string
-
-Request parameters
+Query string parameters
 
 | Parameter | Value   | Meaning                       | Example                              |
 | --------- | ------- | ----------------------------- | ------------------------------------ |
@@ -63,21 +132,13 @@ Request parameters
 
 Route: `/similar/`
 
-Request type: `GET`
-
-Response type: `JSON` string
-
-Request parameters: [Same as `/prior-art/patent/` route]
+Parameters: [Same as `/prior-art/patent/` route]
 
 ###  5. Retrieve snippet for a query-document pair
 
 Route: `/snippets/`
 
-Request type: `GET`
-
-Response type: `JSON` string
-
-Request parameters:
+Query string parameters:
 
 | Parameter | Value  | Meaning            | Example          |
 | --------- | ------ | ------------------ | ---------------- |
@@ -88,21 +149,13 @@ Request parameters:
 
 Route: `/mappings/`
 
-Request type: `GET`
-
-Response type: `JSON` string
-
-Request parameters: [Same as `/snippets/` route]
+Parameters: [Same as `/snippets/` route]
 
 ###  7. Retrieve a sample from a dataset
 
 Route: `/datasets/`
 
-Request type: `GET`
-
-Response type: `JSON` string
-
-Request parameters
+Query string parameters
 
 | Parameter | Value   | Meaning       | Example |
 | --------- | ------- | ------------- | ------- |
@@ -113,11 +166,7 @@ Request parameters
 
 Route: `/documents/`
 
-Request type: `GET`
-
-Response type: `JSON` string
-
-Request parameters
+Query string parameters
 
 | Parameter | Value   | Meaning       | Example       |
 | --------- | ------- | ------------- | ------------- |
@@ -127,9 +176,9 @@ Request parameters
 
 Route: `/patents/:pn/drawings/:n`
 
-Request type: `GET`
-
 Response type: `PNG` image (binary)
+
+NOTE: Authentication token is NOT required for this route.
 
 Path parameters
 
@@ -138,15 +187,20 @@ Path parameters
 | `pn`      | String  | Patent Number | `US7654321B2` |
 | `n`       | Integer | Drawing index | `3`           |
 
-NOTE: Authentication token is NOT required for this route.
+Query string parameters
+
+| Parameter | Value   | Meaning | Example |
+| --------- | ------- | ------- | ------- |
+| `w`       | Integer | Width   | `300`   |
+| `h`       | Integer | Height  | `300`   |
+
+We suggest you pass *only one* of the parameters `w` and `h` - if you pass both and their values are not appropriately set, the drawing may appear stretched along the horizontal or vertical direction (example: [accurate](https://api.projectpq.ai/patents/US10112730B2/thumbnails/2?w=400), [distorted](https://api.projectpq.ai/patents/US10112730B2/thumbnails/2?w=400&h=200)).
 
 ###  10. Get list of drawings for a patent (to tell how many drawings are there)
 
 Route: `/patents/:pn/drawings`
 
-Request type: `GET`
-
-Response type: `JSON` string
+NOTE: Authentication token is NOT required for this route.
 
 Path parameters
 
@@ -154,15 +208,11 @@ Path parameters
 | --------- | ------- | ------------- | ------------- |
 | `pn`      | String  | Patent Number | `US7654321B2` |
 
-NOTE: Authentication token is NOT required for this route.
-
 ### 11. Get list of thumbnails available for a patent
 
 Route: `/patents/:pn/thumbnails`
 
-Request type: `GET`
-
-Response type: `JSON` string
+NOTE: Authentication token is NOT required for this route.
 
 Path parameters
 
@@ -170,13 +220,11 @@ Path parameters
 | --------- | ------ | ------------- | ------------- |
 | `pn`      | String | Patent Number | `US7654321B2` |
 
-NOTE: Authentication token is NOT required for this route.
-
 ### 12. Get a thumbnail of a patent's drawing
 
 Route: `/patents/:pn/thumbnails/:n`
 
-Request type: `GET`
+NOTE: Authentication token is NOT required for this route.
 
 Response type: `PNG` image (binary) 
 
@@ -189,17 +237,11 @@ Path parameters
 | `h`       | Integer | Thumbnail height (in pixels, optional) | `300`         |
 | `w`       | Integer | Thumbnail width (in pixels, optional)  | `400`         |
 
-To maintain the aspect ratio of the thumbnail, it is recommended to send only of the two parameters `h` and `w`. The other will be computed automatically. If both parameters are supplied and they violate the original aspect ratio of the image, then the thumbnail would look unnaturally stretched along x- or the y-axis.
-
-NOTE: Authentication token is NOT required for this route.
+We suggest you pass *only one* of the parameters `w` and `h` - if you pass both and their values are not appropriately set, the drawing may appear stretched along the horizontal or vertical direction (example: [accurate](https://api.projectpq.ai/patents/US10112730B2/thumbnails/2?w=400), [distorted](https://api.projectpq.ai/patents/US10112730B2/thumbnails/2?w=400&h=200)).
 
 ### 13. Get a patent's data
 
 Route: `/patents/:pn`
-
-Request type: `GET`
-
-Response type: `JSON` string
 
 Path parameters
 
@@ -210,10 +252,6 @@ Path parameters
 ### 14. Get a patent's field (title, abstract, claims, etc.)
 
 Route: `/patents/:pn/:field`
-
-Request type: `GET`
-
-Response type: `JSON` string
 
 Path parameters
 
@@ -233,10 +271,6 @@ Path parameters
 
 Route: `/patents/:pn/classification/cpcs`
 
-Request type: `GET`
-
-Response type: `JSON` string
-
 Path parameters
 
 | Parameter | Value  | Meaning       | Example       |
@@ -246,10 +280,6 @@ Path parameters
 ### 16. Get a patent's vector
 
 Route: `/patents/:pn/vectors/:field`
-
-Request type: `GET`
-
-Response type: `JSON` string
 
 Path parameters
 
@@ -262,10 +292,6 @@ Path parameters
 
 Route: `/concepts/:concept/vector`
 
-Request type: `GET`
-
-Response type: `JSON` string
-
 Path parameters
 
 | Parameter | Value  | Meaning    | Example                     |
@@ -275,10 +301,6 @@ Path parameters
 ### 18. Get contextually similar words to a given word
 
 Route: `/concepts/:concept/similar`
-
-Request type: `GET`
-
-Response type: `JSON` string
 
 Path parameters
 
@@ -291,11 +313,7 @@ Path parameters
 
 Route: `/suggest/cpcs`
 
-Request type: `GET`
-
-Response type: `JSON` string
-
-Request parameters
+Query string parameters
 
 | Parameter | Value  | Meaning      | Example                     |
 | --------- | ------ | ------------ | --------------------------- |
@@ -305,11 +323,7 @@ Request parameters
 
 Route: `/predict/gaus`
 
-Request type: `GET`
-
-Response type: `JSON` string
-
-Request parameters
+Query string parameters
 
 | Parameter | Value  | Meaning      | Example                     |
 | --------- | ------ | ------------ | --------------------------- |
@@ -319,11 +333,7 @@ Request parameters
 
 Route: `/extract/concepts`
 
-Request type: `GET`
-
-Response type: `JSON` string
-
-Request parameters
+Query string parameters
 
 | Parameter | Value  | Meaning      | Example                     |
 | --------- | ------ | ------------ | --------------------------- |
@@ -333,22 +343,16 @@ Request parameters
 
 Route: `/definitions/cpcs`
 
-Request type: `GET`
+Query string parameters
 
-Response type: `JSON` string
-
-Request parameters
-
-| Parameter | Value  | Meaning      | Example                     |
-| --------- | ------ | ------------ | --------------------------- |
-| `text`    | String | Text Excerpt | `fire fighting drones`      |
+| Parameter | Value  | Meaning    | Example     |
+| --------- | ------ | ---------- | ----------- |
+| `cpc`     | String | A CPC code | `H04W52/02` |
 
 ### 23. Get API documentation
 
 Route: `/docs`
 
-Request type: `GET`
-
 Response type: `HTML` string
 
-Parameters: None
+Parameters: None required
