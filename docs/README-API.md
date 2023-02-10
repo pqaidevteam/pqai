@@ -87,6 +87,78 @@ Some requests, such as those for a patent drawing, do not require a token. In th
 
 Most endpoints return JSON responses.
 
+### How to make requests programmatically?
+
+#### Python
+
+Here is an example of making an API request in Python:
+
+```python
+import requests
+
+token = "392cd21128f44cc496331c4c9c772b62" # fake; replace with yours
+endpoint = "https://api.projectpq.ai"      # address of the PQAI API
+route = "/search/102"                      # search route
+url = endpoint + route
+
+query = "a fire fighting drone" # search query (can be paragraph long)
+n = 10                          # no. of results to return
+result_type = "patent"          # exclude research papers
+after = "2016-01-01"            # return patents published post-2016
+
+params = {                      # create parameter object
+    "q": query,
+    "n": n,
+    "type": result_type,
+    "after": after,
+    "token": token
+}
+response = requests.get(url, params=params)  # send the request
+assert response.status_code == 200           # error check
+
+results = response.json().get("results")     # decode response
+print(results)
+```
+
+#### Javascript
+
+Here is the same example in Javascript:
+
+```javascript
+var request = require('request');
+
+const endpoint = "https://api.projectpq.ai";
+const route = "/search/102";
+const url = endpoint + route;
+
+const qs = {
+    q: "a fire fighting drone", // search query
+    n: 10,                      // return 10 results
+    type: "patent",             // exclude research papers
+    after: "2016-01-01",        // return patents published post-2016
+    token: "392cd21128f44cc496331c4c9c772b62" // fake; replace with yours
+}
+
+request({ url, qs }, (err, res, body) => {
+    if(err) {
+        console.log(err);
+        return;
+    }
+    const results = JSON.parse(body).results;
+    console.log(results);
+});
+```
+
+#### Browser
+
+The same request can be made by going to the following URL (put together manually):
+
+```
+https://api.projectpq.ai/search/102?q=a%20fire%fighting%20drone&n=10&type=patent&after=2016-01-01&token=392cd21128f44cc496331c4c9c772b62
+```
+
+(note that the above URL as such will give you an Invalid Token error. To get it to work, you'd have to replace the fake token in it with a valid one. The [Getting Started](#Getting%20started) section above describes how to get an access token.)
+
 ## Routes
 
 ###  1. Retrieve prior-art documents with text query
