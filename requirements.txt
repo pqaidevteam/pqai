@@ -104,7 +104,7 @@ transformers==4.22.1
 typing_extensions==4.3.0
 urllib3==1.26.12
 waitress==2.1.2
-Werkzeug==2.2.2
+Werkzeug==2.2.3
 wrapt==1.14.1
 yarg==0.1.9
 zipp==3.8.1
