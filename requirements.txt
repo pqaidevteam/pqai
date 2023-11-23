@@ -57,7 +57,7 @@ networkx==2.8.6
 nltk==3.6.7
 numba==0.55.2
 numpy==1.22.3
-oauthlib==3.2.1
+oauthlib==3.2.2
 opencv-python==4.6.0.66
 opt-einsum==3.3.0
 packaging==21.3
