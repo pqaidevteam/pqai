@@ -39,10 +39,22 @@ class TestJSONDocumentsFolder(unittest.TestCase):
 class TestMongoDBClass(unittest.TestCase):
 	
 	def test_can_retrieve_document(self):
-		client = MongoClient('localhost', 27017)
-		query = { 'publicationNumber': 'US7654321B2' }
-		mongo_coll = MongoCollection(client.pqai.bibliography)
-		doc = mongo_coll.get(query)
+		user = os.environ.get('MONGO_USER')
+		pwd = os.environ.get('MONGO_PASSWORD')
+		host = os.environ.get('MONGO_HOST')
+		port = os.environ.get('MONGO_PORT')
+		db = os.environ.get('MONGO_DBNAME')
+		coll = os.environ.get('MONGO_PAT_COLL')
+
+		if user and pwd:
+			url = f"mongodb://{user}:{pwd}@{host}:{port}/?authSource=admin"
+		else:
+			url = f"mongodb://{host}:{port}"
+		
+		client = MongoClient(url)
+		mongo_coll = MongoCollection(client[db][coll])
+
+		doc = mongo_coll.get({ 'publicationNumber': 'US7654321B2' })
 		self.assertEqual('US7654321B2', doc['publicationNumber'])
 
 
