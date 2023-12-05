@@ -239,7 +239,7 @@ def error(e):
 if os.environ.get("PLUGINS"):
     for plugin in os.environ.get("PLUGINS").split(","):
         try:
-            plugin_path = f'plugins/{plugin}/routes.py'
+            plugin_path = f'plugins.{plugin}.routes'
             importlib.import_module(plugin_path)
             print(f'Loaded plugin {plugin}')
         except Exception as e:
