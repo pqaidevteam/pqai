@@ -2,6 +2,7 @@ from waitress import serve
 import os
 import traceback
 import json
+import importlib
 import logging
 log = logging.getLogger('waitress')
 log.setLevel(logging.INFO)
@@ -199,7 +200,8 @@ def create_request_and_serve(req, reqClass):
         return success(reqClass(req_data).serve())
     except API.ResourceNotFoundError:
         return "Resource not found", status.HTTP_404_NOT_FOUND
-    except:
+    except Exception as e:
+        traceback.print_exc()
         return "Server error", status.HTTP_500_INTERNAL_SERVER_ERROR
 
 def create_request_and_serve_jpg(req, reqClass):
@@ -209,7 +211,8 @@ def create_request_and_serve_jpg(req, reqClass):
         return send_file(file_path_local, mimetype='image/jpeg')
     except API.ResourceNotFoundError:
         return "Drawing unavailable", status.HTTP_404_NOT_FOUND
-    except:
+    except Exception as e:
+        traceback.print_exc()
         return "Server error", status.HTTP_500_INTERNAL_SERVER_ERROR
 
 def success(response):
@@ -233,7 +236,14 @@ def error(e):
         msg = e.message if e.message else 'Resource not found'
         return msg, status.HTTP_404_NOT_FOUND
 
-import plugins.miniapps.routes
+if os.environ.get("PLUGINS"):
+    for plugin in os.environ.get("PLUGINS").split(","):
+        try:
+            plugin_path = f'plugins/{plugin}/routes.py'
+            importlib.import_module(plugin_path)
+            print(f'Loaded plugin {plugin}')
+        except Exception as e:
+            print(f'Error loading plugin {plugin}: {e}')
 
 if __name__ == '__main__':
     PORT = int(os.environ['API_PORT'])
