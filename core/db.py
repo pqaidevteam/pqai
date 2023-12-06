@@ -4,6 +4,7 @@ This module hides the implementation details of the document storage
 import os
 import re
 import json
+import requests
 import boto3
 import botocore.exceptions
 from pymongo import MongoClient
@@ -34,6 +35,9 @@ MONGO_CLIENT = MongoClient(MONGO_URI)
 PAT_COLL = MONGO_CLIENT[MONGO_DBNAME][MONGO_PAT_COLL]
 NPL_COLL = MONGO_CLIENT[MONGO_DBNAME][MONGO_NPL_COLL]
 
+MAIN_PQAI_SERVER_API = os.environ["MAIN_PQAI_SERVER_API"]
+MAIN_PQAI_SERVER_TOKEN = os.environ["MAIN_PQAI_SERVER_TOKEN"]
+
 
 def get_patent_data(pn, only_bib=False):
     """Retrieve a patent's data from the database.
@@ -49,7 +53,11 @@ def get_patent_data(pn, only_bib=False):
     """
     if only_bib:
         return get_patent_data_from_mongo_db(pn)
-    return get_patent_data_from_s3(pn)
+    if AWS_ACCESS_KEY_ID:
+        return get_patent_data_from_s3(pn)
+    if MAIN_PQAI_SERVER_API:
+        return get_patent_data_from_api(pn)
+    return None
 
 def get_patent_data_from_mongo_db(pn):
     """Retrieve patent's bibliography from Mongo DB"""
@@ -67,6 +75,23 @@ def get_patent_data_from_s3(pn):
         return json.loads(contents)
     except botocore.exceptions.ClientError:
         return None
+
+def get_patent_data_from_api(pn):
+    url = f"{MAIN_PQAI_SERVER_API}/patents/{pn}"
+    params = {"token": MAIN_PQAI_SERVER_TOKEN}
+    try:
+        response = requests.get(url, params=params)
+        patent = response.json()
+        patent["publicationNumber"] = patent["pn"]
+        patent["publicationDate"] = patent["publication_date"]
+        patent["filingDate"] = patent["filing_date"]
+        patent.pop("pn")
+        patent.pop("publication_date")
+        patent.pop("filing_date")
+        return patent
+    except Exception:
+        return None
+
 
 def get_bibliography(pn):
     """Return bibliography details of the patent"""
