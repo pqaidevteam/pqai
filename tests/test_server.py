@@ -4,7 +4,7 @@
 
 import unittest
 import requests
-
+import socket
 import os
 import sys
 from dotenv import load_dotenv
@@ -23,9 +23,8 @@ else:
 	HOST = '127.0.0.1'
 print(f'Testing PQAI API on {HOST}:{PORT}')
 
-API_TEST_TOKEN = 'test_token_asdf77bc3a9f'
+API_TEST_TOKEN = 'test_token'
 
-import socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_not_running = sock.connect_ex((HOST, PORT)) != 0
 if server_not_running:
@@ -45,7 +44,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(response.json()['results']), 0)
 
 	def test_patent_prior_art_search_route(self):
-		response = self.api_get('/prior-art/patent', {'pn': 'US7654321B2'})
+		response = self.api_get('/prior-art/patent', {'pn': 'US11803102B1'})
 		self.assertSuccess(response)
 		self.assertGreater(len(response.json()['results']), 0)
 

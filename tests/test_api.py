@@ -1,61 +1,62 @@
 import unittest
+import sys
+from pathlib import Path
+from dotenv import load_dotenv
+from dateutil.parser import parse as parse_date
 
 # Run tests without using GPU
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 os.environ['TEST'] = "1"
 
-import sys
-from pathlib import Path
-from dotenv import load_dotenv
-
 TEST_DIR = str(Path(__file__).parent.resolve())
 BASE_DIR = str(Path(__file__).parent.parent.resolve())
 ENV_PATH = "{}/.env".format(BASE_DIR)
 
 load_dotenv(ENV_PATH)
-
 sys.path.append(BASE_DIR)
 
-from core.filters import PublicationDateFilter
-from dateutil.parser import parse as parse_date
+from core.api import (  # noqa: E402
+    APIRequest,
+    SearchRequest102,
+    SearchRequest103,
+    SnippetRequest,
+    MappingRequest,
+    DatasetSampleRequest,
+    SimilarPatentsRequest,
+    PatentPriorArtRequest
+)
 
-from core.api import APIRequest
-from core.api import SearchRequest102
-from core.api import SearchRequest103
-from core.api import SnippetRequest
-from core.api import MappingRequest
-from core.api import DatasetSampleRequest
-from core.api import SimilarPatentsRequest
-from core.api import PatentPriorArtRequest
+from core.api import (  # noqa: E402
+    BadRequestError,
+    ServerError,
+    ResourceNotFoundError
+)
 
-from core.api import BadRequestError
-from core.api import ServerError
-from core.api import ResourceNotFoundError
-
-from core.api import DocumentRequest
-from core.api import PatentDataRequest
-from core.api import TitleRequest
-from core.api import AbstractRequest
-from core.api import AllClaimsRequest
-from core.api import OneClaimRequest
-from core.api import IndependentClaimsRequest
-from core.api import PatentDescriptionRequest
-from core.api import CitationsRequest
-from core.api import BackwardCitationsRequest
-from core.api import ForwardCitationsRequest
-from core.api import AbstractConceptsRequest
-from core.api import DescriptionConceptsRequest
-from core.api import CPCsRequest
-from core.api import ListThumbnailsRequest
-from core.api import ThumbnailRequest
-from core.api import PatentCPCVectorRequest
-from core.api import PatentAbstractVectorRequest
-from core.api import SimilarConceptsRequest
-from core.api import ConceptVectorRequest
-from core.api import DrawingRequest
-from core.api import ListDrawingsRequest
-from core.api import AggregatedCitationsRequest
+from core.api import (  # noqa: E402
+    DocumentRequest,
+    PatentDataRequest,
+    TitleRequest,
+    AbstractRequest,
+    AllClaimsRequest,
+    OneClaimRequest,
+    IndependentClaimsRequest,
+    PatentDescriptionRequest,
+    CitationsRequest,
+    BackwardCitationsRequest,
+    ForwardCitationsRequest,
+    AbstractConceptsRequest,
+    CPCsRequest,
+    ListThumbnailsRequest,
+    ThumbnailRequest,
+    PatentCPCVectorRequest,
+    PatentAbstractVectorRequest,
+    SimilarConceptsRequest,
+    ConceptVectorRequest,
+    DrawingRequest,
+    ListDrawingsRequest,
+    AggregatedCitationsRequest
+)
 
 
 class TestRequestClass(unittest.TestCase):
@@ -72,7 +73,7 @@ class TestRequestClass(unittest.TestCase):
             return self.greetings[lang]
 
         def _validation_fn(self):
-            if not 'lang' in self._data:
+            if 'lang' not in self._data:
                 raise BadRequestError('Invalid request.')
 
     def test_can_create_dummy_request(self):
@@ -152,8 +153,8 @@ class TestSearchRequest102Class(unittest.TestCase):
         self.assertForEach(results, has_mappings)
 
     def test_raises_error_with_bad_request(self):
-        bad_req = lambda: SearchRequest102({ 'qry': self.query })
-        self.assertRaises(BadRequestError, bad_req)
+        with self.assertRaises(BadRequestError):
+            SearchRequest102({ 'qry': self.query })
 
     def test_pagination(self):
         results_a = self.search({ 'q': self.query, 'n': 10 })
@@ -202,16 +203,16 @@ class TestDatasetSampleRequestClass(unittest.TestCase):
         self.assertSample('poc', 45023)
 
     def test_request_a_sample_that_does_not_exist(self):
-        non_existent_sample = lambda: self.make_request('poc', 200200)
-        self.assertRaises(ServerError, non_existent_sample)
+        with self.assertRaises(ServerError):
+            self.make_request('poc', 200200)
 
     def test_access_non_existent_dataset(self):
-        non_existent_dataset = lambda: self.make_request('dog', 1)
-        self.assertRaises(ResourceNotFoundError, non_existent_dataset)
+        with self.assertRaises(ResourceNotFoundError):
+            self.make_request('dog', 1)
 
     def test_invalid_request(self):
-        invalid_request = lambda: DatasetSampleRequest({ 'sample': 3 }).serve()
-        self.assertRaises(BadRequestError, invalid_request)
+        with self.assertRaises(BadRequestError):
+            DatasetSampleRequest({ 'sample': 3 }).serve()
 
     def assertSample(self, dataset, n):
         sample = self.make_request(dataset, n)
@@ -225,8 +226,8 @@ class TestDatasetSampleRequestClass(unittest.TestCase):
 class TestSimilarPatentsRequestClass(unittest.TestCase):
 
     def test_invalid_query(self):
-        make_bad_query = lambda: SimilarPatentsRequest({ 'q': 'drones'})
-        self.assertRaises(BadRequestError, make_bad_query)
+        with self.assertRaises(BadRequestError):
+            SimilarPatentsRequest({ 'q': 'drones'})
 
     def test_with_simple_query(self):
         response = SimilarPatentsRequest({ 'pn': 'US7654321B2' }).serve()
@@ -369,8 +370,8 @@ class TestOneClaimRequestClass(unittest.TestCase):
             {'pn': self.pn, 'n': -1}
         ]
         for req_data in invalid_requests:
-            req = lambda: OneClaimRequest(req_data).serve()
-            self.assertRaises(BadRequestError, req)
+            with self.assertRaises(BadRequestError):
+                OneClaimRequest(req_data).serve()
 
 
 class TestIndependentClaimsRequestClass(unittest.TestCase):
@@ -498,8 +499,8 @@ class TestSimilarConceptsRequestClass(unittest.TestCase):
         self.assertEqual(13, len(response['similar']))
 
     def test_raises_error_on_invalid_concept(self):
-        attempt = lambda: SimilarConceptsRequest({'concept': 'django'}).serve()
-        self.assertRaises(ResourceNotFoundError, attempt)
+        with self.assertRaises(ResourceNotFoundError):
+            SimilarConceptsRequest({'concept': 'django'}).serve()
         
 
 class TestConceptVectorRequestClass(unittest.TestCase):
@@ -510,8 +511,8 @@ class TestConceptVectorRequestClass(unittest.TestCase):
         self.assertEqual(256, len(response['vector']))
 
     def test_raises_error_on_invalid_concept(self):
-        attempt = lambda: ConceptVectorRequest({'concept': 'django'}).serve()
-        self.assertRaises(ResourceNotFoundError, attempt)
+        with self.assertRaises(ResourceNotFoundError):
+            ConceptVectorRequest({'concept': 'django'}).serve()
 
 
 class TestAggregatedCitationsRequest(unittest.TestCase):
@@ -530,23 +531,23 @@ class TestAggregatedCitationsRequest(unittest.TestCase):
 
     def test_raises_error_if_level_parameter_missing(self):
         req_data = {'pn': 'US7654321B2'}
-        attempt = lambda: AggregatedCitationsRequest(req_data).serve()
-        self.assertRaises(BadRequestError, attempt)
+        with self.assertRaises(BadRequestError):
+            AggregatedCitationsRequest(req_data).serve()
 
     def test_raises_error_if_no_level_specified(self):
         req_data = {'pn': 'US7654321B2', 'levels': None}
-        attempt = lambda: AggregatedCitationsRequest(req_data).serve()
-        self.assertRaises(BadRequestError, attempt)
+        with self.assertRaises(BadRequestError):
+            AggregatedCitationsRequest(req_data).serve()
 
     def test_raises_error_if_level_out_of_range(self):
         req_data = {'levels': 5, 'pn': 'US7654321B2'}
-        attempt = lambda: AggregatedCitationsRequest(req_data).serve()
-        self.assertRaises(BadRequestError, attempt)
+        with self.assertRaises(BadRequestError):
+            AggregatedCitationsRequest(req_data).serve()
 
     def test_raises_error_if_citations_grow_a_lot(self):
         req_data = {'levels': 4, 'pn': 'US7654321B2'}
-        attempt = lambda: AggregatedCitationsRequest(req_data).serve()
-        self.assertRaises(ServerError, attempt)
+        with self.assertRaises(ServerError):
+            AggregatedCitationsRequest(req_data).serve()
 
 
 if __name__ == '__main__':
