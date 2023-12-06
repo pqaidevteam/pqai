@@ -135,7 +135,7 @@ class SearchRequest(APIRequest):
 
         self._need_snippets = self._read_bool_value('snip')
         self._need_mappings = self._read_bool_value('maps')
-        self.MAX_RES_LIMIT = 500
+        self.MAX_RES_LIMIT = 1000
 
     def __repr__(self):
         return f'{self._name}: {json.dumps(self._data)}'
@@ -276,10 +276,11 @@ class SearchRequest102(SearchRequest):
         results.
         """
         n = max(50, self._n_results)
+        n = min(n, self.MAX_RES_LIMIT)
 
         results = []
         m = n
-        while len(results) < n and m < self.MAX_RES_LIMIT:
+        while len(results) < n and m <= 2*self.MAX_RES_LIMIT:
             results = vector_search(qvec, self._indexes, m)
             results = self._filters.apply(results)
             m *= 2
