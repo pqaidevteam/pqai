@@ -12,8 +12,8 @@ from config import config
 if config.gpu_disabled:
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-from flask import Flask, request, send_file
-from flask_api import FlaskAPI, status, exceptions
+from flask import request, send_file
+from flask_api import FlaskAPI, status
 
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration

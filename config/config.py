@@ -28,10 +28,10 @@ models_dir = f'{base_dir}/models/'
 docs_dir = f'{base_dir}/docs/'
 tokens_file = f'{base_dir}/tokens.txt'
 
-index_selection_disabled = not bool(int(os.environ['SMART_INDEX_SELECTION']))
+smart_index_selection_active = bool(int(os.environ['SMART_INDEX_SELECTION']))
 if os.environ.get('TEST'):
-    index_selection_disabled = True
-if index_selection_disabled:
+    smart_index_selection_active = True
+if not smart_index_selection_active:
     print('WARNING: Index selection is inactive. Search may be slow.')
 
 reranker_active = bool(int(os.environ['USE_RERANKER']))
@@ -48,3 +48,5 @@ if allow_incoming_extension_requests:
     print('Server has been configured to accept extension requests.')
 
 token_authentication_active = bool(int(os.environ['TOKEN_AUTHENTICATION']))
+
+year_wise_indexes = bool(int(os.environ['YEAR_WISE_INDEXES']))

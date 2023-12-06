@@ -1,13 +1,15 @@
 import os
-import io
 import re
-import time
 import math
-import copy
+import json
 import cv2
 import markdown
+import traceback
 import boto3
 import botocore.exceptions
+from bs4 import BeautifulSoup
+from PIL import Image
+
 from core.vectorizers import SentBERTVectorizer
 from core.vectorizers import CPCVectorizer
 from core.index_selection import SubclassBasedIndexSelector
@@ -17,12 +19,32 @@ from core.obvious import Combiner
 from core.indexes import IndexesDirectory
 from core.search import VectorIndexSearcher
 from core.documents import Document, Patent
-from core.snippet import SnippetExtractor, CombinationalMapping
+from core.snippet import SnippetExtractor
 from core.reranking import ConceptMatchRanker
 from core.encoders import default_boe_encoder
 from core.results import SearchResult
 from core.encoders import default_embedding_matrix
 from core.datasets import PoC
+import core.remote as remote
+import core.utils as utils
+
+from config.config import (
+    indexes_dir,
+    reranker_active,
+    smart_index_selection_active,
+    year_wise_indexes,
+    allow_outgoing_extension_requests,
+    allow_incoming_extension_requests,
+    docs_dir
+)
+
+vectorize_text = SentBERTVectorizer().embed
+available_indexes = IndexesDirectory(indexes_dir)
+select_indexes = SubclassBasedIndexSelector(available_indexes).select
+vector_search = VectorIndexSearcher().search
+extract_snippet = SnippetExtractor.extract_snippet
+generate_mapping = SnippetExtractor.map
+reranker = None if not reranker_active else ConceptMatchRanker()
 
 PQAI_S3_BUCKET_NAME = os.environ['PQAI_S3_BUCKET_NAME']
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
@@ -34,23 +56,9 @@ session = boto3.Session(
 )
 s3 = session.resource('s3')
 
-from PIL import Image
-import core.remote as remote
-import core.utils as utils
-
-from config.config import indexes_dir, reranker_active, index_selection_disabled
-from config.config import allow_outgoing_extension_requests
-from config.config import allow_incoming_extension_requests
-from config.config import docs_dir
-from bs4 import BeautifulSoup
-
-vectorize_text = SentBERTVectorizer().embed
-available_indexes = IndexesDirectory(indexes_dir)
-select_indexes = SubclassBasedIndexSelector(available_indexes).select
-vector_search = VectorIndexSearcher().search
-extract_snippet = SnippetExtractor.extract_snippet
-generate_mapping = SnippetExtractor.map
-reranker = None if not reranker_active else ConceptMatchRanker()
+# Initialize indexes
+# This will load all indexes into memory
+available_indexes.get("all")
 
 
 class APIRequest():
@@ -67,7 +75,8 @@ class APIRequest():
             raise e
         except ResourceNotFoundError as e:
             raise e
-        except:
+        except Exception:
+            traceback.print_exc()
             raise ServerError()
 
     def _validate(self):
@@ -121,11 +130,11 @@ class SearchRequest(APIRequest):
         self._n_results = int(req_data.get('n', 10))
         self._n_results += self._offset # for pagination
         
+        self._filters = FilterExtractor(self._data).extract()
         self._indexes = self._get_indexes()
 
         self._need_snippets = self._read_bool_value('snip')
         self._need_mappings = self._read_bool_value('maps')
-        self._filters = FilterExtractor(self._data).extract()
         self.MAX_RES_LIMIT = 500
 
     def __repr__(self):
@@ -147,18 +156,34 @@ class SearchRequest(APIRequest):
         if self._index_specified_in_request():
             index_in_req = self._data['idx']
             return available_indexes.get(index_in_req)
-        elif index_selection_disabled:
-            idx_ids = available_indexes.available()
-            indexes = []
-            for idx_id in set(idx_ids):
-                indexes += available_indexes.get(idx_id)
-            return indexes
-        else:
+        
+        if smart_index_selection_active:
             return select_indexes(self._full_query, 3)
+        
+        idx_ids = available_indexes.available()
+        indexes = []
+        for idx_id in set(idx_ids):
+            indexes += available_indexes.get(idx_id)
+        
+        if not year_wise_indexes:
+            return indexes
+        
+        if not self._data.get('before') and not self._data.get('after'):
+            return indexes
+
+        if "before" in self._data and re.match(r"\d{4}", self._data['before']):
+            year = int(self._data['before'][:4])
+            indexes = [idx for idx in indexes if int(idx.name.split(".")[0]) <= year]
+        
+        if "after" in self._data and re.match(r"^\d{4}", self._data['after']):
+            year = int(self._data['after'][:4])
+            indexes = [idx for idx in indexes if int(idx.name.split(".")[0]) >= year]
+
+        return indexes
 
     def _index_specified_in_request(self):
         req_data = self._data
-        if not 'idx' in req_data:
+        if 'idx' not in req_data:
             return False
         if req_data['idx'] == 'auto':
             return False
@@ -172,7 +197,7 @@ class SearchRequest(APIRequest):
         return False
 
     def _validation_fn(self):
-        if not 'q' in self._data:
+        if 'q' not in self._data:
             raise BadRequestError(
                 'Request does not contain a query.')
 
@@ -299,7 +324,8 @@ class SearchRequest102(SearchRequest):
         if self._need_mappings:
             try:
                 result.mapping = generate_mapping(self._query, result.full_text)
-            except:
+            except Exception:
+                traceback.print_exc()
                 result.mapping = None
 
 
