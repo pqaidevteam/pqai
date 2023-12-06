@@ -5,7 +5,6 @@ import os
 import faiss
 import psutil
 
-from config.config import indexes_dir
 from config import config
 
 CHECK_MARK = u'\u2713'
@@ -179,6 +178,9 @@ class IndexesDirectory():
         return set(index_ids)
 
     def get(self, index_id):
+        if index_id == "*" or index_id == "all":
+            return [self._get_one_index(idx) for idx in self.available()]
+        
         index_ids = filter(lambda x: x.startswith(index_id), self.available())
         indexes = [self._get_one_index(idx) for idx in index_ids]
         return indexes
