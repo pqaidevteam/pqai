@@ -158,7 +158,7 @@ class FaissIndex(VectorIndex):
 class IndexesDirectory():
 
     cache = {}
-    dims = 768
+    dims = 384
     metric = 'angular'
     use_faiss_indexes = config.use_faiss_indexes
     use_annoy_indexes = config.use_annoy_indexes
