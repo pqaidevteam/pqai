@@ -98,13 +98,16 @@ class AssigneeFilter(Filter):
 
 class KeywordFilter(Filter):
 
-	def __init__(self, keyword):
+	def __init__(self, keyword, exclude=False):
 		self._keyword = keyword
 		self._regex = self._create_regex(keyword)
+		self._exclude = exclude
 
 	def _filter_fn(self, doc):
-		text = doc.full_text.lower()
-		return bool(re.search(self._regex, text))
+		text = doc.abstract.lower()
+		res = bool(re.search(self._regex, text))
+		res = res if not self._exclude else not res
+		return res
 
 	def _create_regex(self, keyword):
 		regex = keyword.lower()
@@ -113,6 +116,3 @@ class KeywordFilter(Filter):
 		regex = re.sub('_+', r'[\\_\\-\\s]?', regex)
 		regex = rf'\b{regex}\b'
 		return regex
-
-class InventorFilter(Filter):
-	pass

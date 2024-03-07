@@ -124,7 +124,6 @@ class SearchRequest(APIRequest):
         super().__init__(req_data)
         self._query = req_data.get('q', '')
         self._latent_query = req_data.get('lq', '')
-        self._full_query = self._get_full_query()
 
         self._offset = max(0, int(req_data.get('offset', 0)))
         self._n_results = int(req_data.get('n', 10))
@@ -149,16 +148,13 @@ class SearchRequest(APIRequest):
     def _searching_fn(self):
         pass
 
-    def _get_full_query(self):
-        return (self._query + '\n' + self._latent_query).strip()
-
     def _get_indexes(self):
         if self._index_specified_in_request():
             index_in_req = self._data['idx']
             return available_indexes.get(index_in_req)
         
         if smart_index_selection_active:
-            return select_indexes(self._full_query, 3)
+            return select_indexes(self._query, 3)
         
         idx_ids = available_indexes.available()
         indexes = []
@@ -244,10 +240,16 @@ class FilterExtractor():
 
     def _get_keyword_filters(self):
         query = self._data.get('q', '')
-        keywords = re.findall(r'\`([\w\*\?]+)\`', query)
+        keywords = re.findall(r'\`(\-?[\w\*\?]+)\`', query)
         if not keywords:
             return None
-        return [KeywordFilter(keyword) for keyword in keywords]
+        filters = []
+        for keyword in keywords:
+            if keyword.startswith('-'):
+                filters.append(KeywordFilter(keyword[1:], exclude=True))
+            else:
+                filters.append(KeywordFilter(keyword))
+        return filters
 
 
 class SearchRequest102(SearchRequest):
@@ -266,7 +268,10 @@ class SearchRequest102(SearchRequest):
         return results[self._offset:]
 
     def _get_results(self):
-        qvec = vectorize_text(self._full_query)
+        query_ = re.sub(r'\`(\-[\w\*\?]+)\`', '', self._query)
+        query_ = re.sub(r"\`", "", query_)
+        print(query_)
+        qvec = vectorize_text(query_)
 
         """
         During reranking, lower ranked results may come up on top of the list.
@@ -275,14 +280,15 @@ class SearchRequest102(SearchRequest):
         are searched. To mitigate this issue, always search with at least 50
         results.
         """
-        n = max(50, self._n_results)
-        n = min(n, self.MAX_RES_LIMIT)
-
         results = []
-        m = n
+        n = min(self._n_results, self.MAX_RES_LIMIT)
+
+        m = max(50, n) # find at least 50 results (deduplication removes some)
         while len(results) < n and m <= 2*self.MAX_RES_LIMIT:
-            results = vector_search(qvec, self._indexes, m)
-            results = self._filters.apply(results)
+            results_ = vector_search(qvec, self._indexes, m)
+            p = 0 if int(m/2) < 50 else int(m/2)
+            print(p, self._filters)
+            results += self._filters.apply(results_[p:])
             m *= 2
         return results
 
