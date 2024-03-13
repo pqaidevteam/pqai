@@ -30,6 +30,7 @@ annoy = "^1.17.3"
 faiss-cpu = "^1.7.4"
 psutil = "^5.9.6"
 bs4 = "^0.0.1"
+usearch = "2.9.2"
 
 [build-system]
 requires = ["poetry-core"]
