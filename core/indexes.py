@@ -4,6 +4,7 @@ import json
 import os
 import faiss
 import psutil
+import usearch.index
 
 from config import config
 
@@ -158,10 +159,11 @@ class FaissIndex(VectorIndex):
 class IndexesDirectory():
 
     cache = {}
-    dims = 384
+    dims = 1024
     metric = 'angular'
     use_faiss_indexes = config.use_faiss_indexes
     use_annoy_indexes = config.use_annoy_indexes
+    use_usearch_indexes = config.use_usearch_indexes
 
     def __init__(self, folder):
         self._folder = folder
@@ -170,10 +172,14 @@ class IndexesDirectory():
     def _discover_indexes(self):
         files = [f.name for f in os.scandir(self._folder)]
         index_files = []
+
         if self.use_faiss_indexes:
             index_files += [f for f in files if f.endswith('.faiss')]
         if self.use_annoy_indexes:
             index_files += [f for f in files if f.endswith('.ann')]
+        if self.use_usearch_indexes:
+            index_files += [f for f in files if f.endswith('.usearch')]
+        
         index_ids = ['.'.join(f.split('.')[:-1]) for f in index_files]
         return set(index_ids)
 
@@ -192,24 +198,80 @@ class IndexesDirectory():
 
     def _get_from_disk(self, index_id):
         print(f'Loading vector index: {index_id}')
+
         index_file = self._get_index_file_path(index_id)
         json_file = f'{self._folder}/{index_id}.items.json'
+
         if index_file.endswith('faiss'):
             reader = FaissIndexReader()
+        elif index_file.endswith('ann'):
+            reader = AnnoyIndexReader(self.dims, "angular")
+        elif index_file.endswith('usearch'):
+            reader = USearchIndexReader(self.dims, "cos")
         else:
-            reader = AnnoyIndexReader(self.dims, self.metric)
+            raise ValueError(f'Unknown index file type: {index_file}')
+        
         index = reader.read_from_files(index_file, json_file, name=index_id)
         self._cache_index(index_id, index)
         print(f"  {CHECK_MARK} RAM usage: {psutil.virtual_memory()._asdict().get('percent')}%")
         return index
 
     def _get_index_file_path(self, index_id):
-        ann_file = f'{self._folder}/{index_id}.ann'
         faiss_file = f'{self._folder}/{index_id}.faiss'
-        return faiss_file if (os.path.exists(faiss_file)) else ann_file
+        if self.use_faiss_indexes and os.path.exists(faiss_file):
+            return faiss_file
+        
+        ann_file = f'{self._folder}/{index_id}.ann'
+        if self.use_annoy_indexes and os.path.exists(ann_file):
+            return ann_file
+        
+        usearch_file = f'{self._folder}/{index_id}.usearch'
+        if self.use_usearch_indexes and os.path.exists(usearch_file):
+            return usearch_file
+
+        raise ValueError(f'Index file not found for {index_id}')
 
     def _cache_index(self, index_id, index):
         self.cache[index_id] = index
 
     def available(self):
         return self._available
+
+
+class USearchIndex(VectorIndex):
+    
+        def __init__(self, index=None, resolver_fn=None, name=None):
+            self._id = name
+            self._index = index
+            self._index2label = resolver_fn
+            self._labels = None
+            self._dims = None
+    
+        def _search_fn(self, qvec, n):
+            matches = self._index.search(qvec, n)
+            labels = [self._index2label(m.key) for m in matches]
+            dists = [float(m.distance) for m in matches]
+            return list(zip(labels, dists))
+        
+        @property
+        def name(self):
+            return self._id
+
+
+class USearchIndexReader:
+
+    def __init__(self, dims, metric):
+        self._dims = dims
+        self._metric = metric
+
+    def read_from_files(self, index_file, json_file, name=None):
+        index = usearch.index.Index(ndim=self._dims, metric=self._metric)
+        index.view(index_file)
+        items = self._get_items_from_json(json_file)
+        item_resolver = items.__getitem__
+        return USearchIndex(index, item_resolver, name)
+
+    def _get_items_from_json(self, json_file):
+        with open(json_file) as fp:
+            items = json.load(fp)
+        return items

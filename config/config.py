@@ -19,8 +19,9 @@ environment = os.environ.get('ENVIRONMENT')
 
 use_faiss_indexes = bool(int(os.environ.get('USE_FAISS_INDEXES')))
 use_annoy_indexes = bool(int(os.environ.get('USE_ANNOY_INDEXES')))
+use_usearch_indexes = bool(int(os.environ.get('USE_USEARCH_INDEXES')))
 
-if not (use_faiss_indexes or use_annoy_indexes):
+if not (use_faiss_indexes or use_annoy_indexes or use_usearch_indexes):
     print('Bad config! At least one index type must be activated.')
     sys.exit('App will now exit. Edit application config and try again')
 
