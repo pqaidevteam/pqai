@@ -270,7 +270,6 @@ class SearchRequest102(SearchRequest):
     def _get_results(self):
         query_ = re.sub(r'\`(\-[\w\*\?]+)\`', '', self._query)
         query_ = re.sub(r"\`", "", query_)
-        print(query_)
         qvec = vectorize_text(query_)
 
         """
@@ -282,14 +281,14 @@ class SearchRequest102(SearchRequest):
         """
         results = []
         n = min(self._n_results, self.MAX_RES_LIMIT)
-
         m = max(50, n) # find at least 50 results (deduplication removes some)
+        i = 0
         while len(results) < n and m <= 2*self.MAX_RES_LIMIT:
             results_ = vector_search(qvec, self._indexes, m)
-            p = 0 if int(m/2) < 50 else int(m/2)
-            print(p, len(results_))
+            p = 0 if i == 0 else int(m/2)
             results += self._filters.apply(results_[p:])
             m *= 2
+            i += 1
         return results
 
     def _rerank(self, results):
