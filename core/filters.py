@@ -104,7 +104,7 @@ class KeywordFilter(Filter):
 		self._exclude = exclude
 
 	def _filter_fn(self, doc):
-		text = doc.abstract.lower()
+		text = doc.title.lower() + "\n" + doc.abstract.lower()
 		res = bool(re.search(self._regex, text))
 		res = res if not self._exclude else not res
 		return res
