@@ -20,6 +20,7 @@ environment = os.environ.get('ENVIRONMENT')
 use_faiss_indexes = bool(int(os.environ.get('USE_FAISS_INDEXES')))
 use_annoy_indexes = bool(int(os.environ.get('USE_ANNOY_INDEXES')))
 use_usearch_indexes = bool(int(os.environ.get('USE_USEARCH_INDEXES')))
+load_usearch_indexes_in_memory = bool(int(os.environ.get('LOAD_USEARCH_INDEXES_IN_MEMORY')))
 
 if not (use_faiss_indexes or use_annoy_indexes or use_usearch_indexes):
     print('Bad config! At least one index type must be activated.')

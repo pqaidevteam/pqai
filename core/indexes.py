@@ -266,7 +266,10 @@ class USearchIndexReader:
 
     def read_from_files(self, index_file, json_file, name=None):
         index = usearch.index.Index(ndim=self._dims, metric=self._metric)
-        index.view(index_file)
+        if config.load_usearch_indexes_in_memory:
+            index.load(index_file)
+        else:
+            index.view(index_file)
         items = self._get_items_from_json(json_file)
         item_resolver = items.__getitem__
         return USearchIndex(index, item_resolver, name)
