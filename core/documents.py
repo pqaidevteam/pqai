@@ -97,12 +97,13 @@ class Document:
 	@property
 	def owner (self):
 		if self.type == 'patent':
-			if not self.data.get('assignees'):
-				return 'Assignee N/A'
-			elif not self.data.get('assignees')[0].strip():
-				return 'Assignee N/A'
-			else:
-				return self.data['assignees'][0]
+			arr = self.data.get('assignees')
+			if (isinstance(arr, list) and len(arr) and arr[0].strip()):
+				return arr[0]
+			arr = self.data.get('applicants')
+			if (isinstance(arr, list) and len(arr) and arr[0].strip()):
+				return arr[0]
+			return 'Assignee N/A'
 		elif self.type == 'npl':
 			if not self.data['authors']:
 				return 'Author N/A'
