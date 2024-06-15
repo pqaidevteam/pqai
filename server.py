@@ -14,6 +14,7 @@ if config.gpu_disabled:
 
 from flask import request, send_file
 from flask_api import FlaskAPI, status
+from flask_cors import CORS
 
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
@@ -28,6 +29,7 @@ if SENTRY_URL:
     )
 
 app = FlaskAPI(__name__)
+CORS(app)
 app.url_map.strict_slashes = False
 
 import core.api as API
