@@ -1,15 +1,20 @@
 import os
 import re
 import logging
-from logging import FileHandler, Formatter
+from logging.handlers import TimedRotatingFileHandler
 from config.config import tokens_file
 
 logger = logging.getLogger('API-ACCESS')
 logger.setLevel(logging.DEBUG)
 
-fh = FileHandler('api-access.log')
+fh = TimedRotatingFileHandler(
+    'api-access.log',
+    when='midnight',
+    interval=1,
+    backupCount=7
+)
 fh.setLevel(logging.INFO)
-fh.setFormatter(Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+fh.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 logger.addHandler(fh)
 
 TOKENS = set()
