@@ -202,7 +202,7 @@ class SearchRequest(APIRequest):
             result.snippet = SnippetExtractor.extract_snippet(self._query, result.full_text)
 
     def _add_drawing_link(self, result):
-        if result.is_patent():
+        if result.type == 'patent':
             result.image = f'https://api.projectpq.ai/patents/{result.id}/thumbnails/1'
 
 

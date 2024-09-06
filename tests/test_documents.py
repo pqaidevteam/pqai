@@ -21,8 +21,7 @@ class TestDocument(unittest.TestCase):
 
     def test__can_check_type(self):
         doc = Document("US7654321B2")
-        self.assertTrue(doc.is_patent())
-        self.assertFalse(doc.is_npl())
+        self.assertEqual(doc.type, 'patent')
         self.assertEqual('patent', doc.type)
 
     def test__can_compare_publication_date(self):

@@ -1,216 +1,177 @@
+import re
+from dataclasses import dataclass
+from functools import cached_property
 from dateutil.parser import parse as parse_date
+
 from core import db
 from core import utils
-import re
 
+
+@dataclass
 class Document:
+    _id: str
+    _data: dict = None
+    _config = {
+        "patent": {
+            "publication_id": "publicationNumber",
+            "publication_date": "publicationDate",
+            "filing_date": "filingDate",
+            "backwards_citations": "backwardCitations",
+            "forwards_citations": "forwardCitations",
+            "www_link": lambda data: utils.get_external_link(
+                data.get("publicationNumber")
+            ),
+            "alias": lambda data: utils.get_faln(data.get("inventors")),
+            "full_text": lambda data: db.get_full_text(data.get('publicationNumber')),
+        },
+        "npl": {
+            "publication_id": lambda data: data.get("doi", "[External link]"),
+            "abstract": "paperAbstract",
+            "www_link": lambda data: data.get("doiUrl", data.get("s2Url")),
+            "inventors": lambda data: [a["name"] for a in data.get("authors", [])],
+            "alias": lambda data: utils.get_faln(
+                [a["name"] for a in data.get("authors", [])]
+            ),
+            "full_text": lambda data: data.get("title")
+            + "\n"
+            + data.get("paperAbstract"),
+            "publicationDate": lambda data: f"{data.get('year')}-12-31",
+        },
+    }
 
-	def __init__(self, doc_id):
-		self._id = doc_id
-		self._data = None	# lazy-load data from DB
+    @cached_property
+    def id(self):
+        return self._id
 
-	def __getitem__(self, key):
-		if self._data is None:
-			self._load()
-		return self._data.get(key)
+    @cached_property
+    def type(self):
+        return "patent" if self._id.startswith("US") else "npl"
 
-	def _load (self, force=False):
-		if self._data is None or force == True:
-			self._data = db.get_document(self.id)
+    @cached_property
+    def data(self):
+        if not self._data:
+            self._load()
+        return self._data
 
-	def is_patent (self):
-		return bool(re.match(r'US\d+', self._id))
+    def _load(self, force=False):
+        if not self._data or force:
+            self._data = db.get_document(self._id)
 
-	def is_npl (self):
-		return not self.is_patent()
+    def __getattr__(self, key):
+        if not self._data:
+            self._load()
 
-	def is_published_before (self, date):
-		if date is None:
-			return True
-		return parse_date(self.publication_date) < parse_date(date)
+        if key in self._data:
+            return self._data[key]
 
-	def is_published_after (self, date):
-		if date is None:
-			return True
-		return parse_date(self.publication_date) > parse_date(date)
+        if key in self._config[self.type]:
+            if callable(self._config[self.type][key]):
+                return self._config[self.type][key](self._data)
+            return self._data.get(self._config[self.type][key])
 
-	def is_published_between (self, earlier_date, later_date):
-		return self.is_published_after(earlier_date) \
-				and self.is_published_before(later_date)
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{key}'")
 
-	@property
-	def type (self):
-		return 'patent' if self.is_patent() else 'npl'
+    @cached_property
+    def owner (self):
+        if self.type == 'patent':
+            arr = self.data.get('assignees')
+            if (isinstance(arr, list) and len(arr) and arr[0].strip()):
+                return arr[0]
 
-	@property
-	def id (self):
-		return self._id
+            arr = self.data.get('applicants')
+            if (isinstance(arr, list) and len(arr) and arr[0].strip()):
+                return arr[0]
 
-	@property
-	def data (self):
-		if not self._data:
-			self._load()
-		return self._data
+            return 'Assignee N/A'
 
-	@property
-	def title (self):
-		if self.type == 'patent':
-			return self.data['title']
-		elif self.type == 'npl':
-			return self.data['title']
-		else:
-			return None
+        elif self.type == 'npl':
+            if not self.data['authors']:
+                return 'Author N/A'
+            names = [e['name'] for e in self.data['authors']]
+            return utils.get_faln(names)
+        return None
 
-	@property
-	def abstract (self):
-		if self.type == 'patent':
-			return self.data['abstract']
-		elif self.type == 'npl':
-			return self.data['paperAbstract']
-		else:
-			return None
+    def is_published_before(self, date):
+        if date is None:
+            return True
+        return parse_date(self.publication_date) < parse_date(date)
 
-	@property
-	def publication_date (self):
-		if self.type == 'patent':
-			return self.data['publicationDate']
-		elif self.type == 'npl':
-			# If only the publication year is known (and exact date is
-			# unknown) consider it published on the last day of the year
-			return str(self.data['year']) + '-12-31'
-		else:
-			return None
+    def is_published_after(self, date):
+        if date is None:
+            return True
+        return parse_date(self.publication_date) > parse_date(date)
 
-	@property
-	def www_link (self):
-		if self.type == 'patent':
-			return utils.get_external_link(self.data['publicationNumber'])
-		elif self.type == 'npl':
-			if self.data['doiUrl']:
-				return self.data['doiUrl']
-			else:
-				return self.data['s2Url']
-		else:
-			return None
+    def is_published_between(self, d0, d1):
+        return self.is_published_after(d0) and self.is_published_before(d1)
+
+    def json(self):
+        return {
+            "id": self._id,
+            "type": self.type,
+            "publication_id": self.publication_id,
+            "title": self.data.get("title"),
+            "abstract": self.data.get("abstract", self.data.get("paperAbstract")),
+            "publication_date": self.publication_date,
+            "www_link": self.www_link,
+            "owner": self.owner,
+            "image": getattr(self, "image", None),
+            "alias": self.alias,
+            "inventors": self.inventors,
+        }
 
 
-	@property
-	def owner (self):
-		if self.type == 'patent':
-			arr = self.data.get('assignees')
-			if (isinstance(arr, list) and len(arr) and arr[0].strip()):
-				return arr[0]
-			arr = self.data.get('applicants')
-			if (isinstance(arr, list) and len(arr) and arr[0].strip()):
-				return arr[0]
-			return 'Assignee N/A'
-		elif self.type == 'npl':
-			if not self.data['authors']:
-				return 'Author N/A'
-			else:
-				names = [e['name'] for e in self.data['authors']]
-				return utils.get_faln(names)
-		else:
-			return None
+class Patent(Document):
 
-	@property
-	def publication_id (self):
-		if self.type == 'patent':
-			return self.data['publicationNumber']
-		elif self.type == 'npl':
-			if self.data['doi']:
-				return self.data['doi']
-			else:
-				return '[External link]'
-		else:
-			return None
+    def __init__(self, patent_number):
+        super().__init__(patent_number)
 
-	@property
-	def full_text(self):
-		if self.type == 'patent':
-			text = db.get_full_text(self.publication_id)
-		else:
-			text = self.title + '\n' + self.abstract
-		return text
+    def _load(self, force=False):
+        if not self._data or force:
+            self._data = db.get_patent_data(self._id)
 
-	@property
-	def inventors(self):
-		if self.type == 'patent':
-			return self.data['inventors']
-		else:
-			return [e['name'] for e in self.data['authors']]
+    @cached_property
+    def claims(self):
+        return self.data.get("claims", [])
 
-	@property
-	def alias(self):
-		return utils.get_faln(self.inventors)
+    @cached_property
+    def filing_date(self):
+        return self.data.get("filingDate")
 
-	def json(self):
-		return dict(
-			id = self.id,
-			type = self.type,
-			publication_id = self.publication_id,
-			title = self.title,
-			abstract = self.abstract,
-			publication_date = self.publication_date,
-			www_link = self.www_link,
-			owner = self.owner,
-			image = self.image if hasattr(self, 'image') else None,
-			alias = self.alias,
-			inventors = self.inventors
-		)
+    @cached_property
+    def first_claim(self):
+        return self.claims[0] if self.claims else None
 
-class Patent (Document):
-	
-	def __init__(self, patent_number):
-		super().__init__(patent_number)
+    @cached_property
+    def description(self):
+        return self.data.get("description")
 
-	def _load (self, force=False):
-		if self._data is None or force == True:
-			self._data = db.get_patent_data(self.id)
+    @cached_property
+    def cpcs(self):
+        biblio = db.get_patent_data(self._id, True)
+        return biblio.get("cpcs", [])
 
-	@property
-	def claims(self):
-		return self.data['claims']
+    @cached_property
+    def independent_claims(self):
+        pattern = r"\bclaim(s|ed)?\b"
+        return [clm for clm in self.claims if not re.search(pattern, clm)]
 
-	@property
-	def filing_date(self):
-		return self.data.get('filingDate')
+    @cached_property
+    def art_unit(self):
+        try:
+            examiner = self.data["examinersDetails"]["details"][0]
+            return examiner["name"]["department"]
+        except (KeyError, IndexError):
+            return None
 
-	@property
-	def first_claim(self):
-		return self.claims[0]
+    @cached_property
+    def forward_citations(self):
+        biblio = db.get_patent_data(self._id, True)
+        return biblio.get("forwardCitations", [])
 
-	@property
-	def description(self):
-		return self.data['description']
+    @cached_property
+    def backward_citations(self):
+        biblio = db.get_patent_data(self._id, True)
+        return biblio.get("backwardCitations", [])
 
-	@property
-	def cpcs(self):
-		biblio = db.get_patent_data(self.id, True)
-		return biblio.get('cpcs', list())
-
-	@property
-	def independent_claims(self):
-		pattern = r'\bclaim(s|ed)?\b'
-		return [clm for clm in self.claims if not re.search(pattern, clm)]
-
-	@property
-	def art_unit(self):
-		try:
-			examiner = self.data['examinersDetails']['details'][0]
-			return examiner['name']['department']
-		except KeyError:
-			return None
-
-	@property
-	def forward_citations(self):
-		biblio = db.get_patent_data(self.id, True)
-		return biblio['forwardCitations']
-
-	@property
-	def backward_citations(self):
-		biblio = db.get_patent_data(self.id, True)
-		return biblio['backwardCitations']
-
-class Paper (Document):
-	pass
+class Paper(Document):
+    pass
