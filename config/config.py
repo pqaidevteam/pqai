@@ -4,6 +4,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 base_dir = str((Path(__file__).parent / '../').resolve())
 
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
 env_file = f'{base_dir}/.env'
 if os.path.isfile(env_file):
     load_dotenv(env_file)

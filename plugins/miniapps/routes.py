@@ -3,26 +3,15 @@ from pathlib import Path
 BASE_DIR = str(Path(__file__).parent.resolve())
 sys.path.append(BASE_DIR)
 
-from flask import request
-from __main__ import app, create_request_and_serve
+from __main__ import app, add_routes
 import api as API
 
-@app.route('/suggest/cpcs', methods=['GET'])
-def suggest_cpcs():
-    return create_request_and_serve(request, API.SuggestCPCs)
+route_config = [
+    {"method": "GET", "path": "/suggest/cpcs", "handler": API.SuggestCPCs},
+    {"method": "GET", "path": "/predict/gaus", "handler": API.PredictGAUs},
+    {"method": "GET", "path": "/suggest/synonyms", "handler": API.SuggestSynonyms},
+    {"method": "GET", "path": "/extract/concepts", "handler": API.ExtractConcepts},
+    {"method": "GET", "path": "/definitions/cpcs", "handler": API.DefineCPC}
+]
 
-@app.route('/predict/gaus', methods=['GET'])
-def suggest_gaus():
-    return create_request_and_serve(request, API.PredictGAUs)
-
-@app.route('/suggest/synonyms', methods=['GET'])
-def suggest_synonyms():
-    return create_request_and_serve(request, API.SuggestSynonyms)
-
-@app.route('/extract/concepts/', methods=['GET'])
-def extract_concepts():
-    return create_request_and_serve(request, API.ExtractConcepts)
-
-@app.route('/definitions/cpcs/', methods=['GET'])
-def define_cpc():
-    return create_request_and_serve(request, API.DefineCPC)
+add_routes(app, route_config)

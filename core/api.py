@@ -745,20 +745,20 @@ class OneClaimRequest(AbstractPatentDataRequest):
 
     def __init__(self, req_data):
         super().__init__(req_data)
-        self._n = req_data['n']
+        self._n = int(req_data['n'])
 
     def _validation_fn(self):
         super()._validation_fn()
-        if not 'n' in self._data:
+        if 'n' not in self._data:
             raise BadRequestError('Claim number unspecified.')
-        if not isinstance(self._data['n'], int):
+        if not re.match(r'^\d+$', self._data['n']):
             raise BadRequestError('Claim number should be integer')
-        if self._data['n'] < 1:
+        if int(self._data['n']) < 1:
             raise BadRequestError('Claim number cannot be <= 0')
 
     def _serving_fn(self):
         if self._n > len(self._patent.claims):
-            raise BadRequestError(f'{self._pn} has no claim #{self._n}')
+            raise ResourceNotFoundError(f'{self._pn} has no claim #{self._n}')
         return {
             'claim': self._patent.claims[self._n-1],
             'claim_num': self._n

@@ -23,7 +23,7 @@ else:
 	HOST = '127.0.0.1'
 print(f'Testing PQAI API on {HOST}:{PORT}')
 
-API_TEST_TOKEN = 'test_token'
+API_TEST_TOKEN = 'test_mahesh'
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_not_running = sock.connect_ex((HOST, PORT)) != 0
