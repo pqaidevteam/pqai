@@ -6,6 +6,8 @@ import cv2
 import markdown
 import traceback
 import boto3
+import time
+import threading
 import botocore.exceptions
 from bs4 import BeautifulSoup
 from PIL import Image
@@ -17,7 +19,6 @@ from core.filters import FilterArray, PublicationDateFilter
 from core.filters import DocTypeFilter, KeywordFilter
 from core.obvious import Combiner
 from core.indexes import IndexesDirectory
-from core.search import VectorIndexSearcher
 from core.documents import Document, Patent
 from core.snippet import SnippetExtractor
 from core.reranking import ConceptMatchRanker
@@ -27,6 +28,7 @@ from core.encoders import default_embedding_matrix
 from core.datasets import PoC
 import core.remote as remote
 import core.utils as utils
+from services import vector_search as vector_search_srv
 
 from config.config import (
     indexes_dir,
@@ -38,10 +40,16 @@ from config.config import (
     docs_dir
 )
 
+if not vector_search_srv.ready():
+    thread = threading.Thread(target=vector_search_srv.start)
+    thread.start()
+    while not vector_search_srv.ready():
+        print("Waiting for vector search service to be ready...")
+        time.sleep(1)
+
 vectorize_text = SentBERTVectorizer().embed
 available_indexes = IndexesDirectory(indexes_dir)
 select_indexes = SubclassBasedIndexSelector(available_indexes).select
-vector_search = VectorIndexSearcher().search
 extract_snippet = SnippetExtractor.extract_snippet
 generate_mapping = SnippetExtractor.map
 reranker = None if not reranker_active else ConceptMatchRanker()
@@ -55,11 +63,6 @@ session = boto3.Session(
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY
 )
 s3 = session.resource('s3')
-
-# Initialize indexes
-# This will load all indexes into memory
-available_indexes.get("all")
-
 
 class APIRequest():
     
@@ -128,7 +131,7 @@ class SearchRequest(APIRequest):
         self._offset = max(0, int(req_data.get('offset', 0)))
         self._n_results = int(req_data.get('n', 10))
         self._n_results += self._offset # for pagination
-        
+
         self._filters = FilterExtractor(self._data).extract()
         self._indexes = self._get_indexes()
 
@@ -151,31 +154,28 @@ class SearchRequest(APIRequest):
     def _get_indexes(self):
         if self._index_specified_in_request():
             index_in_req = self._data['idx']
-            return available_indexes.get(index_in_req)
-        
+            return index_in_req
+
         if smart_index_selection_active:
             return select_indexes(self._query, 3)
-        
-        idx_ids = available_indexes.available()
-        indexes = []
-        for idx_id in set(idx_ids):
-            indexes += available_indexes.get(idx_id)
-        
+
+        index_ids = list(available_indexes.available())
+
         if not year_wise_indexes:
-            return indexes
-        
+            return index_ids
+
         if not self._data.get('before') and not self._data.get('after'):
-            return indexes
+            return index_ids
 
         if "before" in self._data and re.match(r"\d{4}", self._data['before']):
             year = int(self._data['before'][:4])
-            indexes = [idx for idx in indexes if int(idx.name.split(".")[0]) <= year]
-        
+            index_ids = [idx for idx in index_ids if int(idx.split(".")[0]) <= year]
+
         if "after" in self._data and re.match(r"^\d{4}", self._data['after']):
             year = int(self._data['after'][:4])
-            indexes = [idx for idx in indexes if int(idx.name.split(".")[0]) >= year]
+            index_ids = [idx for idx in index_ids if int(idx.split(".")[0]) >= year]
 
-        return indexes
+        return index_ids
 
     def _index_specified_in_request(self):
         req_data = self._data
@@ -284,7 +284,14 @@ class SearchRequest102(SearchRequest):
         m = max(50, n) # find at least 50 results (deduplication removes some)
         i = 0
         while len(results) < n and m <= 2*self.MAX_RES_LIMIT:
-            results_ = vector_search(qvec, self._indexes, m)
+            request_payload = {
+                "vector": qvec.tolist(),
+                "indexes": self._indexes,
+                "n_results": m
+            }
+            triplets = vector_search_srv.send(request_payload)
+            results_ = [SearchResult(*triplet) for triplet in triplets]
+            # results_ = vector_search(qvec, self._indexes, m)
             p = 0 if i == 0 else int(m/2)
             results += self._filters.apply(results_[p:])
             m *= 2
@@ -712,7 +719,7 @@ class PatentDataRequest(AbstractPatentDataRequest):
             'filing_date': self._patent.filing_date
         }
         return patent_data
-        
+
 
 class TitleRequest(AbstractPatentDataRequest):
 

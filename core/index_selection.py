@@ -9,8 +9,4 @@ class SubclassBasedIndexSelector():
 
 	def select(self, text, n=3):
 		subclasses = self._subclass_predict_fn(text)
-		subclasses = subclasses[:n]
-		indexes = []
-		for subclass in subclasses:
-			indexes += self._indexes.get(subclass)
-		return indexes
+		return subclasses[:n]

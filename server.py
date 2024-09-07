@@ -14,6 +14,7 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 from config import config
 import core.api as API
+import services.vector_search as vector_search
 
 logging.getLogger("uvicorn").setLevel(logging.INFO)
 

@@ -1,6 +1,5 @@
 import itertools
 from core.indexes import VectorIndex
-from core.results import SearchResult
 
 class Searcher():
 
@@ -64,15 +63,15 @@ class Searcher():
         output = []
         added = set()
         for r in results:
+            _id, _, score = r
             if len(output) > 0:
-                previous = output[-1]
-                if r.score == previous.score:
+                if score == output[-1][-1]:
                     continue
-                if r.id in added:
+                if _id in added:
                     continue
 
             output.append(r)
-            added.add(r.id)
+            added.add(_id)
         return output
 
 
@@ -100,8 +99,7 @@ class VectorIndexSearcher(Searcher):
         pairs = [(res_id, dist) for res_id, dist in pairs if 0.0 <= dist <= 2.0]
         index_id = index.name
         triplets = [(res_id, index_id, dist) for res_id, dist in pairs]
-        results = [SearchResult(*triplet) for triplet in triplets]
-        return results
+        return triplets
 
-    def _sort_fn(self, results):
-        return sorted(results, key=lambda x: x.score)
+    def _sort_fn(self, triplets):
+        return sorted(triplets, key=lambda x: x[-1])
