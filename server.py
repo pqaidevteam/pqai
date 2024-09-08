@@ -8,25 +8,16 @@ from functools import partial
 from fastapi import FastAPI, Request, HTTPException, status, Depends
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
-import sentry_sdk
 import auth
-from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 from config import config
 import core.api as API
-import services.vector_search as vector_search
 
 logging.getLogger("uvicorn").setLevel(logging.INFO)
 
 if config.gpu_disabled:
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-SENTRY_URL = os.environ.get("SENTRY_URL").strip()
-if SENTRY_URL:
-    print("Sentry is active. Errors and performance data will be reported.")
-    sentry_sdk.init(
-        environment=config.environment, dsn=SENTRY_URL, traces_sample_rate=1.0
-    )
 
 app = FastAPI(openapi_url=None, docs_url=None)
 
@@ -38,9 +29,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-if SENTRY_URL:
-    app.add_middleware(SentryAsgiMiddleware)
 
 route_config = [
     {"method": "GET", "path": "/search/102/", "handler": API.SearchRequest102},
