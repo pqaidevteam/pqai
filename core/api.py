@@ -392,7 +392,7 @@ class SearchRequest103(SearchRequest):
         for result in combination:
             try:
                 result.mapping = generate_mapping(self._query, result.full_text)
-            except:
+            except:  # noqa: E722
                 result.mapping = None
 
 
@@ -448,7 +448,7 @@ class SearchRequestCombined102and103(SearchRequest103):
         if self._need_mappings:
             try:
                 result.mapping = generate_mapping(self._query, result.full_text)
-            except:
+            except:  # noqa: E722
                 result.mapping = None
 
 
@@ -490,7 +490,7 @@ class PatentPriorArtRequest(SimilarPatentsRequest):
             search_request = self._create_text_query_request()
             cutoff_date = Patent(self._pn).filing_date
             search_request['before'] = cutoff_date
-        except:
+        except:  # noqa: E722
             err_msg = f'Data unavailable for patent {self._pn}'
             raise ResourceNotFoundError(err_msg)
         return SearchRequest102(search_request).serve()
@@ -505,7 +505,7 @@ class DocumentRequest(APIRequest):
         self._doc_id = req_data['id']
 
     def _validation_fn(self):
-        if not 'id' in self._data:
+        if 'id' not in self._data:
             raise BadRequestError(
                 'Request does not contain a document ID.')
 
@@ -579,9 +579,9 @@ class DatasetSampleRequest(APIRequest):
         return self.poc_dataset[int(n)]
 
     def _validation_fn(self):
-        if not 'dataset' in self._data:
+        if 'dataset' not in self._data:
             raise BadRequestError('Dataset name unspecified.')
-        if not 'n' in self._data:
+        if 'n' not in self._data:
             raise BadRequestError('Sample number unspecified.')
 
     def _formatting_fn(self, sample):
@@ -981,7 +981,7 @@ class SimilarConceptsRequest(ConceptRelatedRequest):
         self._n = min(self._n, self.LIMIT)
 
     def _serving_fn(self):
-        if not self._concept in default_embedding_matrix:
+        if self._concept not in default_embedding_matrix:
             raise ResourceNotFoundError(f'No vector for "{self._concept}"')
 
         n = 2*self._n  # because some will be filtered out
@@ -996,7 +996,7 @@ class ConceptVectorRequest(ConceptRelatedRequest):
         super().__init__(req_data)
 
     def _serving_fn(self):
-        if not self._concept in default_embedding_matrix:
+        if self._concept not in default_embedding_matrix:
             raise ResourceNotFoundError(f'No vector for "{self._concept}"')
 
         vector = default_embedding_matrix[self._concept]
@@ -1054,7 +1054,7 @@ class AggregatedCitationsRequest(AbstractPatentDataRequest):
                     if len(patent.forward_citations) <= self._fanout_limit or i == 1:
                         cits = cits.union(set(patent.forward_citations))
 
-                except: # if data unavailable for any patent
+                except: # noqa: E722
                     continue
         cits.remove(self._pn)
         return list(cits)
