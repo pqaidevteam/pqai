@@ -35,7 +35,7 @@ class Document:
             "full_text": lambda data: data.get("title")
             + "\n"
             + data.get("paperAbstract"),
-            "publicationDate": lambda data: f"{data.get('year')}-12-31",
+            "publication_date": lambda data: f"{data.get('year')}-12-31",
         },
     }
 
