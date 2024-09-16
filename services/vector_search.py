@@ -86,4 +86,7 @@ def send(request_payload: dict):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("services.vector_search:app", host="127.0.0.1", port=PORT)
+    uvicorn.run("services.vector_search:app",
+                host="127.0.0.1",
+                port=PORT,
+                access_log=False)

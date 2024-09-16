@@ -3,23 +3,54 @@ import traceback
 import json
 import importlib
 import logging
+from datetime import datetime
 from functools import partial
 
 from fastapi import FastAPI, Request, HTTPException, status, Depends
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+
+
 import auth
 
 from config import config
 import core.api as API
 
-logging.getLogger("uvicorn").setLevel(logging.INFO)
-
 if config.gpu_disabled:
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+logger = logging.getLogger("api_requests")
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+handler.setFormatter(logging.Formatter("%(message)s"))
+logger.addHandler(handler)
+
+
+class CustomLogMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        ip = request.client.host
+        route = request.url.path
+
+        t0 = datetime.now()
+        response = await call_next(request)
+        dt = (datetime.now() - t0).total_seconds()
+
+        log_message = (
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} "
+            f"{ip} "
+            f"{request.method} "
+            f"{route} "
+            f"{response.status_code} "
+            f"{dt:.2f}s"
+        )
+        logger.info(log_message)
+
+        return response
 
 app = FastAPI(openapi_url=None, docs_url=None)
+app.add_middleware(CustomLogMiddleware)
 
 # Enable CORS
 app.add_middleware(
@@ -139,4 +170,4 @@ if os.environ.get("PLUGINS"):
 if __name__ == "__main__":
     import uvicorn
     PORT = int(os.environ.get("API_PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
+    uvicorn.run(app, host="0.0.0.0", port=PORT, access_log=False)
