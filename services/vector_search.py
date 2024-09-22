@@ -1,12 +1,17 @@
 import os
 import time
 import subprocess
+import sys
+from pathlib import Path
 
 import requests
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import numpy as np
 from contextlib import asynccontextmanager
+
+BASE_DIR = str(Path(__file__).parent.parent.resolve())
+sys.path.append(BASE_DIR)
 
 from config.config import indexes_dir
 from core.indexes import IndexesDirectory
