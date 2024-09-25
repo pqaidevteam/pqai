@@ -30,7 +30,7 @@ if not (use_faiss_indexes or use_annoy_indexes or use_usearch_indexes):
 
 models_dir = f'{base_dir}/models/'
 docs_dir = f'{base_dir}/docs/'
-tokens_file = f'{base_dir}/tokens.txt'
+tokens_file = os.environ.get('TOKENS_FILE')
 
 smart_index_selection_active = bool(int(os.environ['SMART_INDEX_SELECTION']))
 if os.environ.get('TEST'):
