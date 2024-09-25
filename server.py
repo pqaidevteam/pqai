@@ -1,21 +1,19 @@
 import os
-import traceback
 import json
 import importlib
 import logging
-from datetime import datetime
+
 from functools import partial
 
-from fastapi import FastAPI, Request, HTTPException, status, Depends
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
-
-
-import auth
+from starlette.routing import Route
 
 from config import config
+from routes import routes_config
 import core.api as API
+from middleware import CustomLogMiddleware, AuthMiddleware, RateLimitMiddleware
 
 if config.gpu_disabled:
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -27,32 +25,8 @@ handler.setLevel(logging.INFO)
 handler.setFormatter(logging.Formatter("%(message)s"))
 logger.addHandler(handler)
 
-
-class CustomLogMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        ip = request.client.host
-        route = request.url.path
-
-        t0 = datetime.now()
-        response = await call_next(request)
-        dt = (datetime.now() - t0).total_seconds()
-
-        log_message = (
-            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} "
-            f"{ip} "
-            f"{request.method} "
-            f"{route} "
-            f"{response.status_code} "
-            f"{dt:.2f}s"
-        )
-        logger.info(log_message)
-
-        return response
-
 app = FastAPI(openapi_url=None, docs_url=None)
-app.add_middleware(CustomLogMiddleware)
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -60,51 +34,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(CustomLogMiddleware)
+app.add_middleware(AuthMiddleware, tokens_file=config.tokens_file)
+app.add_middleware(RateLimitMiddleware, default_limit=5, window=60)
 
-route_config = [
-    {"method": "GET", "path": "/search/102/", "handler": API.SearchRequest102},
-    {"method": "GET", "path": "/search/103/", "handler": API.SearchRequest103},
-    {"method": "GET", "path": "/search/102+103/", "handler": API.SearchRequestCombined102and103},
-    {"method": "GET", "path": "/prior-art/patent/", "handler": API.PatentPriorArtRequest},
-    {"method": "GET", "path": "/similar/", "handler": API.SimilarPatentsRequest},
-    {"method": "GET", "path": "/snippets/", "handler": API.SnippetRequest},
-    {"method": "GET", "path": "/mappings/", "handler": API.MappingRequest},
-    {"method": "GET", "path": "/datasets/", "handler": API.DatasetSampleRequest},
-    {"method": "GET", "path": "/extension/", "handler": API.IncomingExtensionRequest},
-    {'method': 'GET', 'path': '/documents/', 'handler': API.DocumentRequest},
-    {'method': 'GET', 'path': '/patents/{pn}', 'handler': API.PatentDataRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/title', 'handler': API.TitleRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/abstract', 'handler': API.AbstractRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/claims/', 'handler': API.AllClaimsRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/claims/independent', 'handler': API.IndependentClaimsRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/claims/{n}', 'handler': API.OneClaimRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/description', 'handler': API.PatentDescriptionRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/citations', 'handler': API.CitationsRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/citations/backward', 'handler': API.BackwardCitationsRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/citations/forward', 'handler': API.ForwardCitationsRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/citations/aggregated', 'handler': API.AggregatedCitationsRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/abstract/concepts', 'handler': API.AbstractConceptsRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/description/concepts', 'handler': API.DescriptionConceptsRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/classification/cpcs', 'handler': API.CPCsRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/vectors/cpcs', 'handler': API.PatentCPCVectorRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/vectors/abstract', 'handler': API.PatentAbstractVectorRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/thumbnails', 'handler': API.ListThumbnailsRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/drawings/', 'handler': API.ListDrawingsRequest},
-    {'method': 'GET', 'path': '/patents/{pn}/thumbnails/{n}', 'handler': API.ThumbnailRequest, 'is_jpg': True},
-    {'method': 'GET', 'path': '/patents/{pn}/drawings/{n}/', 'handler': API.DrawingRequest, 'is_jpg': True},
-    {'method': 'GET', 'path': '/concepts/{concept}/similar', 'handler': API.SimilarConceptsRequest},
-    {'method': 'GET', 'path': '/concepts/{concept}/vector', 'handler': API.ConceptVectorRequest},
-    {'method': 'GET', 'path': '/docs', 'handler': API.DocumentationRequest}
-]
 
 async def create_request_and_serve(req: Request, handler):
     try:
         req_data = {**req.path_params, **req.query_params}
         response = handler(req_data).serve()
         if isinstance(response, str):
-            return HTMLResponse(content=response, status_code=status.HTTP_200_OK)
+            return HTMLResponse(content=response, status_code=200)
 
-        return JSONResponse(content=response, status_code=status.HTTP_200_OK)
+        return JSONResponse(content=response, status_code=200)
     except Exception as e:
         handle_error(e)
 
@@ -117,26 +59,23 @@ async def create_request_and_serve_jpg(req: Request, handler):
         handle_error(e)
 
 def create_route_handler(handler, is_jpg=False):
-    serve_function = create_request_and_serve_jpg if is_jpg else create_request_and_serve
-    return partial(serve_function, handler=handler)
-
-async def validate_token(request: Request):
-    if not config.token_authentication_active:
-        return
-    if auth.validate_access(request):
-        return
-    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token.")
+    fn = create_request_and_serve_jpg if is_jpg else create_request_and_serve
+    return partial(fn, handler=handler)
 
 def add_routes(app, routes):
     for route in routes:
         app.add_api_route(
             route["path"],
             create_route_handler(route["handler"], route.get('is_jpg', False)),
-            methods=[route["method"]],
-            dependencies=[Depends(validate_token)]
+            methods=[route["method"]]
         )
 
-add_routes(app, route_config)
+add_routes(app, routes_config)
+
+async def serve_favicon(request):
+    return FileResponse('./models/favicon.ico')
+
+app.router.routes.insert(0, Route('/favicon.ico', serve_favicon, include_in_schema=False))
 
 @app.post("/user-rating")
 async def save_user_feedback(request: Request):
@@ -144,19 +83,20 @@ async def save_user_feedback(request: Request):
     with open("user-ratings.tsv", "a") as f:
         f.write(json.dumps(data))
         f.write("\n")
-    return JSONResponse(content={"success": True}, status_code=status.HTTP_200_OK)
+    return JSONResponse(content={"success": True}, status_code=200)
 
 def handle_error(e):
     if isinstance(e, API.ResourceNotFoundError):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+        raise HTTPException(status_code=404, detail="Resource not found")
     if isinstance(e, API.BadRequestError):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+        raise HTTPException(status_code=400, detail=e.message)
     if isinstance(e, API.ServerError):
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e.message)
+        raise HTTPException(status_code=500, detail=e.message)
     if isinstance(e, API.NotAllowedError):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message)
-    traceback.print_exc(e)
-    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Server error")
+        raise HTTPException(status_code=403, detail=e.message)
+    if isinstance(e, HTTPException):
+        raise e
+    raise HTTPException(status_code=500, detail="Server error")
 
 if os.environ.get("PLUGINS"):
     for plugin in os.environ.get("PLUGINS").split(","):

@@ -7,11 +7,41 @@ from __main__ import app, add_routes
 import api as API
 
 route_config = [
-    {"method": "GET", "path": "/suggest/cpcs", "handler": API.SuggestCPCs},
-    {"method": "GET", "path": "/predict/gaus", "handler": API.PredictGAUs},
-    {"method": "GET", "path": "/suggest/synonyms", "handler": API.SuggestSynonyms},
-    {"method": "GET", "path": "/extract/concepts", "handler": API.ExtractConcepts},
-    {"method": "GET", "path": "/definitions/cpcs", "handler": API.DefineCPC}
+    {
+        "method": "GET",
+        "path": "/suggest/cpcs",
+        "handler": API.SuggestCPCs,
+        "rateLimit": 5,
+        "protected": True
+    },
+    {
+        "method": "GET",
+        "path": "/predict/gaus",
+        "handler": API.PredictGAUs,
+        "rateLimit": 5,
+        "protected": True
+    },
+    {
+        "method": "GET",
+        "path": "/suggest/synonyms",
+        "handler": API.SuggestSynonyms,
+        "rateLimit": 5,
+        "protected": True
+    },
+    {
+        "method": "GET",
+        "path": "/extract/concepts",
+        "handler": API.ExtractConcepts,
+        "rateLimit": 5,
+        "protected": True
+    },
+    {
+        "method": "GET",
+        "path": "/definitions/cpcs",
+        "handler": API.DefineCPC,
+        "rateLimit": -1,
+        "protected": True
+    }
 ]
 
 add_routes(app, route_config)
