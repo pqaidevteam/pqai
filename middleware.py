@@ -6,6 +6,7 @@ from datetime import datetime
 from collections import deque
 import logging
 from logging.handlers import TimedRotatingFileHandler
+from pymongo import MongoClient
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -26,6 +27,18 @@ fh = TimedRotatingFileHandler(
 fh.setLevel(logging.INFO)
 fh.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 logger.addHandler(fh)
+
+MONGO_HOST = os.environ["MONGO_HOST"]
+MONGO_PORT = os.environ["MONGO_PORT"]
+MONGO_USER = os.environ["MONGO_USER"]
+MONGO_PASSWORD = os.environ["MONGO_PASSWORD"]
+if MONGO_USER and MONGO_PASSWORD:
+    MONGO_URI = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}"
+else:
+    MONGO_URI = f"mongodb://{MONGO_HOST}:{MONGO_PORT}"
+
+MONGO_CLIENT = MongoClient(MONGO_URI)
+TOKENS_COLL = MONGO_CLIENT["pqai"]["users"]
 
 class CustomLogMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -70,12 +83,21 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         token = await self.extract_token(request)
-        if token is None or token not in self.tokens:
+        if token is None:
             logger.info("%s - No token", route)
             return JSONResponse(
                 status_code=401,
                 content={"detail": "Unauthorized"}
             )
+
+        if token not in self.tokens:
+            print(TOKENS_COLL.find_one({"apiKey": token}))
+            if TOKENS_COLL.find_one({"apiKey": token}) is None:
+                logger.info("%s - Invalid token", route)
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": "Unauthorized"}
+                )
 
         logger.info("%s - Valid token: %s", route, token)
         return await call_next(request)
