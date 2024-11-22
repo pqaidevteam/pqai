@@ -22,7 +22,7 @@ fh = TimedRotatingFileHandler(
     'api-access.log',
     when='midnight',
     interval=1,
-    backupCount=7
+    backupCount=31
 )
 fh.setLevel(logging.INFO)
 fh.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
