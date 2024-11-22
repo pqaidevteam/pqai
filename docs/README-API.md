@@ -10,17 +10,13 @@ You can use it to obtain patent data (only US patents as of now), run similarity
 
 ## Getting started
 
-To get started the first thing you will need is an API access token.
+API access is provided as a part of PQAI+ subscription. Visit this page for more details: [Pricing](https://projectpq.ai/pricing).
 
-The token is a unique ID that verifies real API users. It looks like this: `392cd21128f44cc496331c4c9c772b62`. You can request one for free by filling [this form](https://projectpq.ai/get-involved) on our website.
+Once you have an active subscription, you will see an API access token on your [account page](http://localhost:8555/account).
 
-Make sure you include your email address, because that's where we are going to send your token.
+For academic and non-commercial usage, you can request a free API token by emailing [sam@projectpq.ai](mailto:sam@projectpq.ai). While requesting access, please provide a brief about your use case. We will send you an API token via email.
 
-Typically it will take us about a day to send you your token. In some instances (such as holidays) it may take us up to 2 days. If you haven't received your token after 2 days, feel free to email [sam@projectpq.ai](mailto:sam@projectpq.ai).
-
-Once you get your token, you can begin using with the API.
-
-Some programming experience is needed to make use of this API, although, its functionality can pretty much be *tried out* without writing any code by sending request via a web browser.
+Once you haven an access token, you can begin using with the API. Some programming experience is needed to make use of this API.
 
 ## How to use the API?
 
