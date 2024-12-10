@@ -130,6 +130,6 @@ def get_first_claim(pn):
 
 def get_document(doc_id):
     """Get a document (patent or non-patent) by its identifier"""
-    if re.match(r"US\d+", doc_id):
+    if re.match(r"[A-Z]{2}", doc_id):
         return PAT_COLL.find_one({"publicationNumber": doc_id})
     return NPL_COLL.find_one({"id": doc_id})

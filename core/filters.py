@@ -48,14 +48,18 @@ class DateFilter(Filter):
 
 	"""Base class for implementing date filters, e.g. publication date
 	"""
-	
+
 	def __init__(self, after=None, before=None):
 		self._after = parse_date(after) if after is not None else None
 		self._before = parse_date(before) if before is not None else None
 		self._get_item_date = None
 
 	def _filter_fn(self, item):
-		date = self._get_item_date(item)
+		try:
+			date = self._get_item_date(item)
+		except:
+			return False # date information missing; exclude patent
+
 		if self._after is not None and date < self._after:
 			return False
 		if self._before is not None and date > self._before:

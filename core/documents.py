@@ -26,15 +26,13 @@ class Document:
         },
         "npl": {
             "publication_id": lambda data: data.get("doi", "[External link]"),
-            "abstract": "paperAbstract",
-            "www_link": lambda data: data.get("doiUrl", data.get("s2Url")),
-            "inventors": lambda data: [a["name"] for a in data.get("authors", [])],
-            "alias": lambda data: utils.get_faln(
-                [a["name"] for a in data.get("authors", [])]
-            ),
+            "abstract": "abstract",
+            "www_link": lambda data: data.get("url", data.get("doi")),
+            "inventors": lambda data: data.get("authors", []),
+            "alias": lambda data: utils.get_faln(data.get("authors", [])),
             "full_text": lambda data: data.get("title")
-            + "\n"
-            + data.get("paperAbstract"),
+                + "\n"
+                + data.get("abstract"),
             "publication_date": lambda data: f"{data.get('year')}-12-31",
         },
     }
@@ -87,7 +85,7 @@ class Document:
         elif self.type == 'npl':
             if not self.data['authors']:
                 return 'Author N/A'
-            names = [e['name'] for e in self.data['authors']]
+            names = self.data.get('authors', [])
             return utils.get_faln(names)
         return None
 
