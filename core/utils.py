@@ -208,8 +208,10 @@ def get_external_link(pn):
     return f'https://patents.google.com/patent/{pn}/en'
 
 
-def get_faln(authors):
-    # faln = first author's last name
+def get_faln(authors): # faln = first author's last name
+    if not authors:
+        return "Unknown"
+
     name = authors[0]
     if ',' in name:                         # Doe, John
         faln = re.findall(r'\w+', name)[0]

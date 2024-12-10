@@ -283,7 +283,6 @@ class SearchRequest102(SearchRequest):
         n = min(self._n_results, self.MAX_RES_LIMIT)
         m = max(50, n) # find at least 50 results (deduplication removes some)
         i = 0
-        print(self._indexes)
         while len(results) < n and m <= 2*self.MAX_RES_LIMIT:
             request_payload = {
                 "vector": qvec.tolist(),
