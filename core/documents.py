@@ -43,7 +43,8 @@ class Document:
 
     @cached_property
     def type(self):
-        return "patent" if self._id.startswith("US") else "npl"
+        pattern = r'^[A-Z]{2}'
+        return "patent" if re.match(pattern, self._id) else "npl"
 
     @cached_property
     def data(self):
