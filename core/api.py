@@ -303,6 +303,8 @@ class SearchRequest102(SearchRequest):
         deduplicated = []
         titles = set()
         for result in results:
+            if result.title is None: # defects in the database
+                continue
             if result.title.lower() in titles:
                 continue
             deduplicated.append(result)
