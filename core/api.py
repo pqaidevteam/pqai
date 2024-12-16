@@ -160,6 +160,10 @@ class SearchRequest(APIRequest):
 
         index_ids = list(available_indexes.available())
 
+        if "type" in self._data and (self._data['type'] not in ['any', 'auto']):
+            index_ids = [idx for idx in index_ids if len(idx.split(".")) > 1
+                                                     and idx.split(".")[1] == self._data['type']]
+
         if not year_wise_indexes:
             return index_ids
 
@@ -173,10 +177,6 @@ class SearchRequest(APIRequest):
         if "after" in self._data and re.match(r"^\d{4}", self._data['after']):
             year = int(self._data['after'][:4])
             index_ids = [idx for idx in index_ids if int(idx.split(".")[0]) >= year]
-
-        if "type" in self._data and (self._data['type'] not in ['any', 'auto']):
-            index_ids = [idx for idx in index_ids if len(idx.split(".")) > 1
-                                                     and idx.split(".")[1] == self._data['type']]
 
         return index_ids
 
@@ -265,7 +265,7 @@ class SearchRequest102(SearchRequest):
     def _get_results(self):
         query_ = re.sub(r'\`(\-[\w\*\?]+)\`', '', self._query)
         query_ = re.sub(r"\`", "", query_)
-        qvec = vectorize_text(query_)
+        qvec = vectorize_text("[query] " + query_)
 
         """
         During reranking, lower ranked results may come up on top of the list.
@@ -286,7 +286,6 @@ class SearchRequest102(SearchRequest):
             }
             triplets = vector_search_srv.send(request_payload)
             results_ = [SearchResult(*triplet) for triplet in triplets]
-            # results_ = vector_search(qvec, self._indexes, m)
             p = 0 if i == 0 else int(m/2)
             results += self._filters.apply(results_[p:])
             m *= 2

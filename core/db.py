@@ -32,8 +32,8 @@ else:
     MONGO_URI = f"mongodb://{MONGO_HOST}:{MONGO_PORT}"
 
 MONGO_CLIENT = MongoClient(MONGO_URI)
-PAT_COLL = MONGO_CLIENT[MONGO_DBNAME][MONGO_PAT_COLL]
-NPL_COLL = MONGO_CLIENT[MONGO_DBNAME][MONGO_NPL_COLL]
+PAT_COLLS = [MONGO_CLIENT[MONGO_DBNAME][coll_name] for coll_name in MONGO_PAT_COLL.split(',')]
+NPL_COLLS = [MONGO_CLIENT[MONGO_DBNAME][coll_name] for coll_name in MONGO_NPL_COLL.split(',')]
 
 MAIN_PQAI_SERVER_API = os.environ["MAIN_PQAI_SERVER_API"]
 MAIN_PQAI_SERVER_TOKEN = os.environ["MAIN_PQAI_SERVER_TOKEN"]
@@ -62,8 +62,10 @@ def get_patent_data(pn, only_bib=False):
 def get_patent_data_from_mongo_db(pn):
     """Retrieve patent's bibliography from Mongo DB"""
     query = {"publicationNumber": pn}
-    patent = PAT_COLL.find_one(query)
-    return patent
+    for coll in PAT_COLLS:
+        patent = coll.find_one(query)
+        if patent:
+            return patent
 
 def get_patent_data_from_s3(pn):
     """Retrieve the patent's data in its entirety from S3 bucket"""
@@ -131,5 +133,12 @@ def get_first_claim(pn):
 def get_document(doc_id):
     """Get a document (patent or non-patent) by its identifier"""
     if re.match(r"[A-Z]{2}", doc_id):
-        return PAT_COLL.find_one({"publicationNumber": doc_id})
-    return NPL_COLL.find_one({"id": doc_id})
+        for coll in PAT_COLLS:
+            patent = coll.find_one({"publicationNumber": doc_id})
+            if patent:
+                return patent
+    else:
+        for coll in NPL_COLLS:
+            doc = coll.find_one({"id": doc_id})
+            if doc:
+                return doc
