@@ -15,8 +15,7 @@ from PIL import Image
 from core.vectorizers import SentBERTVectorizer
 from core.vectorizers import CPCVectorizer
 from core.index_selection import SubclassBasedIndexSelector
-from core.filters import FilterArray, PublicationDateFilter
-from core.filters import DocTypeFilter, KeywordFilter
+from core.filters import FilterArray, PublicationDateFilter, KeywordFilter
 from core.obvious import Combiner
 from core.indexes import IndexesDirectory
 from core.documents import Document, Patent
@@ -175,6 +174,10 @@ class SearchRequest(APIRequest):
             year = int(self._data['after'][:4])
             index_ids = [idx for idx in index_ids if int(idx.split(".")[0]) >= year]
 
+        if "type" in self._data and (self._data['type'] not in ['any', 'auto']):
+            index_ids = [idx for idx in index_ids if len(idx.split(".")) > 1
+                                                     and idx.split(".")[1] == self._data['type']]
+
         return index_ids
 
     def _index_specified_in_request(self):
@@ -214,12 +217,9 @@ class FilterExtractor():
     def extract(self):
         filters = FilterArray()
         date_filter = self._get_date_filter()
-        doctype_filter = self._get_doctype_filter()
         keyword_filters = self._get_keyword_filters()
         if date_filter:
             filters.add(date_filter)
-        if doctype_filter:
-            filters.add(doctype_filter)
         if keyword_filters:
             for fltr in keyword_filters:
                 filters.add(fltr)
@@ -232,11 +232,6 @@ class FilterExtractor():
             after = None if not bool(after) else after
             before = None if not bool(before) else before
             return PublicationDateFilter(after, before)
-
-    def _get_doctype_filter(self):
-        doctype = self._data.get('type')
-        if doctype:
-            return DocTypeFilter(doctype)
 
     def _get_keyword_filters(self):
         query = self._data.get('q', '')
