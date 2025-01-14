@@ -3,35 +3,38 @@ import time
 import subprocess
 import sys
 from pathlib import Path
+from concurrent.futures import ProcessPoolExecutor
 
 import requests
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
 import numpy as np
 from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 BASE_DIR = str(Path(__file__).parent.parent.resolve())
 sys.path.append(BASE_DIR)
 
 from config.config import indexes_dir
 from core.indexes import IndexesDirectory
-from core.search import VectorIndexSearcher
 
-available_indexes = IndexesDirectory(indexes_dir)
-vector_search = VectorIndexSearcher().search
+indexdir = IndexesDirectory(indexes_dir)
 
 HOST = "http://127.0.0.1"
 PORT = 8002
 ENDPOINT = f"http://127.0.0.1:{PORT}"
 process = None  # To track service status
 
+cache = {}
+
+def load_indexes():
+    for index_id in indexdir.available():
+        index = indexdir.get(index_id)[0]
+        cache[index_id] = index
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    available_indexes.get("all")  # Load indexes in memory
-
+    load_indexes()
     yield
-
     print("Shutting down the vector search service.")
 
 
@@ -41,15 +44,48 @@ app = FastAPI(lifespan=lifespan)
 async def health():
     return {"status": "ok"}
 
+def search_index(t):
+    idx, qvec, n = t 
+    results = cache[idx].search(qvec, n)
+    results = [(doc_id, idx, score) for doc_id, score in results]
+    return results
+
+def concurrent_search(idxs, qvec, n):
+    args = [(idx, qvec, n) for idx in idxs]
+    with ProcessPoolExecutor(max_workers=8) as executor:
+        results = list(executor.map(search_index, args))
+    results = sum(results, [])
+    results = sorted(results, key=lambda x: x[2], reverse=True)
+    return results
+
+def deduplicate(results):
+    if not results:
+        return results
+
+    epsilon = 0.000001
+    output, rest = results[:1], results[1:]
+    added = set()
+    for r in rest:
+        _id, _, score = r
+        if output[-1][-1] - score < epsilon:
+            continue
+        if _id in added:
+            continue
+        output.append(r)
+        added.add(_id)
+    return output
+
 @app.post("/search")
 async def search(request: Request):
+    if not cache:
+        load_indexes()
     payload = await request.json()
     vector = np.array(payload["vector"], dtype=np.float32)
     n = payload.get("n_results", 10)
-    indexes = []
-    for idx_id in payload.get("indexes", []):
-        indexes += available_indexes.get(idx_id)
-    results = vector_search(vector, indexes, n)
+    indexes = payload.get("indexes")
+    indexes = indexdir.available() if indexes == "all" else indexes
+    results = concurrent_search(indexes, vector, n)
+    results = deduplicate(results)[:n]
     return JSONResponse(content=results)
 
 
@@ -59,7 +95,6 @@ def ready() -> bool:
         return response.status_code == 200
     except requests.ConnectionError:
         return False
-
 
 def start():
     global process
