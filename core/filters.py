@@ -1,26 +1,39 @@
-from dateutil.parser import parse as parse_date
 import re
+import time
+from dateutil.parser import parse as parse_date
+from concurrent.futures import ThreadPoolExecutor
+import core.db as db
 
 class Filter():
 
-	"""Base class for implementing a Filter criterion on items
+	"""Base class for implementing a Filter criterion on search result triplets
 	"""
 	
 	def __init__(self, filter_fn=None):
 		self._filter_fn = filter_fn
 
-	def apply(self, items):
-		filtrate = [r for r in items if self.passed_by(r)]
+	def apply(self, items, n=None):
+		assert all(isinstance(i, list) and len(i) == 3 for i in items)
+		doc_ids = [item[0] for item in items]
+		filtrate, batch_size = [], 128
+		t0 = time.time()
+		for i in range(0, len(doc_ids), batch_size):
+			batch = doc_ids[i:i+batch_size]
+			docs = db.get_documents(batch)
+
+			for item, doc in zip(items[i:i+batch_size], docs):
+				if self._filter_fn(doc):
+					filtrate.append(item)
+					if n is not None and len(filtrate) == n:
+						break
+		t1 = time.time()
+		print(f"Filtering took {t1-t0:.2f} seconds.")
 		return filtrate
 
 	def passed_by(self, item):
-		self._raise_if_invalid_filter_fn()
-		return self._filter_fn(item)
-
-	def _raise_if_invalid_filter_fn(self):
-		if not callable(self._filter_fn):
-			raise Exception("Invalid filter function.")
-
+		doc_id = item[0]
+		doc = db.get_document(doc_id)
+		return self._filter_fn(doc)
 
 class FilterArray(Filter):
 
@@ -30,10 +43,8 @@ class FilterArray(Filter):
 	def __init__(self, filters=None):
 		self._filters = [] if not filters else filters
 
-	def _filter_fn(self, item):
-		if len(self._filters) == 0:
-			return True
-		return all([f.passed_by(item) for f in self._filters])
+	def _filter_fn(self, doc):
+		return len(self._filters) == 0 or all([f._filter_fn(doc) for f in self._filters])
 
 	def add(self, the_filter):
 		self._raise_if_invalid_filter(the_filter)
@@ -41,8 +52,8 @@ class FilterArray(Filter):
 
 	def _raise_if_invalid_filter(self, fltr):
 		if not isinstance(fltr, Filter):
-			raise Exception('Only instances of Filter can be added \
-								to FilterArray.')
+			msg = 'Only instances of Filter can be added to FilterArray.'
+			raise Exception(msg)
 
 class DateFilter(Filter):
 
@@ -52,11 +63,12 @@ class DateFilter(Filter):
 	def __init__(self, after=None, before=None):
 		self._after = parse_date(after) if after is not None else None
 		self._before = parse_date(before) if before is not None else None
-		self._get_item_date = None
 
-	def _filter_fn(self, item):
+	def _filter_fn(self, doc):
+		if not hasattr(self, '_get_date'):
+			raise Exception('DateFilter is an abstract class and should not be instantiated directly.')
 		try:
-			date = self._get_item_date(item)
+			date = self._get_date(doc)
 		except:
 			return False # date information missing; exclude patent
 
@@ -71,34 +83,51 @@ class PublicationDateFilter(DateFilter):
 	
 	def __init__(self, after=None, before=None):
 		super().__init__(after, before)
-		self._get_item_date = lambda doc: parse_date(doc.publication_date)
+	
+	def _get_date(self, doc):
+		date = doc['publicationDate'] if 'publicationNumber' in doc else doc['year'] + '-12-31'
+		return parse_date(date)
 
 
 class FilingDateFilter(DateFilter):
 	
 	def __init__(self, after=None, before=None):
 		super().__init__(after, before)
-		self._get_item_date = lambda doc: parse_date(doc.filing_date)
+		self._get_date = lambda doc: parse_date(doc['filingDate'])
 
 
 class PriorityDateFilter(DateFilter):
 	
 	def __init__(self, after=None, before=None):
 		super().__init__(after, before)
-		self._get_item_date = lambda doc: parse_date(doc.priority_date)
+		self._get_date = lambda doc: parse_date(doc['priorityDate'])
 
 
 class DocTypeFilter(Filter):
 	
 	def __init__(self, doctype):
 		self._doctype = doctype
-		self._filter_fn = lambda doc: doc.type == self._doctype
+	
+	def _filter_fn(self, doc):
+		if self._doctype == 'patent':
+			return 'publicationNumber' in doc
+		elif self._doctype == 'npl':
+			return 'id' in doc
+		else:
+			raise Exception(f"Invalid document type: {self._doctype}")
 
 class AssigneeFilter(Filter):
 	
 	def __init__(self, name):
 		self._name = name
-		self._filter_fn = lambda doc: doc.owner == self._name
+	
+	def _filter_fn(self, doc):
+		if 'assignees' not in doc:
+			return False
+
+		# if any assignee name starts with the given name, return True
+		return any([assignee['name'].lower().startswith(self._name.lower()) for assignee in doc['assignees']])
+	
 
 class KeywordFilter(Filter):
 
@@ -108,7 +137,7 @@ class KeywordFilter(Filter):
 		self._exclude = exclude
 
 	def _filter_fn(self, doc):
-		text = doc.title.lower() + "\n" + doc.abstract.lower()
+		text = doc['title'].lower() + "\n" + doc['abstract'].lower()
 		res = bool(re.search(self._regex, text))
 		res = res if not self._exclude else not res
 		return res
@@ -120,3 +149,13 @@ class KeywordFilter(Filter):
 		regex = re.sub('_+', r'[\\_\\-\\s]?', regex)
 		regex = rf'\b{regex}\b'
 		return regex
+
+class CountryCodeFilter(Filter):
+
+	def __init__(self, cc):
+		self._cc = cc
+	
+	def _filter_fn(self, doc):
+		if 'publicationNumber' not in doc:
+			return False
+		return doc['publicationNumber'].startswith(self._cc)

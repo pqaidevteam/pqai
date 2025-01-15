@@ -32,8 +32,8 @@ else:
     MONGO_URI = f"mongodb://{MONGO_HOST}:{MONGO_PORT}"
 
 MONGO_CLIENT = MongoClient(MONGO_URI)
-PAT_COLLS = [MONGO_CLIENT[MONGO_DBNAME][coll_name] for coll_name in MONGO_PAT_COLL.split(',')]
-NPL_COLLS = [MONGO_CLIENT[MONGO_DBNAME][coll_name] for coll_name in MONGO_NPL_COLL.split(',')]
+PAT_COLL = MONGO_CLIENT[MONGO_DBNAME][MONGO_PAT_COLL]
+NPL_COLL = MONGO_CLIENT[MONGO_DBNAME][MONGO_NPL_COLL]
 
 MAIN_PQAI_SERVER_API = os.environ["MAIN_PQAI_SERVER_API"]
 MAIN_PQAI_SERVER_TOKEN = os.environ["MAIN_PQAI_SERVER_TOKEN"]
@@ -62,10 +62,9 @@ def get_patent_data(pn, only_bib=False):
 def get_patent_data_from_mongo_db(pn):
     """Retrieve patent's bibliography from Mongo DB"""
     query = {"publicationNumber": pn}
-    for coll in PAT_COLLS:
-        patent = coll.find_one(query)
-        if patent:
-            return patent
+    patent = PAT_COLL.find_one(query)
+    return patent
+            
 
 def get_patent_data_from_s3(pn):
     """Retrieve the patent's data in its entirety from S3 bucket"""
@@ -133,12 +132,30 @@ def get_first_claim(pn):
 def get_document(doc_id):
     """Get a document (patent or non-patent) by its identifier"""
     if re.match(r"[A-Z]{2}", doc_id):
-        for coll in PAT_COLLS:
-            patent = coll.find_one({"publicationNumber": doc_id})
-            if patent:
-                return patent
+        patent = PAT_COLL.find_one({"publicationNumber": doc_id})
+        return patent
     else:
-        for coll in NPL_COLLS:
-            doc = coll.find_one({"id": doc_id})
-            if doc:
-                return doc
+        doc = NPL_COLL.find_one({"id": doc_id})
+        return doc
+
+def get_documents(doc_ids):
+    """Efficiently get multiple documents by their identifiers"""
+    patents = []
+    npls = []
+    for doc_id in doc_ids:
+        if re.match(r"[A-Z]{2}", doc_id):
+            patents.append(doc_id)
+        else:
+            npls.append(doc_id)
+    patent_query = {"publicationNumber": {"$in": patents}}
+    npl_query = {"id": {"$in": npls}}
+    patent_data = list(PAT_COLL.find(patent_query))
+    npl_data = list(NPL_COLL.find(npl_query))
+    # arrange in original sequence
+    data = []
+    for doc_id in doc_ids:
+        if re.match(r"[A-Z]{2}", doc_id):
+            data.append(next(filter(lambda x: x["publicationNumber"] == doc_id, patent_data)))
+        else:
+            data.append(next(filter(lambda x: x["id"] == doc_id, npl_data)))
+    return data

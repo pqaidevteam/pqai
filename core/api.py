@@ -15,7 +15,8 @@ from PIL import Image
 from core.vectorizers import SentBERTVectorizer
 from core.vectorizers import CPCVectorizer
 from core.index_selection import SubclassBasedIndexSelector
-from core.filters import FilterArray, PublicationDateFilter, KeywordFilter
+from core.filters import FilterArray, KeywordFilter, CountryCodeFilter
+from core.filters import FilingDateFilter, PublicationDateFilter, PriorityDateFilter
 from core.obvious import Combiner
 from core.indexes import IndexesDirectory
 from core.documents import Document, Patent
@@ -218,20 +219,31 @@ class FilterExtractor():
         filters = FilterArray()
         date_filter = self._get_date_filter()
         keyword_filters = self._get_keyword_filters()
+        country_code_filter = self._get_country_code_filter()
         if date_filter:
             filters.add(date_filter)
         if keyword_filters:
             for fltr in keyword_filters:
                 filters.add(fltr)
+        if country_code_filter:
+            filters.add(country_code_filter)
         return filters
 
     def _get_date_filter(self):
         after = self._data.get('after', None)
         before = self._data.get('before', None)
+        dtype = self._data.get('dtype', 'publication')
         if after or before:
             after = None if not bool(after) else after
             before = None if not bool(before) else before
-            return PublicationDateFilter(after, before)
+            if dtype == 'filing':
+                return FilingDateFilter(after, before)
+            elif dtype == 'publication':
+                return PublicationDateFilter(after, before)
+            elif dtype == 'priority':
+                return PriorityDateFilter(after, before)
+            else:
+                raise BadRequestError('Invalid date filter type.')
 
     def _get_keyword_filters(self):
         query = self._data.get('q', '')
@@ -245,6 +257,11 @@ class FilterExtractor():
             else:
                 filters.append(KeywordFilter(keyword))
         return filters
+    
+    def _get_country_code_filter(self):
+        cc = self._data.get('cc', None)
+        if cc:
+            return CountryCodeFilter(cc)
 
 
 class SearchRequest102(SearchRequest):
@@ -284,10 +301,16 @@ class SearchRequest102(SearchRequest):
                 "indexes": self._indexes,
                 "n_results": m
             }
+
+            # Run a vector search
             triplets = vector_search_srv.send(request_payload)
-            results_ = [SearchResult(*triplet) for triplet in triplets]
+
+            # Apply filter on fresh results to remove results that don't match search constraints
             p = 0 if i == 0 else int(m/2)
-            results += self._filters.apply(results_[p:])
+            triplets = self._filters.apply(triplets[p:], m-p)
+
+            results = [SearchResult(*t) for t in triplets]
+            
             m *= 2
             i += 1
         return results
