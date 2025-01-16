@@ -52,8 +52,10 @@ class SuggestCPCs(TextBasedRequest):
     def _similar_patents(self):
         search_req = {'q': self._text }
         search_req['after'] = '2009-01-01' # base inference on recent data
+        search_req['dtype'] = 'publication'
         search_req['type'] = 'patent'
         search_req['n'] = 25
+        search_req['cc'] = 'US'
         results = SearchRequest102(search_req).serve()['results']
         patents = [Patent(res['id']) for res in results]
         return patents
