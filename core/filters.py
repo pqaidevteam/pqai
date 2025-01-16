@@ -1,5 +1,4 @@
 import re
-import time
 from dateutil.parser import parse as parse_date
 from concurrent.futures import ThreadPoolExecutor
 import core.db as db
@@ -16,7 +15,6 @@ class Filter():
 		assert all(isinstance(i, list) and len(i) == 3 for i in items)
 		doc_ids = [item[0] for item in items]
 		filtrate, batch_size = [], 128
-		t0 = time.time()
 		for i in range(0, len(doc_ids), batch_size):
 			batch = doc_ids[i:i+batch_size]
 			docs = db.get_documents(batch)
@@ -26,8 +24,6 @@ class Filter():
 					filtrate.append(item)
 					if n is not None and len(filtrate) == n:
 						break
-		t1 = time.time()
-		print(f"Filtering took {t1-t0:.2f} seconds.")
 		return filtrate
 
 	def passed_by(self, item):

@@ -146,8 +146,8 @@ class Patent(Document):
 
     @cached_property
     def cpcs(self):
-        biblio = db.get_patent_data(self._id, True)
-        return biblio.get("cpcs", [])
+        patent = db.get_patent_data(self._id, False)
+        return patent.get("cpcs", [])
 
     @cached_property
     def independent_claims(self):
@@ -164,13 +164,13 @@ class Patent(Document):
 
     @cached_property
     def forward_citations(self):
-        biblio = db.get_patent_data(self._id, True)
-        return biblio.get("forwardCitations", [])
+        patent = db.get_patent_data(self._id, False)
+        return patent.get("forwardCitations", [])
 
     @cached_property
     def backward_citations(self):
-        biblio = db.get_patent_data(self._id, True)
-        return biblio.get("backwardCitations", [])
+        patent = db.get_patent_data(self._id, False)
+        return patent.get("backwardCitations", [])
 
 class Paper(Document):
     pass

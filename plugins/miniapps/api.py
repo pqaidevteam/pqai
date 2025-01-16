@@ -77,7 +77,9 @@ class PredictGAUs(TextBasedRequest):
         search_req = {'q': self._text }
         search_req['after'] = '2015-12-31' # base inference on recent data
         search_req['type'] = 'patent'
+        search_req['dtype'] = 'publication'
         search_req['n'] = 25
+        search_req['cc'] = 'US'
         results = SearchRequest102(search_req).serve()['results']
         patents = [Patent(res['id']) for res in results]
         return patents

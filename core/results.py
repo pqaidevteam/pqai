@@ -28,7 +28,7 @@ class SearchResult (Document):
 		json_obj['score'] = self.score
 		json_obj['snippet'] = self.snippet
 		json_obj['mapping'] = self.mapping
-		json_obj['index'] = self._assign_index()
+		json_obj['index'] = self._index
 		return json_obj
 
 	def _is_subclass(self, string):

@@ -70,6 +70,8 @@ def get_patent_data_from_s3(pn):
     """Retrieve the patent's data in its entirety from S3 bucket"""
     try:
         bucket = PQAI_S3_BUCKET_NAME
+        if pn.startswith('US') and len(pn) == 14: # US published patent applications with missing 0
+            pn = pn[:6] + '0' + pn[6:] # insert a 0 to match number format
         key = f"patents/{pn}.json"
         obj = BOTO_CLIENT.get_object(Bucket=bucket, Key=key)
         contents = obj["Body"].read().decode()
