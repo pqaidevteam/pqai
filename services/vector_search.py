@@ -27,7 +27,8 @@ process = None  # To track service status
 cache = {}
 
 def load_indexes():
-    for index_id in indexdir.available():
+    index_ids = sorted(indexdir.available())
+    for index_id in index_ids:
         index = indexdir.get(index_id)[0]
         cache[index_id] = index
 
@@ -47,7 +48,7 @@ async def health():
 def search_index(t):
     idx, qvec, n = t 
     results = cache[idx].search(qvec, n)
-    results = [(doc_id, idx, score) for doc_id, score in results]
+    results = [(doc_id, idx, 1.0-dist) for doc_id, dist in results]
     return results
 
 def concurrent_search(idxs, qvec, n):
