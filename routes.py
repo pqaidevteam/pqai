@@ -201,14 +201,16 @@ routes_config = [
         'method': 'GET',
         'path': '/patents/{pn}/thumbnails/{n}',
         'handler': API.ThumbnailRequest,
-        'is_jpg': True, "rateLimit": -1,
+        'is_jpg': True,
+        "rateLimit": -1,
         'protected': False
     },
     {
         'method': 'GET',
         'path': '/patents/{pn}/drawings/{n}/',
         'handler': API.DrawingRequest,
-        'is_jpg': True, "rateLimit": -1,
+        'is_jpg': True,
+        "rateLimit": -1,
         'protected': False
     },
     {
