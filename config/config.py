@@ -7,17 +7,12 @@ base_dir = str((Path(__file__).parent / '../').resolve())
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 env_file = f'{base_dir}/.env'
+
 if os.path.isfile(env_file):
     load_dotenv(env_file)
     print('Created environment from .env file.')
 
-if os.environ.get('TEST'):
-    indexes_dir = f'{base_dir}/tests/test_indexes/'
-    print('Application in test mode. Test indexes will be used.')
-else:
-    indexes_dir = f'{base_dir}/indexes/'
-
-environment = os.environ.get('ENVIRONMENT')
+indexes_dir = f'{base_dir}/indexes/'
 
 use_faiss_indexes = bool(int(os.environ.get('USE_FAISS_INDEXES')))
 use_annoy_indexes = bool(int(os.environ.get('USE_ANNOY_INDEXES')))

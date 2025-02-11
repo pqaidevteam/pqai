@@ -2,9 +2,11 @@ import numpy as np
 import annoy
 import json
 import os
+import gzip
 import faiss
 import psutil
 import usearch.index
+
 
 from config import config
 
@@ -202,7 +204,7 @@ class IndexesDirectory():
         print(f'Loading vector index: {index_id}')
 
         index_file = self._get_index_file_path(index_id)
-        json_file = f'{self._folder}/{index_id}.items.json'
+        labels_file = f'{self._folder}/{index_id}.items.json'
 
         if index_file.endswith('faiss'):
             reader = FaissIndexReader()
@@ -210,10 +212,11 @@ class IndexesDirectory():
             reader = AnnoyIndexReader(self.dims, "angular")
         elif index_file.endswith('usearch'):
             reader = USearchIndexReader(self.dims, "cos")
+            labels_file = f'{self._folder}/{index_id}.items.bin.gz'
         else:
             raise ValueError(f'Unknown index file type: {index_file}')
         
-        index = reader.read_from_files(index_file, json_file, name=index_id)
+        index = reader.read_from_files(index_file, labels_file, name=index_id)
         self._cache_index(index_id, index)
         print(f"  {CHECK_MARK} RAM usage: {psutil.virtual_memory()._asdict().get('percent')}%")
         return index
@@ -262,21 +265,22 @@ class USearchIndex(VectorIndex):
 
 class USearchIndexReader:
 
+    BYTES_PER_LABEL = 20
+
     def __init__(self, dims, metric):
         self._dims = dims
         self._metric = metric
 
-    def read_from_files(self, index_file, json_file, name=None):
-        index = usearch.index.Index(ndim=self._dims, metric=self._metric)
-        if config.load_usearch_indexes_in_memory:
-            index.load(index_file)
-        else:
-            index.view(index_file)
-        items = self._get_items_from_json(json_file)
-        item_resolver = items.__getitem__
-        return USearchIndex(index, item_resolver, name)
+    def read_from_files(self, index_file, labels_file, name=None):
+        view = not config.load_usearch_indexes_in_memory
+        index = usearch.index.Index(ndim=self._dims, metric=self._metric, path=index_file, view=view)
+        
+        with gzip.open(labels_file, 'rb') as f:
+            self._labels = f.read()
+        
+        return USearchIndex(index, self._get_label, name)
 
-    def _get_items_from_json(self, json_file):
-        with open(json_file) as fp:
-            items = json.load(fp)
-        return items
+    def _get_label(self, i):
+        start = int(i * self.BYTES_PER_LABEL)
+        end = start + self.BYTES_PER_LABEL
+        return self._labels[start:end].decode("utf-8").strip()

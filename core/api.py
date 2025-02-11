@@ -132,12 +132,16 @@ class SearchRequest(APIRequest):
         self._n_results = int(req_data.get('n', 10))
         self._n_results += self._offset # for pagination
 
+        self._doctype = req_data.get('type', 'patent')
+        self._doctype = self._doctype if self._doctype in ['patent', 'npl', 'any'] else None
+
         self._filters = FilterExtractor(self._data).extract()
         self._indexes = self._get_indexes()
 
         self._need_snippets = self._read_bool_value('snip')
         self._need_mappings = self._read_bool_value('maps')
-        self.MAX_RES_LIMIT = 1000
+        self.MAX_RES_LIMIT = 500
+        self.MIN_SIMILARITY_THRESHOLD = 0.5
 
     def __repr__(self):
         return f'{self._name}: {json.dumps(self._data)}'
@@ -284,36 +288,28 @@ class SearchRequest102(SearchRequest):
         query_ = re.sub(r"\`", "", query_)
         qvec = vectorize_text("[query] " + query_)
 
-        """
-        During reranking, lower ranked results may come up on top of the list.
-        This means that the first 10 results a user sees when only 10 results 
-        are search may differ from the first 10 results when, say, 50 results
-        are searched. To mitigate this issue, always search with at least 50
-        results.
-        """
         results = []
         n = min(self._n_results, self.MAX_RES_LIMIT)
-        m = max(50, n) # find at least 50 results (deduplication removes some)
-        i = 0
+        m = max(25, n)
         while len(results) < n and m <= 2*self.MAX_RES_LIMIT:
-            request_payload = {
+            payload = {
                 "vector": qvec.tolist(),
-                "indexes": self._indexes,
-                "n_results": m
+                "n_results": m,
+                "type": self._doctype
             }
 
             # Run a vector search
-            triplets = vector_search_srv.send(request_payload)
-
-            # Apply filter on fresh results to remove results that don't match search constraints
-            p = 0 if i == 0 else int(m/2)
-            triplets = self._filters.apply(triplets[p:], m-p)
-
-            results = [SearchResult(*t) for t in triplets]
+            results = vector_search_srv.send(payload)
+            results = [t for t in results if t[2] > self.MIN_SIMILARITY_THRESHOLD]
+            results = self._deduplicate_by_score(results)
+            results = self._filters.apply(results, m)
             
-            m *= 2
-            i += 1
-        return results
+            # Avoid looking for more results if the last one is a poor match
+            if results[-1][2] <= self.MIN_SIMILARITY_THRESHOLD + 0.01:
+                break
+
+            m *= 2 
+        return [SearchResult(*t) for t in results][:n]
 
     def _rerank(self, results):
         if not reranker:
@@ -321,6 +317,17 @@ class SearchRequest102(SearchRequest):
         result_texts = [r.abstract for r in results]
         ranks = reranker.rank(self._query, result_texts)
         return [results[i] for i in ranks]
+
+    def _deduplicate_by_score(self, triplets):
+        if not triplets:
+            return triplets
+
+        epsilon = 0.000001
+        output, rest = triplets[:1], triplets[1:]
+        for r in rest:
+            if output[-1][2] - r[2] >= epsilon:
+                output.append(r)
+        return output
 
     def _deduplicate(self, results):
         deduplicated = []

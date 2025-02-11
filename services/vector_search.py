@@ -2,93 +2,114 @@ import os
 import time
 import subprocess
 import sys
+import gzip
+import itertools
 from pathlib import Path
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from contextlib import asynccontextmanager
 
 import requests
 import numpy as np
-from contextlib import asynccontextmanager
+import uvicorn
+from tqdm.auto import tqdm
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from usearch.index import Index as UsearchIndex
 
 BASE_DIR = str(Path(__file__).parent.parent.resolve())
 sys.path.append(BASE_DIR)
 
-from config.config import indexes_dir
-from core.indexes import IndexesDirectory
+indexes_dir = f'{BASE_DIR}/indexes/'
 
-indexdir = IndexesDirectory(indexes_dir)
-
-HOST = "http://127.0.0.1"
+PROTOCOL = "http"
+HOST = "127.0.0.1"
 PORT = 8002
-ENDPOINT = f"http://127.0.0.1:{PORT}"
+ENDPOINT = f"{PROTOCOL}://{HOST}:{PORT}"
 process = None  # To track service status
 
-cache = {}
+cache = {
+    'indexes': {},
+    'labels': {}
+}
 
 def load_indexes():
-    index_ids = sorted(indexdir.available())
-    for index_id in index_ids:
-        index = indexdir.get(index_id)[0]
-        cache[index_id] = index
+    index_files = []
+    for entry in os.scandir(indexes_dir):
+        if entry.is_file() and entry.name.endswith('.usearch'):
+            index_files.append(entry)
+
+    files = sorted(index_files, key=lambda f: f.name)
+
+    if os.environ.get('ENVIRONMENT') == 'test':
+        files = files[-10:]
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        list(tqdm(executor.map(load_index, files), total=len(files), desc="Loading indexes", ncols=80, ascii="░▒"))
+
+def load_index(file):
+    fname = file.path.split('/').pop()
+    index_id = fname[:-len('.usearch')]
+    view = 'npl' in index_id
+    index = UsearchIndex(ndim=384, metric='cos', path=file.path, view=view)
+    cache['indexes'][index_id] = index
+
+    labels_file = file.path[:-len('.usearch')] + '.items.bin.gz'
+    with gzip.open(labels_file, 'rb') as f:
+        labels = f.read()
+    cache['labels'][index_id] = labels
+
+
+def search_index(t):
+    idx, qvec, n = t
+    matches = cache['indexes'][idx].search(qvec, n)
+    results = [(m.key, idx, 1.0-m.distance) for m in matches]
+    return results
+
+process_pool = None
+
+def concurrent_search(qvec, n, type=None):
+    global process_pool
+    idxs = cache['indexes'].keys()
+    if type in ['patent', 'npl']:
+        idxs = [idx for idx in idxs if type in idx]
+    args = [(idx, qvec, n) for idx in idxs]
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        with tqdm(total=len(args), desc="Searching indexes", ncols=80, ascii="░▒") as pbar:
+            results = []
+            for r in executor.map(search_index, args):
+                results.append(r)
+                pbar.update(1)
+
+    results = list(itertools.chain.from_iterable(results))
+    results = sorted(results, key=lambda x: x[2], reverse=True)
+
+    BYTES_PER_LABEL = 20
+
+    arr = []
+    for i, idx, sim in results:
+        start = int(i * BYTES_PER_LABEL)
+        end = start + BYTES_PER_LABEL
+        label = cache['labels'][idx][start:end].decode("utf-8").strip()
+        arr.append((label, idx, sim))
+    return arr
+
+
+############################# FASTAPI APP #############################
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    load_indexes()
-    yield
-    print("Shutting down the vector search service.")
+    global process_pool
 
+    load_indexes()
+    process_pool = ProcessPoolExecutor(max_workers=4)
+
+    yield
+
+    if process_pool is not None:
+        process_pool.shutdown()
 
 app = FastAPI(lifespan=lifespan)
-
-@app.get('/health')
-async def health():
-    return {"status": "ok"}
-
-def search_index(t):
-    idx, qvec, n = t 
-    results = cache[idx].search(qvec, n)
-    results = [(doc_id, idx, 1.0-dist) for doc_id, dist in results]
-    return results
-
-def concurrent_search(idxs, qvec, n):
-    args = [(idx, qvec, n) for idx in idxs]
-    with ProcessPoolExecutor(max_workers=8) as executor:
-        results = list(executor.map(search_index, args))
-    results = sum(results, [])
-    results = sorted(results, key=lambda x: x[2], reverse=True)
-    return results
-
-def deduplicate(results):
-    if not results:
-        return results
-
-    epsilon = 0.000001
-    output, rest = results[:1], results[1:]
-    added = set()
-    for r in rest:
-        _id, _, score = r
-        if output[-1][-1] - score < epsilon:
-            continue
-        if _id in added:
-            continue
-        output.append(r)
-        added.add(_id)
-    return output
-
-@app.post("/search")
-async def search(request: Request):
-    if not cache:
-        load_indexes()
-    payload = await request.json()
-    vector = np.array(payload["vector"], dtype=np.float32)
-    n = payload.get("n_results", 10)
-    indexes = payload.get("indexes")
-    indexes = indexdir.available() if indexes == "all" else indexes
-    results = concurrent_search(indexes, vector, n)
-    results = deduplicate(results)[:n]
-    return JSONResponse(content=results)
-
 
 def ready() -> bool:
     try:
@@ -97,6 +118,7 @@ def ready() -> bool:
     except requests.ConnectionError:
         return False
 
+
 def start():
     global process
     if ready():
@@ -104,10 +126,8 @@ def start():
         return
 
     print("Starting vector search service...")
-    process = subprocess.Popen(
-        ["uvicorn", "services.vector_search:app", "--port", str(PORT)],
-        preexec_fn=os.setpgrp,
-    )
+    cmd = ["uvicorn", "services.vector_search:app", "--port", str(PORT)]
+    process = subprocess.Popen(cmd, preexec_fn=os.setpgrp)
     time.sleep(2)
 
 
@@ -124,10 +144,19 @@ def send(request_payload: dict):
     results = response.json()
     return results
 
+@app.get('/health')
+async def health():
+    return {"status": "ok"}
+
+
+@app.post("/search")
+async def search(request: Request):
+    payload = await request.json()
+    vector = np.array(payload["vector"], dtype=np.float32)
+    n = payload.get("n_results", 10)
+    type = payload.get("type", 'patent')
+    results = concurrent_search(vector, n, type)
+    return JSONResponse(content=results)
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("services.vector_search:app",
-                host="127.0.0.1",
-                port=PORT,
-                access_log=False)
+    uvicorn.run("services.vector_search:app", host=HOST, port=PORT, access_log=False)

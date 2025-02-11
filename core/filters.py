@@ -38,9 +38,17 @@ class FilterArray(Filter):
 	
 	def __init__(self, filters=None):
 		self._filters = [] if not filters else filters
+	
+	def apply(self, items, n=None):
+		if not self._filters:
+			return items if n is None else items[:n]
+		return super().apply(items, n)
 
 	def _filter_fn(self, doc):
-		return len(self._filters) == 0 or all([f._filter_fn(doc) for f in self._filters])
+		for fltr in self._filters:
+			if not fltr._filter_fn(doc):
+				return False
+		return True
 
 	def add(self, the_filter):
 		self._raise_if_invalid_filter(the_filter)
