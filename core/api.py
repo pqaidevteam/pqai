@@ -663,9 +663,16 @@ class AbstractPatentDataRequest(APIRequest):
 class AbstractDrawingRequest(AbstractPatentDataRequest):
     
     S3_BUCKET = s3.Bucket(PQAI_S3_BUCKET_NAME)
+    PN_PATTERN = r'^US(RE)?\d{4,11}[AB]\d?$'
 
     def __init__(self, req_data):
         super().__init__(req_data)
+
+    def _validation_fn(self):
+        if self._data['pn'][:2] != 'US':
+            raise BadRequestError('Only US patents supported.')
+        if not re.match(self.PN_PATTERN, self._data['pn']):
+            raise BadRequestError('Could not parse patent number.')
 
     def _get_prefix(self):
         number = self._get_8_digits() if self._is_granted_patent() else self._pn
