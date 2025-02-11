@@ -5,7 +5,7 @@ import sys
 import gzip
 import itertools
 from pathlib import Path
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 
 import requests
@@ -15,10 +15,12 @@ from tqdm.auto import tqdm
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from usearch.index import Index as UsearchIndex
+from dotenv import load_dotenv
 
 BASE_DIR = str(Path(__file__).parent.parent.resolve())
 sys.path.append(BASE_DIR)
 
+load_dotenv(f"{BASE_DIR}/.env")
 indexes_dir = f'{BASE_DIR}/indexes/'
 
 PROTOCOL = "http"
@@ -43,13 +45,14 @@ def load_indexes():
     if os.environ.get('ENVIRONMENT') == 'test':
         files = files[-10:]
 
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        list(tqdm(executor.map(load_index, files), total=len(files), desc="Loading indexes", ncols=80, ascii="░▒"))
+    for file in tqdm(index_files, desc="Loading indexes", ncols=80, ascii="░▒"):
+        load_index(file)
 
 def load_index(file):
     fname = file.path.split('/').pop()
     index_id = fname[:-len('.usearch')]
-    view = 'npl' in index_id
+
+    view = os.environ.get('LOAD_USEARCH_INDEXES_IN_MEMORY') == '0'
     index = UsearchIndex(ndim=384, metric='cos', path=file.path, view=view)
     cache['indexes'][index_id] = index
 
@@ -65,10 +68,8 @@ def search_index(t):
     results = [(m.key, idx, 1.0-m.distance) for m in matches]
     return results
 
-process_pool = None
 
 def concurrent_search(qvec, n, type=None):
-    global process_pool
     idxs = cache['indexes'].keys()
     if type in ['patent', 'npl']:
         idxs = [idx for idx in idxs if type in idx]
@@ -95,19 +96,15 @@ def concurrent_search(qvec, n, type=None):
     return arr
 
 
+
 ############################# FASTAPI APP #############################
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global process_pool
-
     load_indexes()
-    process_pool = ProcessPoolExecutor(max_workers=4)
-
+    print("Starting vector search service...")
     yield
-
-    if process_pool is not None:
-        process_pool.shutdown()
+    print("Shutting down vector search service...")
 
 app = FastAPI(lifespan=lifespan)
 
