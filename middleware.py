@@ -11,6 +11,7 @@ from pymongo import MongoClient
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.routing import compile_path
 
 from config import config
 from routes import routes_config
@@ -74,7 +75,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         route = request.url.path
 
-        route_config = next((r for r in routes_config if r["path"] == route), None)
+        route_config = self.match_route(route, routes_config)
         if not route_config:
             return await call_next(request)
         
@@ -91,7 +92,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
             )
 
         if token not in self.tokens:
-            print(TOKENS_COLL.find_one({"apiKey": token}))
             if TOKENS_COLL.find_one({"apiKey": token}) is None:
                 logger.info("%s - Invalid token", route)
                 return JSONResponse(
@@ -101,6 +101,14 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         logger.info("%s - Valid token: %s", route, token)
         return await call_next(request)
+
+    @staticmethod
+    def match_route(route: str, routes_config: list):
+        for r in routes_config:
+            route_regex, *_ = compile_path(r["path"])
+            if route_regex.match(route):
+                return r
+        return None
 
     @staticmethod
     async def extract_token(req: Request):
