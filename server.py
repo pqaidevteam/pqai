@@ -102,8 +102,12 @@ if os.environ.get("PLUGINS"):
     for plugin in os.environ.get("PLUGINS").split(","):
         try:
             plugin_path = f"plugins.{plugin}.routes"
-            importlib.import_module(plugin_path)
-            print(f"Loaded plugin {plugin}")
+            module = importlib.import_module(plugin_path)
+            if hasattr(module, "route_config"):
+                add_routes(app, module.route_config)
+                print(f"Loaded plugin {plugin}")
+            else:
+                print(f"Plugin {plugin} has no routes")
         except Exception as e:
             logging.error(f"Error loading plugin {plugin}: {e}")
 
