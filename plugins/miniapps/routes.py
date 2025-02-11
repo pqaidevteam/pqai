@@ -3,7 +3,6 @@ from pathlib import Path
 BASE_DIR = str(Path(__file__).parent.resolve())
 sys.path.append(BASE_DIR)
 
-from __main__ import app, add_routes
 import api as API
 
 route_config = [
@@ -43,5 +42,3 @@ route_config = [
         "protected": True
     }
 ]
-
-add_routes(app, route_config)
