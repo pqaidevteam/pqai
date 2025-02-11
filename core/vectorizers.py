@@ -9,6 +9,7 @@ from core.encoders import Encoder
 from config.config import models_dir
 
 DEFAULT_SBERT_MODEL = os.environ["DEFAULT_SBERT_MODEL"]
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 class Vectorizer(Encoder):
 
