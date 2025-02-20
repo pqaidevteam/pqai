@@ -303,6 +303,9 @@ class SearchRequest102(SearchRequest):
             results = [t for t in results if t[2] > self.MIN_SIMILARITY_THRESHOLD]
             results = self._deduplicate_by_score(results)
             results = self._filters.apply(results, m)
+
+            if not results:
+                break
             
             # Avoid looking for more results if the last one is a poor match
             if results[-1][2] <= self.MIN_SIMILARITY_THRESHOLD + 0.01:
