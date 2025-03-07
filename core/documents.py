@@ -53,7 +53,7 @@ class Document:
         return self._data
 
     def _load(self, force=False):
-        if not self._data or force:
+        if self._data is None or force:
             self._data = db.get_document(self._id)
 
     def __getattr__(self, key):

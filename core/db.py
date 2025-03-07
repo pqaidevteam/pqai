@@ -61,17 +61,16 @@ def get_patent_data(pn, only_bib=False):
 
 def get_patent_data_from_mongo_db(pn):
     """Retrieve patent's bibliography from Mongo DB"""
-    query = {"publicationNumber": pn}
-    patent = PAT_COLL.find_one(query)
+    pn = normalize_patent_number_for_mongodb(pn)
+    patent = PAT_COLL.find_one({"publicationNumber": pn})
     return patent
-            
+
 
 def get_patent_data_from_s3(pn):
     """Retrieve the patent's data in its entirety from S3 bucket"""
     try:
         bucket = PQAI_S3_BUCKET_NAME
-        if pn.startswith('US') and len(pn) == 14: # US published patent applications with missing 0
-            pn = pn[:6] + '0' + pn[6:] # insert a 0 to match number format
+        pn = normalize_patent_number_for_s3(pn)
         key = f"patents/{pn}.json"
         obj = BOTO_CLIENT.get_object(Bucket=bucket, Key=key)
         contents = obj["Body"].read().decode()
@@ -133,8 +132,8 @@ def get_first_claim(pn):
 
 def get_document(doc_id):
     """Get a document (patent or non-patent) by its identifier"""
-    if re.match(r"[A-Z]{2}", doc_id):
-        patent = PAT_COLL.find_one({"publicationNumber": doc_id})
+    if re.match(r"^[A-Z]{2}", doc_id):
+        patent = get_patent_data_from_mongo_db(doc_id)
         return patent
     else:
         doc = NPL_COLL.find_one({"id": doc_id})
@@ -142,22 +141,34 @@ def get_document(doc_id):
 
 def get_documents(doc_ids):
     """Efficiently get multiple documents by their identifiers"""
-    patents = []
+    pns = []
     npls = []
     for doc_id in doc_ids:
         if re.match(r"[A-Z]{2}", doc_id):
-            patents.append(doc_id)
+            pns.append(doc_id)
         else:
             npls.append(doc_id)
-    patent_query = {"publicationNumber": {"$in": patents}}
+    pns = [normalize_patent_number_for_mongodb(pn) for pn in pns]
+    patent_query = {"publicationNumber": {"$in": pns}}
     npl_query = {"id": {"$in": npls}}
     patent_data = list(PAT_COLL.find(patent_query))
+
     npl_data = list(NPL_COLL.find(npl_query))
     # arrange in original sequence
     data = []
     for doc_id in doc_ids:
-        if re.match(r"[A-Z]{2}", doc_id):
+        if re.match(r"^[A-Z]{2}", doc_id):
             data.append(next(filter(lambda x: x["publicationNumber"] == doc_id, patent_data)))
         else:
             data.append(next(filter(lambda x: x["id"] == doc_id, npl_data)))
     return data
+
+def normalize_patent_number_for_mongodb(pn):
+    if pn.startswith("US") and len(pn) == 15:
+        pn = pn[:6] + pn[7:]
+    return pn
+
+def normalize_patent_number_for_s3(pn):
+    if pn.startswith("US") and len(pn) == 14:
+        pn = pn[:6] + "0" + pn[6:]
+    return pn

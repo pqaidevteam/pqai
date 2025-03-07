@@ -19,10 +19,18 @@ from core.documents import Document
 
 class TestDocument(unittest.TestCase):
 
+    def setUp(self):
+        self.pns = [
+            "US7654321B2",
+            "US20070205188A1",
+            "US2007205188A1"
+        ]
+
     def test__can_check_type(self):
-        doc = Document("US7654321B2")
-        self.assertEqual(doc.type, 'patent')
-        self.assertEqual('patent', doc.type)
+        for pn in self.pns:
+            doc = Document(pn)
+            self.assertEqual(doc.type, 'patent')
+            self.assertEqual('patent', doc.type)
 
     def test__can_compare_publication_date(self):
         doc = Document("US7654321B2")
@@ -54,44 +62,56 @@ class TestDocument(unittest.TestCase):
         self.assertEqual("2010-02-02", doc.publication_date)
 
     def test__can_get_www_link(self):
-        doc = Document("US7654321B2")
-        self.assertIsInstance(doc.www_link, str)
+        for pn in self.pns:
+            doc = Document(pn)
+            self.assertIsInstance(doc.www_link, str)
 
     def test__can_get_assignee(self):
-        doc = Document("US7654321B2")
-        self.assertIsInstance(doc.owner, str)
+        for pn in self.pns:
+            doc = Document(pn)
+            self.assertIsInstance(doc.owner, str)
 
     def test__can_get_publication_id(self):
         doc = Document("US7654321B2")
         self.assertEqual(doc.publication_id, "US7654321B2")
+        
+        doc = Document("US20070205188A1")
+        self.assertEqual(doc.publication_id, "US2007205188A1") # how it's in the database
+
+        doc = Document("US2007205188A1")
+        self.assertEqual(doc.publication_id, "US2007205188A1")
 
     def test__can_get_full_text(self):
-        doc = Document("US7654321B2")
-        self.assertIsInstance(doc.full_text, str)
+        for pn in self.pns:
+            doc = Document(pn)
+            self.assertIsInstance(doc.full_text, str)
 
     def test__can_get_inventors(self):
-        doc = Document("US7654321B2")
-        self.assertIsInstance(doc.inventors, list)
+        for pn in self.pns:
+            doc = Document(pn)
+            self.assertIsInstance(doc.inventors, list)
 
     def test__can_get_alias(self):
-        doc = Document("US7654321B2")
-        self.assertIsInstance(doc.alias, str)
+        for pn in self.pns:
+            doc = Document(pn)
+            self.assertIsInstance(doc.alias, str)
 
     def test__can_get_json_repr(self):
-        doc = Document("US7654321B2")
-        obj = doc.json()
-        self.assertIsInstance(obj, dict)
-        self.assertIn("id", obj)
-        self.assertIn("type", obj)
-        self.assertIn("publication_id", obj)
-        self.assertIn("title", obj)
-        self.assertIn("abstract", obj)
-        self.assertIn("publication_date", obj)
-        self.assertIn("www_link", obj)
-        self.assertIn("owner", obj)
-        self.assertIn("image", obj)
-        self.assertIn("alias", obj)
-        self.assertIn("inventors", obj)
+        for pn in self.pns:
+            doc = Document(pn)
+            json_data = doc.json()
+            self.assertIsInstance(json_data, dict)
+            self.assertIn("id", json_data)
+            self.assertIn("type", json_data)
+            self.assertIn("publication_id", json_data)
+            self.assertIn("title", json_data)
+            self.assertIn("abstract", json_data)
+            self.assertIn("publication_date", json_data)
+            self.assertIn("www_link", json_data)
+            self.assertIn("owner", json_data)
+            self.assertIn("image", json_data)
+            self.assertIn("alias", json_data)
+            self.assertIn("inventors", json_data)
 
 
 if __name__ == '__main__':
