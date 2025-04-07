@@ -156,10 +156,10 @@ class KeywordFilter(Filter):
 
 class CountryCodeFilter(Filter):
 
-	def __init__(self, cc):
-		self._cc = cc
+	def __init__(self, codes):
+		self._country_codes = tuple(codes)
 	
 	def _filter_fn(self, doc):
 		if 'publicationNumber' not in doc:
 			return False
-		return doc['publicationNumber'].startswith(self._cc)
+		return doc['publicationNumber'].startswith(self._country_codes)

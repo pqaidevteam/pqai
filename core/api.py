@@ -264,8 +264,12 @@ class FilterExtractor():
     
     def _get_country_code_filter(self):
         cc = self._data.get('cc', None)
-        if cc:
-            return CountryCodeFilter(cc)
+        if cc is None:
+            return
+
+        codes = re.findall(r'\b[A-Z]{2}\b', cc.upper())
+        if codes:
+            return CountryCodeFilter(codes)
 
 
 class SearchRequest102(SearchRequest):
