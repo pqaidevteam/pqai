@@ -89,7 +89,8 @@ class PublicationDateFilter(DateFilter):
 		super().__init__(after, before)
 	
 	def _get_date(self, doc):
-		date = doc['publicationDate'] if 'publicationNumber' in doc else doc['year'] + '-12-31'
+		is_npl = 'publicationNumber' not in doc # npl docs have an 'id' field in place of 'publicationNumber'
+		date = f"{str(doc['year'])}-12-31" if is_npl else doc['publicationDate']
 		return parse_date(date)
 
 
