@@ -16,6 +16,7 @@ class Document:
             "publication_id": "publicationNumber",
             "publication_date": "publicationDate",
             "filing_date": "filingDate",
+            "priority_date": "priorityDate",
             "backwards_citations": "backwardCitations",
             "forwards_citations": "forwardCitations",
             "www_link": lambda data: utils.get_external_link(
@@ -104,7 +105,7 @@ class Document:
         return self.is_published_after(d0) and self.is_published_before(d1)
 
     def json(self):
-        return {
+        data = {
             "id": self._id,
             "type": self.type,
             "publication_id": self.publication_id,
@@ -117,6 +118,12 @@ class Document:
             "alias": self.alias,
             "inventors": self.inventors,
         }
+        if self.type == "patent":
+            data.update({
+                "filing_date": self.filing_date,
+                "priority_date": self.priority_date,
+            })
+        return data
 
 
 class Patent(Document):

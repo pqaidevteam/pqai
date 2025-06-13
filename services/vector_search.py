@@ -23,10 +23,10 @@ sys.path.append(BASE_DIR)
 load_dotenv(f"{BASE_DIR}/.env")
 indexes_dir = f'{BASE_DIR}/indexes/'
 
-PROTOCOL = "http"
 HOST = "127.0.0.1"
 PORT = 8002
-ENDPOINT = f"{PROTOCOL}://{HOST}:{PORT}"
+DEFAULT_ENDPOINT = f'http://{HOST}:{PORT}'
+ENDPOINT = os.environ.get('VECTOR_SEARCH_ENDPOINT', DEFAULT_ENDPOINT)
 process = None  # To track service status
 
 cache = {
@@ -156,4 +156,9 @@ async def search(request: Request):
     return JSONResponse(content=results)
 
 if __name__ == "__main__":
-    uvicorn.run("services.vector_search:app", host=HOST, port=PORT, access_log=False)
+    uvicorn.run(
+        "services.vector_search:app",
+        host='0.0.0.0',
+        port=PORT,
+        access_log=False
+    )
