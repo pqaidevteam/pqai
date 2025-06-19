@@ -330,10 +330,30 @@ class SearchRequest102(SearchRequest):
             return triplets
 
         epsilon = 0.000001
-        output, rest = triplets[:1], triplets[1:]
-        for r in rest:
-            if output[-1][2] - r[2] >= epsilon:
-                output.append(r)
+        first, subsequent = triplets[0], triplets[1:]
+        output = [first]
+        for this in subsequent:
+            last = output[-1]
+            if this[2] - last[2] >= epsilon:
+                output.append(this)
+                continue
+            
+            # when scores are too close (likely family members), prefer an English-language member
+            cc_this = this[0][:2]
+            cc_last = last[0][:2]
+            cc_pref = ['US', 'EP', 'GB', 'CA', 'AU', 'WO', 'SG', 'IN'] # native English abstracts
+            cc_rank = {cc: i for i, cc in enumerate(cc_pref)}
+            default_rank = len(cc_pref)
+            if cc_this != cc_last:
+                rank_this = cc_rank.get(cc_this, default_rank)
+                rank_last = cc_rank.get(cc_last, default_rank)
+                if rank_this < rank_last:
+                    output[-1] = this
+                    continue
+                elif rank_this > rank_last:
+                    continue
+        # If all triplets have nearly identical scores and none are in cc_pref,
+        # only the first triplet will be returned.
         return output
 
     def _deduplicate(self, results):
