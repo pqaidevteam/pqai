@@ -131,10 +131,6 @@ class Patent(Document):
     def __init__(self, patent_number):
         super().__init__(patent_number)
 
-    def _load(self, force=False):
-        if not self._data or force:
-            self._data = db.get_patent_data(self._id)
-
     @cached_property
     def claims(self):
         return self.data.get("claims", [])
