@@ -11,6 +11,7 @@ import threading
 import botocore.exceptions
 from bs4 import BeautifulSoup
 from PIL import Image
+import numpy as np
 
 from core.vectorizers import SentBERTVectorizer
 from core.vectorizers import CPCVectorizer
@@ -283,14 +284,16 @@ class SearchRequest102(SearchRequest):
         results = self._get_results()
         if self._n_results < 100:
             results = self._rerank(results)
-        results = self._deduplicate(results)
         results = results[:self._n_results]
         return results[self._offset:]
 
     def _get_results(self):
-        query_ = re.sub(r'\`(\-[\w\*\?]+)\`', '', self._query)
-        query_ = re.sub(r"\`", "", query_)
-        qvec = vectorize_text("[query] " + query_)
+        query = re.sub(r'\`(\-[\w\*\?]+)\`', '', self._query)
+        query = re.sub(r"\`", "", query)
+        qvec = vectorize_text("[query] " + query)
+        relevant, irrelevant = self._extract_feedback(self._latent_query)
+        if relevant or irrelevant: # user feedback
+            qvec = self._update_search_vector(qvec, relevant, irrelevant)
 
         results = []
         n = min(self._n_results, self.MAX_RES_LIMIT)
@@ -315,8 +318,42 @@ class SearchRequest102(SearchRequest):
             if results[-1][2] <= self.MIN_SIMILARITY_THRESHOLD + 0.01:
                 break
 
-            m *= 2 
-        return [SearchResult(*t) for t in results][:n]
+            m *= 2
+        results = [SearchResult(*t) for t in results]
+        results = self._deduplicate(results)
+        return results[:n]
+
+    def _update_search_vector(self, qvec, relevant, irrelevant):
+        alpha = 1.0
+        beta = 1.0
+        gamma = 1.0
+
+        if relevant:
+            vr = np.array([vectorize_text(Patent(pn).abstract) for pn in relevant])
+            vr_mean = np.mean(vr, axis=0)
+            qvec = alpha*qvec + beta*vr_mean
+        
+        if irrelevant:
+            vi = np.array([vectorize_text(Patent(pn).abstract) for pn in irrelevant])
+            vi_mean = np.mean(vi, axis=0)
+            qvec = qvec - gamma*vi_mean
+        
+        qvec = qvec / np.linalg.norm(qvec)
+        return qvec
+    
+    def _extract_feedback(self, latent_query):
+        try:
+            lq_data = json.loads(latent_query)
+        except Exception as e:
+            print("Error parsing latent query data:", latent_query)
+            return [], []
+        
+        if not isinstance(lq_data, dict):
+            return [], []
+        
+        relevant = lq_data.get('relevant', [])
+        irrelevant = lq_data.get('irrelevant', [])
+        return relevant, irrelevant
 
     def _rerank(self, results):
         if not reranker:
@@ -356,6 +393,10 @@ class SearchRequest102(SearchRequest):
         return output
 
     def _deduplicate(self, results):
+        relevant, irrelevant = self._extract_feedback(self._latent_query)
+        seen = set(relevant + irrelevant)
+        results = [r for r in results if r.id not in seen]
+
         deduplicated = []
         titles = set()
         for result in results:
