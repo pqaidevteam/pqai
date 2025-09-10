@@ -131,6 +131,10 @@ class Patent(Document):
     def __init__(self, patent_number):
         super().__init__(patent_number)
 
+    def _load(self, force=False):
+        if not self._data or force:
+            self._data = db.get_patent_data(self._id, only_bib=False)
+
     @cached_property
     def claims(self):
         return self.data.get("claims", [])
@@ -149,8 +153,7 @@ class Patent(Document):
 
     @cached_property
     def cpcs(self):
-        patent = db.get_patent_data(self._id, False)
-        return patent.get("cpcs", [])
+        return self.data.get("cpcs", [])
 
     @cached_property
     def independent_claims(self):

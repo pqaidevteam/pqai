@@ -344,8 +344,7 @@ class SearchRequest102(SearchRequest):
     def _extract_feedback(self, latent_query):
         try:
             lq_data = json.loads(latent_query)
-        except Exception as e:
-            print("Error parsing latent query data:", latent_query)
+        except Exception:
             return [], []
         
         if not isinstance(lq_data, dict):
