@@ -51,7 +51,7 @@ def get_patent_data(pn, only_bib=False):
         dict: The patent data, keys are patent fields. If no patent is found
             matching the patent number, `None` is returned.
     """
-    if only_bib:
+    if only_bib or not pn.startswith("US"):
         return get_patent_data_from_mongo_db(pn)
     if AWS_ACCESS_KEY_ID:
         return get_patent_data_from_s3(pn)
