@@ -91,17 +91,17 @@ Here is an example of making an API request in Python:
 
     :::python
     import requests
-
+    
     token = "392cd21128f44cc496331c4c9c772b62" # fake; replace with yours
     endpoint = "https://api.projectpq.ai"      # address of the PQAI API
     route = "/search/102"                      # search route
     url = endpoint + route
-
+    
     query = "a fire fighting drone" # search query (can be paragraph long)
     n = 10                          # no. of results to return
     result_type = "patent"          # exclude research papers
     after = "2016-01-01"            # return patents published post-2016
-
+    
     params = {                      # create parameter object
         "q": query,
         "n": n,
@@ -111,7 +111,7 @@ Here is an example of making an API request in Python:
     }
     response = requests.get(url, params=params)  # send the request
     assert response.status_code == 200           # error check
-
+    
     results = response.json().get("results")     # decode response
     print(results)
 
@@ -121,11 +121,11 @@ Here is the same example in Javascript:
 
     :::javascript
     var request = require('request');
-
+    
     const endpoint = "https://api.projectpq.ai";
     const route = "/search/102";
     const url = endpoint + route;
-
+    
     const qs = {
         q: "a fire fighting drone", // search query
         n: 10,                      // return 10 results
@@ -133,7 +133,7 @@ Here is the same example in Javascript:
         after: "2016-01-01",        // return patents published post-2016
         token: "392cd21128f44cc496331c4c9c772b62" // fake; replace with yours
     }
-
+    
     request({ url, qs }, (err, res, body) => {
         if(err) {
             console.log(err);
@@ -161,18 +161,21 @@ Route: `/search/102/`
 
 Query string parameters
 
-| Parameter | Value   | Meaning                      | Example                             |
-| --------- | ------- | ---------------------------- | ----------------------------------- |
-| `q`       | String  | Query                        | `"fire fighting drone"`             |
-| `lq`      | String  | Latent query                 | `"unmanned"`                        |
-| `n`       | Integer | No. of results               | `10`                                |
-| `offset`  | Integer | Pagination offset (0-indexed)| `10` (for skipping first 10 results)|
-| `index`   | String  | CPC subclass                 | `"H04W"` (`"auto"` for auto-select) |
-| `after`   | String  | Cutoff date 1                | `"2006-01-01"`                      |
-| `before`  | String  | Cutoff date 2                | `"2019-12-31"`                      |
-| `type`    | String  | Document type                | `"patent"` or `"npl"`               |
-| `snip`    | Boolean | Include snippets             | `1` or `0`                          |
-| `maps`    | Boolean | Include element-wise mapping | `1` or `0`                          |
+| Parameter | Value   | Meaning                               | Example                              |
+| --------- | ------- | ------------------------------------- | ------------------------------------ |
+| `q`       | String  | Query                                 | `"fire fighting drone"`              |
+| `lq`      | String  | Latent query                          | `{"relevant": [], "irrelevant": []}` |
+| `n`       | Integer | No. of results                        | `10`                                 |
+| `offset`  | Integer | Pagination offset (0-indexed)         | `10` (for skipping first 10 results) |
+| `index`   | String  | CPC subclass                          | `"H04W"` (`"auto"` for auto-select)  |
+| `cc`      | String  | Comma-separated list of country codes | `"US,EP,WO"`                         |
+| `after`   | String  | Cutoff date 1                         | `"2006-01-01"`                       |
+| `before`  | String  | Cutoff date 2                         | `"2019-12-31"`                       |
+| `type`    | String  | Document type                         | `"patent"` or `"npl"`                |
+| `snip`    | Boolean | Include snippets                      | `1` or `0`                           |
+| `maps`    | Boolean | Include element-wise mapping          | `1` or `0`                           |
+
+Latent query parameter `lq` has to be a valid JSON string description of an object with two keys: `relevant` and `irrelevant`, each of which, when present, must be a list of patent numbers. This parameter can be used to influence the search by providing positive or negative feedback.
 
 ###  2. Retrieve prior-art combinations with text query
 
@@ -315,35 +318,7 @@ Path parameters
 | --------- | ------ | ------------- | ------------- |
 | `pn`      | String | Patent Number | `US7654321B2` |
 
-### 14. Get a patent's field (title, abstract, claims, etc.)
-
-Route: `/patents/:pn/:field`
-
-Path parameters
-
-| Parameter | Value  | Meaning        | Example                                                   |
-| --------- | ------ | -------------- | --------------------------------------------------------- |
-| `pn`      | String | Patent Number  | `US7654321B2`                                             |
-| `field`   | String | Patent's field | `title`, `abstract`, `claims`, `description`, `citations` |
-
-**NOTES**
-
-* The `/claims` route can also take a suffix path parameter `/n` that can be used to fetch a particular claim. For example, the first claim can be retrieved with `/claims/1`.
-* The `/claims` route can also take a suffix path parameter `/independent` to get only independent claims.
-* The `/abstract` and `/description` routes can take a suffix path parameter `/concepts` that will return the entities identified by an ML model within these text fields.
-* The `/citation` route takes suffix path parameters `/backward` and `/forward` to return only one cited or citing patents.
-
-### 15. Get a patent's CPCs
-
-Route: `/patents/:pn/classification/cpcs`
-
-Path parameters
-
-| Parameter | Value  | Meaning       | Example       |
-| --------- | ------ | ------------- | ------------- |
-| `pn`      | String | Patent Number | `US7654321B2` |
-
-### 16. Get a patent's vector
+### 14. Get a patent's vector
 
 Route: `/patents/:pn/vectors/:field`
 
@@ -354,28 +329,8 @@ Path parameters
 | `pn`      | String | Patent Number    | `US7654321B2`        |
 | `field`   | String | Field vectorized | `cpcs` or `abstract` |
 
-### 17. Get a word (concept) vector
 
-Route: `/concepts/:concept/vector`
-
-Path parameters
-
-| Parameter | Value  | Meaning    | Example                     |
-| --------- | ------ | ---------- | --------------------------- |
-| `concept` | String | Given word | `vehicle` or `mobile phone` |
-
-### 18. Get contextually similar words to a given word
-
-Route: `/concepts/:concept/similar`
-
-Path parameters
-
-| Parameter | Value  | Meaning    | Example                     |
-| --------- | ------ | ---------- | --------------------------- |
-| `concept` | String | Given word | `vehicle` or `mobile phone` |
-
-
-### 19. Suggest CPCs for a text excerpt
+### 15. Suggest CPCs for a text excerpt
 
 Route: `/suggest/cpcs`
 
@@ -385,7 +340,7 @@ Query string parameters
 | --------- | ------ | ------------ | --------------------------- |
 | `text`    | String | Text Excerpt | `fire fighting drones`      |
 
-### 20. Suggest Group Art Units for a text excerpt
+### 16. Suggest Group Art Units for a text excerpt
 
 Route: `/predict/gaus`
 
@@ -395,17 +350,7 @@ Query string parameters
 | --------- | ------ | ------------ | --------------------------- |
 | `text`    | String | Text Excerpt | `fire fighting drones`      |
 
-### 21. Extract technical concepts from a text excerpt
-
-Route: `/extract/concepts`
-
-Query string parameters
-
-| Parameter | Value  | Meaning      | Example                     |
-| --------- | ------ | ------------ | --------------------------- |
-| `text`    | String | Text Excerpt | `fire fighting drones`      |
-
-### 22. Get definition of a CPC class
+### 17. Get definition of a CPC class
 
 Route: `/definitions/cpcs`
 
@@ -415,7 +360,7 @@ Query string parameters
 | --------- | ------ | ---------- | ----------- |
 | `cpc`     | String | A CPC code | `H04W52/02` |
 
-### 23. Get API documentation
+### 18. Get API documentation
 
 Route: `/docs`
 
