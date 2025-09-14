@@ -241,9 +241,9 @@ Query string parameters
 | --------- | ------- | ------------- | ------------- |
 | `id`      | String  | Document ID   | `US7654321B2` |
 
-###  9. Get a patent drawing
+###  9. Get an image from a patent (full-size drawing or thumbnail)
 
-Route: `/patents/:pn/drawings/:n`
+Routes: `/patents/:pn/drawings/:n` and `/patents/:pn/thumbnails/:n`
 
 Response type: `PNG` image (binary)
 
@@ -267,7 +267,7 @@ We suggest you pass *only one* of the parameters `w` and `h` - if you pass both 
 
 ###  10. Get list of drawings for a patent (to tell how many drawings are there)
 
-Route: `/patents/:pn/drawings`
+Route: `/patents/:pn/drawings` or `/patents/:pn/thumbnails`
 
 NOTE: Authentication token is NOT required for this route.
 
@@ -277,38 +277,7 @@ Path parameters
 | --------- | ------- | ------------- | ------------- |
 | `pn`      | String  | Patent Number | `US7654321B2` |
 
-### 11. Get list of thumbnails available for a patent
-
-Route: `/patents/:pn/thumbnails`
-
-NOTE: Authentication token is NOT required for this route.
-
-Path parameters
-
-| Parameter | Value  | Meaning       | Example       |
-| --------- | ------ | ------------- | ------------- |
-| `pn`      | String | Patent Number | `US7654321B2` |
-
-### 12. Get a thumbnail of a patent's drawing
-
-Route: `/patents/:pn/thumbnails/:n`
-
-NOTE: Authentication token is NOT required for this route.
-
-Response type: `PNG` image (binary) 
-
-Path parameters
-
-| Parameter | Value   | Meaning                                | Example       |
-| --------- | ------- | -------------------------------------- | ------------- |
-| `pn`      | String  | Patent Number                          | `US7654321B2` |
-| `n`       | Integer | Thumbnail (drawing) index              | `3`           |
-| `h`       | Integer | Thumbnail height (in pixels, optional) | `300`         |
-| `w`       | Integer | Thumbnail width (in pixels, optional)  | `400`         |
-
-We suggest you pass *only one* of the parameters `w` and `h` - if you pass both and their values are not appropriately set, the drawing may appear stretched along the horizontal or vertical direction (example: [accurate](https://api.projectpq.ai/patents/US10112730B2/thumbnails/2?w=400), [distorted](https://api.projectpq.ai/patents/US10112730B2/thumbnails/2?w=400&h=200)).
-
-### 13. Get a patent's data
+### 11. Get a patent's data
 
 Route: `/patents/:pn`
 
@@ -318,7 +287,7 @@ Path parameters
 | --------- | ------ | ------------- | ------------- |
 | `pn`      | String | Patent Number | `US7654321B2` |
 
-### 14. Get a patent's vector
+### 12. Get a patent's vector
 
 Route: `/patents/:pn/vectors/:field`
 
@@ -330,7 +299,7 @@ Path parameters
 | `field`   | String | Field vectorized | `cpcs` or `abstract` |
 
 
-### 15. Suggest CPCs for a text excerpt
+### 13. Suggest CPCs for a text excerpt
 
 Route: `/suggest/cpcs`
 
@@ -340,7 +309,7 @@ Query string parameters
 | --------- | ------ | ------------ | --------------------------- |
 | `text`    | String | Text Excerpt | `fire fighting drones`      |
 
-### 16. Suggest Group Art Units for a text excerpt
+### 14. Suggest Group Art Units for a text excerpt
 
 Route: `/predict/gaus`
 
@@ -350,7 +319,7 @@ Query string parameters
 | --------- | ------ | ------------ | --------------------------- |
 | `text`    | String | Text Excerpt | `fire fighting drones`      |
 
-### 17. Get definition of a CPC class
+### 15. Get definition of a CPC class
 
 Route: `/definitions/cpcs`
 
@@ -360,7 +329,7 @@ Query string parameters
 | --------- | ------ | ---------- | ----------- |
 | `cpc`     | String | A CPC code | `H04W52/02` |
 
-### 18. Get API documentation
+### 16. Get API documentation
 
 Route: `/docs`
 
