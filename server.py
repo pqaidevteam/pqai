@@ -36,7 +36,7 @@ app.add_middleware(
 )
 app.add_middleware(CustomLogMiddleware)
 app.add_middleware(AuthMiddleware, tokens_file=config.tokens_file)
-app.add_middleware(RateLimitMiddleware, default_limit=5, window=60)
+app.add_middleware(RateLimitMiddleware, default_limit=10, window=10)
 
 
 async def create_request_and_serve(req: Request, handler):
