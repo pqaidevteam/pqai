@@ -83,24 +83,24 @@ class TestFilterArray(unittest.TestCase):
 class TestPublicationDateFilter(unittest.TestCase):
 	
 	def setUp(self):
-		self.doc = Document('US11856900B2')
+		self.doc = ('US11856900B2', 'index', 0.2)
 
 	def test_after_date_filter_operation(self):
-		self.assertFalse(self.doc_published_after('2010-02-03'))
-		self.assertTrue(self.doc_published_after('2010-02-02'))
-		self.assertTrue(self.doc_published_after('2010-02-01'))
+		self.assertFalse(self.doc_published_after('2024-01-03'))
+		self.assertTrue(self.doc_published_after('2024-01-02'))
+		self.assertTrue(self.doc_published_after('2024-01-01'))
 
 	def test_before_date_filter_operation(self):
-		self.assertTrue(self.doc_published_before('2010-02-03'))
-		self.assertTrue(self.doc_published_before('2010-02-02'))
-		self.assertFalse(self.doc_published_before('2010-02-01'))
+		self.assertTrue(self.doc_published_before('2024-01-03'))
+		self.assertTrue(self.doc_published_before('2024-01-02'))
+		self.assertFalse(self.doc_published_before('2024-01-01'))
 
 	def test_between_date_filter_operation(self):
-		self.assertTrue(self.doc_published_between('2010-02-01', '2010-02-03'))
-		self.assertFalse(self.doc_published_between('2010-01-01', '2010-02-01'))
-		self.assertTrue(self.doc_published_between('2010-01-01', '2010-02-02'))
-		self.assertTrue(self.doc_published_between('2010-02-02', '2010-02-02'))
-		self.assertFalse(self.doc_published_between('2010-02-03', '2010-02-05'))
+		self.assertTrue(self.doc_published_between('2024-01-01', '2024-01-03'))
+		self.assertFalse(self.doc_published_between('2010-01-01', '2024-01-01'))
+		self.assertTrue(self.doc_published_between('2010-01-01', '2024-01-02'))
+		self.assertTrue(self.doc_published_between('2024-01-02', '2024-01-02'))
+		self.assertFalse(self.doc_published_between('2024-01-03', '2024-01-05'))
 
 	def doc_published_after(self, date):
 		date_criterion = PublicationDateFilter(date, None)
@@ -126,36 +126,36 @@ class TestPriorityDateFilter(unittest.TestCase):
 class TestKeywordFilter(unittest.TestCase):
 	
 	def setUp(self):
-		self.doc = Document('US11856900B2')
+		self.doc = ('US11856900B2', 'index', 0.2)
 
 	def test_simplest_keyword_match(self):
-		criterion = KeywordFilter('downhole')
+		criterion = KeywordFilter('irrigation')
 		self.assertTrue(criterion.passed_by(self.doc))
-		criterion = KeywordFilter('downholes')
+		criterion = KeywordFilter('irrigating')
 		self.assertFalse(criterion.passed_by(self.doc))
 
 	def test_casing_doesnt_matter(self):
-		criterion = KeywordFilter('DoWnHoLE')
+		criterion = KeywordFilter('iRRigaTion')
 		self.assertTrue(criterion.passed_by(self.doc))
 
 	def test_asterisk_usage(self):
-		criterion = KeywordFilter('downho*')
+		criterion = KeywordFilter('irrigat*')
 		self.assertTrue(criterion.passed_by(self.doc))
-		criterion = KeywordFilter('dow*ole')
+		criterion = KeywordFilter('irrig*ion')
 		self.assertTrue(criterion.passed_by(self.doc))
-		criterion = KeywordFilter('downhole*')
+		criterion = KeywordFilter('irrigatio*')
 		self.assertTrue(criterion.passed_by(self.doc))
 
 	def test_underscore_usage(self):
-		criterion = KeywordFilter('down_hole')
+		criterion = KeywordFilter('irri_gation_area')
 		self.assertTrue(criterion.passed_by(self.doc))
-		criterion = KeywordFilter('logging_while_drilling')
+		criterion = KeywordFilter('irrigation_area_based')
 		self.assertTrue(criterion.passed_by(self.doc))
 
 	def test_single_letter_wildcard_usage(self):
-		criterion = KeywordFilter('downhol?')
+		criterion = KeywordFilter('irrigatio?')
 		self.assertTrue(criterion.passed_by(self.doc))
-		criterion = KeywordFilter('downhole?')
+		criterion = KeywordFilter('irrigation?')
 		self.assertTrue(criterion.passed_by(self.doc))
 
 

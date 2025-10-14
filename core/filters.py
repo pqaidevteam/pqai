@@ -11,7 +11,23 @@ class Filter():
 		self._filter_fn = filter_fn
 
 	def apply(self, items, n=None):
-		assert all(isinstance(i, list) and len(i) == 3 for i in items)
+		filtrate = []
+		for item in items:
+			if self._filter_fn(item):
+				filtrate.append(item)
+				if n is not None and len(filtrate) == n:
+					break
+		return filtrate
+
+	def passed_by(self, item):
+		return self._filter_fn(item)
+
+class DocumentFilter(Filter):
+	
+	def __init__(self, filter_fn=None):
+		super().__init__(filter_fn)
+	
+	def apply(self, items, n=None):
 		doc_ids = [item[0] for item in items]
 		filtrate, batch_size = [], 128
 		for i in range(0, len(doc_ids), batch_size):
@@ -58,7 +74,7 @@ class FilterArray(Filter):
 			msg = 'Only instances of Filter can be added to FilterArray.'
 			raise Exception(msg)
 
-class DateFilter(Filter):
+class DateFilter(DocumentFilter):
 
 	"""Base class for implementing date filters, e.g. publication date
 	"""
@@ -107,7 +123,7 @@ class PriorityDateFilter(DateFilter):
 		self._get_date = lambda doc: parse_date(doc['priorityDate'])
 
 
-class DocTypeFilter(Filter):
+class DocTypeFilter(DocumentFilter):
 	
 	def __init__(self, doctype):
 		self._doctype = doctype
@@ -120,7 +136,7 @@ class DocTypeFilter(Filter):
 		else:
 			raise Exception(f"Invalid document type: {self._doctype}")
 
-class AssigneeFilter(Filter):
+class AssigneeFilter(DocumentFilter):
 	
 	def __init__(self, name):
 		self._name = name
@@ -133,7 +149,7 @@ class AssigneeFilter(Filter):
 		return any([assignee['name'].lower().startswith(self._name.lower()) for assignee in doc['assignees']])
 	
 
-class KeywordFilter(Filter):
+class KeywordFilter(DocumentFilter):
 
 	def __init__(self, keyword, exclude=False):
 		self._keyword = keyword
@@ -154,7 +170,7 @@ class KeywordFilter(Filter):
 		regex = rf'\b{regex}\b'
 		return regex
 
-class CountryCodeFilter(Filter):
+class CountryCodeFilter(DocumentFilter):
 
 	def __init__(self, codes):
 		self._country_codes = tuple(codes)
