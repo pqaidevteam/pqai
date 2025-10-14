@@ -6,9 +6,9 @@ from functools import lru_cache
 from tensorflow.keras.models import load_model
 from tensorflow.keras.models import Model
 import tensorflow.keras.backend as K
-K.set_image_data_format("channels_last")
-
 from config.config import models_dir
+
+K.set_image_data_format("channels_last")
 
 class SensibleSpanExtractor():
 

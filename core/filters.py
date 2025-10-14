@@ -1,6 +1,5 @@
 import re
 from dateutil.parser import parse as parse_date
-from concurrent.futures import ThreadPoolExecutor
 import core.db as db
 
 class Filter():
@@ -73,7 +72,7 @@ class DateFilter(Filter):
 			raise Exception('DateFilter is an abstract class and should not be instantiated directly.')
 		try:
 			date = self._get_date(doc)
-		except:
+		except Exception:
 			return False # date information missing; exclude patent
 
 		if self._after is not None and date < self._after:

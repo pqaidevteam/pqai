@@ -4,6 +4,7 @@ import math
 import numba
 import re
 import json
+from scipy.spatial import distance
 
 from config.config import models_dir as MODELS_DIR
 
@@ -129,7 +130,7 @@ class WordEmbeddings(Embeddings):
                 than the required sequence length
             unk (str, optional): Label for the unknown tokens
         """
-        super().__init__(items, embeddings)
+        super().__init__(words, embeddings)
         self.PAD = pad
         self.UNK = unk
 
@@ -363,10 +364,6 @@ class InteractionMatrix():
 
 embeddings = GloveWordEmbeddings()
 sifs = embeddings.sifs
-
-
-from scipy.spatial import distance
-from core.utils import normalize_rows
 
 class BagOfVectors():
     

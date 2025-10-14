@@ -3,21 +3,16 @@ from random import randrange
 import re
 from core import utils
 from core.highlighter import highlight as highlighter_fn
-
-from core.vectorizers import SIFTextVectorizer
-text2vec = SIFTextVectorizer().embed
-
 from core.reranking import CustomRanker, ConceptMatchRanker
-ranker = CustomRanker()
-conceptmatch_ranker = ConceptMatchRanker()
-
-from core.documents import Document
 from core.encoders import default_boe_encoder
 from core.utils import get_sentences
 from core.sensible_span_extractor import SensibleSpanExtractor
-get_spans = SensibleSpanExtractor().return_ranked
+from core.vectorizers import SIFTextVectorizer
 
-import time
+text2vec = SIFTextVectorizer().embed
+ranker = CustomRanker()
+conceptmatch_ranker = ConceptMatchRanker()
+get_spans = SensibleSpanExtractor().return_ranked
 
 class SnippetExtractor():
 
@@ -35,7 +30,7 @@ class SnippetExtractor():
         if idx < len(sents)-1:
             after = cls._first_few_words(sents[idx+1])
         if htl_on:
-            center = KeywordHighlighter.highlighter_fn(query, center)[0]
+            center = highlighter_fn(query, center)[0]
         snippet = before + center + after
         return snippet
 
@@ -61,8 +56,7 @@ class SnippetExtractor():
                 mapping['ctx_before'] = ''
                 mapping['ctx_after'] = ''
                 mapping['similarity'] = 0.0
-            except Exception as e:
-                traceback.print_exc()
+            except Exception:
                 j = sent_idxs[i]
                 mapping['mapping'] = sents[j]
                 mapping['ctx_before'] = sents[j-1] if j-1 > 0 else ''
