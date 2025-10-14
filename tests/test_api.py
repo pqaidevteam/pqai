@@ -230,7 +230,7 @@ class TestSimilarPatentsRequestClass(unittest.TestCase):
             SimilarPatentsRequest({ 'q': 'drones'})
 
     def test_with_simple_query(self):
-        response = SimilarPatentsRequest({ 'pn': 'US7654321B2' }).serve()
+        response = SimilarPatentsRequest({ 'pn': 'US11856900B2' }).serve()
         self.assertIsInstance(response, dict)
         self.assertIsInstance(response['results'], list)
         self.assertGreater(len(response['results']), 0)
@@ -239,7 +239,7 @@ class TestSimilarPatentsRequestClass(unittest.TestCase):
 class TestPatentPriorArtRequestClass(unittest.TestCase):
 
     def test_with_simple_query(self):
-        response = PatentPriorArtRequest({ 'pn': 'US7654321B2'}).serve()
+        response = PatentPriorArtRequest({ 'pn': 'US11856900B2'}).serve()
         results = response['results']
         def published_before(r):
             d1 = parse_date(r['publication_date'])
@@ -263,7 +263,7 @@ class TestMappingRequestClass(unittest.TestCase):
 class TestDrawingRequestClass(unittest.TestCase):
 
     def setUp(self):
-        self.pat = 'US7654321B2'
+        self.pat = 'US11856900B2'
         self.app = 'US20130291398A1'
 
     def test_get_patent_drawing(self):
@@ -282,7 +282,7 @@ class TestDrawingRequestClass(unittest.TestCase):
 class TestListDrawingsRequestClass(unittest.TestCase):
 
     def setUp(self):
-        self.pat = 'US7654321B2'
+        self.pat = 'US11856900B2'
         self.app = 'US20130291398A1'
 
     def test_list_drawings_of_patent(self):
@@ -299,18 +299,18 @@ class TestListDrawingsRequestClass(unittest.TestCase):
 class TestDocumentRequestClass(unittest.TestCase):
 
     def test_get_patent_document(self):
-        doc = DocumentRequest({'id': 'US7654321B2'}).serve()
+        doc = DocumentRequest({'id': 'US11856900B2'}).serve()
         self.assertIsInstance(doc, dict)
-        self.assertEqual(doc['id'], 'US7654321B2')
+        self.assertEqual(doc['id'], 'US11856900B2')
 
 
 class TestPatentDataRequestClass(unittest.TestCase):
 
     def test_returns_patent_data(self):
-        data = PatentDataRequest({'pn': 'US7654321B2'}).serve()
+        data = PatentDataRequest({'pn': 'US11856900B2'}).serve()
         self.assertIsInstance(data, dict)
         self.assertEqual(data['title'][:24], 'Formation fluid sampling')
-        self.assertEqual(data['pn'], 'US7654321B2')
+        self.assertEqual(data['pn'], 'US11856900B2')
         self.assertNonNullString(data['abstract'])
         self.assertNonNullString(data['description'])
         self.assertIsInstance(data['claims'], list)
@@ -324,7 +324,7 @@ class TestPatentDataRequestClass(unittest.TestCase):
 class TestTitleRequestClass(unittest.TestCase):
     
     def test_get_title(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         title = 'Formation fluid sampling apparatus and methods'
         response = TitleRequest({'pn': pn}).serve()
         self.assertEqual(response['pn'], pn)
@@ -334,7 +334,7 @@ class TestTitleRequestClass(unittest.TestCase):
 class TestAbstractRequestClass(unittest.TestCase):
     
     def test_get_abstract(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         abst = 'A fluid sampling system retrieves'
         response = AbstractRequest({'pn': pn}).serve()
         self.assertEqual(response['pn'], pn)
@@ -344,7 +344,7 @@ class TestAbstractRequestClass(unittest.TestCase):
 class TestAllClaimsRequestClass(unittest.TestCase):
    
     def test_get_all_claims(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         response = AllClaimsRequest({'pn': pn}).serve()
         self.assertIsInstance(response['claims'], list)
         self.assertEqual(26, len(response['claims']))
@@ -353,7 +353,7 @@ class TestAllClaimsRequestClass(unittest.TestCase):
 class TestOneClaimRequestClass(unittest.TestCase):
 
     def setUp(self):
-        self.pn = 'US7654321B2'
+        self.pn = 'US11856900B2'
     
     def test_get_one_claim(self):
         claim_2 = '2. The fluid sampling system of claim 1, in which'
@@ -377,7 +377,7 @@ class TestOneClaimRequestClass(unittest.TestCase):
 class TestIndependentClaimsRequestClass(unittest.TestCase):
     
     def test_get_independent_claims(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         response = IndependentClaimsRequest({'pn': pn}).serve()
         self.assertEqual(response['pn'], pn)
         self.assertEqual(6, len(response['claims']))
@@ -386,7 +386,7 @@ class TestIndependentClaimsRequestClass(unittest.TestCase):
 class TestPatentDescriptionRequestClass(unittest.TestCase):
     
     def test_get_description(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         response = PatentDescriptionRequest({'pn': pn}).serve()
         self.assertNonNullString(response['description'])
 
@@ -398,7 +398,7 @@ class TestPatentDescriptionRequestClass(unittest.TestCase):
 class TestCitationsRequestClass(unittest.TestCase):
     
     def test_get_citations(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         response = CitationsRequest({'pn': pn}).serve()
         self.assertIsInstance(response['citations_backward'], list)
         self.assertGreater(len(response['citations_backward']), 0)
@@ -409,7 +409,7 @@ class TestCitationsRequestClass(unittest.TestCase):
 class TestBackwardCitationsRequestClass(unittest.TestCase):
     
     def test_get_back_citations(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         response = BackwardCitationsRequest({'pn': pn}).serve()
         self.assertIsInstance(response['citations_backward'], list)
         self.assertGreater(len(response['citations_backward']), 0)
@@ -418,7 +418,7 @@ class TestBackwardCitationsRequestClass(unittest.TestCase):
 class TestForwardCitationsRequestClass(unittest.TestCase):
     
     def test_get_forward_citations(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         response = ForwardCitationsRequest({'pn': pn}).serve()
         self.assertIsInstance(response['citations_forward'], list)
         self.assertGreater(len(response['citations_forward']), 0)
@@ -427,7 +427,7 @@ class TestForwardCitationsRequestClass(unittest.TestCase):
 class TestAbstractConceptsRequestClass(unittest.TestCase):
     
     def test_get_concepts_from_abstract(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         response = AbstractConceptsRequest({'pn': pn}).serve()
         self.assertIsInstance(response['concepts'], list)
         self.assertGreater(len(response['concepts']), 0)
@@ -436,7 +436,7 @@ class TestAbstractConceptsRequestClass(unittest.TestCase):
 class TestDescriptionConceptsRequestClass(unittest.TestCase):
     
     def test_get_concepts_from_description(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         response = AbstractConceptsRequest({'pn': pn}).serve()
         self.assertIsInstance(response['concepts'], list)
         self.assertGreater(len(response['concepts']), 0)
@@ -445,7 +445,7 @@ class TestDescriptionConceptsRequestClass(unittest.TestCase):
 class TestCPCsRequestClass(unittest.TestCase):
     
     def test_get_cpcs(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         response = CPCsRequest({'pn': pn}).serve()
         self.assertIsInstance(response['cpcs'], list)
         self.assertGreater(len(response['cpcs']), 0)
@@ -454,7 +454,7 @@ class TestCPCsRequestClass(unittest.TestCase):
 class TestListThumbnailsRequestClass(unittest.TestCase):
     
     def test_get_list_of_available_thumbnails(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         response = ListThumbnailsRequest({'pn': pn}).serve()
         self.assertEqual(8, len(response['thumbnails']))
 
@@ -462,7 +462,7 @@ class TestListThumbnailsRequestClass(unittest.TestCase):
 class TestThumbnailRequestClass(unittest.TestCase):
     
     def test_get_a_thumbnail(self):
-        req_data = {'pn': 'US7654321B2', 'n': '1'}
+        req_data = {'pn': 'US11856900B2', 'n': '1'}
         response = ThumbnailRequest(req_data).serve()
         self.assertIsInstance(response, str)
 
@@ -470,7 +470,7 @@ class TestThumbnailRequestClass(unittest.TestCase):
 class TestPatentCPCVectorRequestClass(unittest.TestCase):
     
     def test_get_cpc_patent_vector(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         response = PatentCPCVectorRequest({'pn': pn}).serve()
         self.assertIsInstance(response['vector'], list)
         self.assertEqual(256, len(response['vector']))
@@ -479,7 +479,7 @@ class TestPatentCPCVectorRequestClass(unittest.TestCase):
 class TestPatentAbstractVectorRequestClass(unittest.TestCase):
     
     def test_get_abstract_text_vector(self):
-        pn = 'US7654321B2'
+        pn = 'US11856900B2'
         response = PatentAbstractVectorRequest({'pn': pn}).serve()
         self.assertIsInstance(response['vector'], list)
         self.assertEqual(768, len(response['vector']))
@@ -518,34 +518,34 @@ class TestConceptVectorRequestClass(unittest.TestCase):
 class TestAggregatedCitationsRequest(unittest.TestCase):
     
     def test_get_one_level_citations(self):
-        req_data = {'levels': 1, 'pn': 'US7654321B2'}
+        req_data = {'levels': 1, 'pn': 'US11856900B2'}
         response = AggregatedCitationsRequest(req_data).serve()
         self.assertIsInstance(response, list)
         self.assertEqual(len(response), 73)
 
     def test_get_two_level_citations(self):
-        req_data = {'levels': 2, 'pn': 'US7654321B2'}
+        req_data = {'levels': 2, 'pn': 'US11856900B2'}
         response = AggregatedCitationsRequest(req_data).serve()
         self.assertIsInstance(response, list)
         self.assertGreater(len(response), 73)
 
     def test_raises_error_if_level_parameter_missing(self):
-        req_data = {'pn': 'US7654321B2'}
+        req_data = {'pn': 'US11856900B2'}
         with self.assertRaises(BadRequestError):
             AggregatedCitationsRequest(req_data).serve()
 
     def test_raises_error_if_no_level_specified(self):
-        req_data = {'pn': 'US7654321B2', 'levels': None}
+        req_data = {'pn': 'US11856900B2', 'levels': None}
         with self.assertRaises(BadRequestError):
             AggregatedCitationsRequest(req_data).serve()
 
     def test_raises_error_if_level_out_of_range(self):
-        req_data = {'levels': 5, 'pn': 'US7654321B2'}
+        req_data = {'levels': 5, 'pn': 'US11856900B2'}
         with self.assertRaises(BadRequestError):
             AggregatedCitationsRequest(req_data).serve()
 
     def test_raises_error_if_citations_grow_a_lot(self):
-        req_data = {'levels': 4, 'pn': 'US7654321B2'}
+        req_data = {'levels': 4, 'pn': 'US11856900B2'}
         with self.assertRaises(ServerError):
             AggregatedCitationsRequest(req_data).serve()
 

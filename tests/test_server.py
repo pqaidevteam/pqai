@@ -36,7 +36,7 @@ class TestRoutes(unittest.TestCase):
 	def setUp(self):
 		self.endpoint = f'http://{HOST}:{str(PORT)}'
 		self.query = 'formation fluid sampling'
-		self.pn = 'US7654321B2'
+		self.pn = 'US11856900B2'
 
 	def test_102_search_route_with_text_query(self):
 		response = self.api_get('/search/102', {'q': self.query})
@@ -49,7 +49,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(response.json()['results']), 0)
 
 	def test_similar_patent_search_route(self):
-		response = self.api_get('/similar', {'pn': 'US7654321B2'})
+		response = self.api_get('/similar', {'pn': 'US11856900B2'})
 		self.assertSuccess(response)
 		self.assertGreater(len(response.json()['results']), 0)
 
@@ -59,7 +59,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(response.json()['results']), 0)
 
 	def test_document_retrieval_route(self):
-		response = self.api_get('/documents', {'id': 'US7654321B2'})
+		response = self.api_get('/documents', {'id': 'US11856900B2'})
 		self.assertSuccess(response)
 		self.assertIsInstance(response.json(), dict)
 
@@ -77,7 +77,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertTrue('anc' in response.json())
 
 	def test_patent_data_route(self):
-		url = '/patents/US7654321B2'
+		url = '/patents/US11856900B2'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -88,7 +88,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertTrue('publication_date' in data)
 
 	def test_patent_title_route(self):
-		url = '/patents/US7654321B2/title'
+		url = '/patents/US11856900B2/title'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -96,7 +96,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertTrue('sampling' in data['title'])
 
 	def test_patent_abstract_route(self):
-		url = '/patents/US7654321B2/abstract'
+		url = '/patents/US11856900B2/abstract'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -104,7 +104,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertTrue('formation' in data['abstract'])
 
 	def test_patent_claims_route(self):
-		url = '/patents/US7654321B2/claims'
+		url = '/patents/US11856900B2/claims'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -112,7 +112,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertEqual(len(data['claims']), 26)
 
 	def test_patent_ind_claims_route(self):
-		url = '/patents/US7654321B2/claims/independent'
+		url = '/patents/US11856900B2/claims/independent'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -120,7 +120,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertEqual(len(data['claims']), 6)
 
 	def test_patent_one_claims_route(self):
-		url = '/patents/US7654321B2/claims/26'
+		url = '/patents/US11856900B2/claims/26'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -133,7 +133,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertEqual(data['claim_num'], 26)
 
 	def test_patent_description_route(self):
-		url = '/patents/US7654321B2/description'
+		url = '/patents/US11856900B2/description'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -141,7 +141,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertIsInstance(data['description'], str)
 
 	def test_patent_citations_route(self):
-		url = '/patents/US7654321B2/citations'
+		url = '/patents/US11856900B2/citations'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -154,7 +154,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(data['citations_forward']), 0)
 
 	def test_patent_backward_citations_route(self):
-		url = '/patents/US7654321B2/citations/backward'
+		url = '/patents/US11856900B2/citations/backward'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -163,7 +163,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(data['citations_backward']), 0)
 
 	def test_patent_forward_citations_route(self):
-		url = '/patents/US7654321B2/citations/forward'
+		url = '/patents/US11856900B2/citations/forward'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -172,7 +172,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(data['citations_forward']), 0)
 
 	def test_patent_aggregated_citations_route(self):
-		url = '/patents/US7654321B2/citations/aggregated?levels=2'
+		url = '/patents/US11856900B2/citations/aggregated?levels=2'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -180,7 +180,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(data), 50)
 
 	def test_patent_concepts_in_abstracts_route(self):
-		url = '/patents/US7654321B2/abstract/concepts'
+		url = '/patents/US11856900B2/abstract/concepts'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -189,7 +189,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(data['concepts']), 0)
 
 	def test_patent_concepts_in_description_route(self):
-		url = '/patents/US7654321B2/description/concepts'
+		url = '/patents/US11856900B2/description/concepts'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -198,7 +198,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(data['concepts']), 0)
 
 	def test_patent_cpcs_route(self):
-		url = '/patents/US7654321B2/classification/cpcs'
+		url = '/patents/US11856900B2/classification/cpcs'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -207,7 +207,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(data['cpcs']), 0)
 
 	def test_patent_cpc_vector_route(self):
-		url = '/patents/US7654321B2/vectors/cpcs'
+		url = '/patents/US11856900B2/vectors/cpcs'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -216,7 +216,7 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(data['vector']), 0)
 
 	def test_patent_abstract_vector_route(self):
-		url = '/patents/US7654321B2/vectors/abstract'
+		url = '/patents/US11856900B2/vectors/abstract'
 		response = self.api_get(url)
 		self.assertSuccess(response)
 		data = response.json()
@@ -243,20 +243,20 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(data['vector']), 0)
 
 	def test_drawing_route(self):
-		response = self.api_get('/patents/US7654321B2/drawings/1')
+		response = self.api_get('/patents/US11856900B2/drawings/1')
 		self.assertSuccess(response)
 
 	def test_list_drawings_route(self):
-		response = self.api_get('/patents/US7654321B2/drawings/')
+		response = self.api_get('/patents/US11856900B2/drawings/')
 		self.assertSuccess(response)
 		self.assertEqual(8, len(response.json()['drawings']))
 
 	def test_thumbnail_route(self):
-		response = self.api_get('/patents/US7654321B2/thumbnails/1')
+		response = self.api_get('/patents/US11856900B2/thumbnails/1')
 		self.assertSuccess(response)
 
 	def test_list_thumbnails_route(self):
-		response = self.api_get('/patents/US7654321B2/thumbnails/')
+		response = self.api_get('/patents/US11856900B2/thumbnails/')
 		self.assertSuccess(response)
 		self.assertEqual(8, len(response.json()['thumbnails']))
 

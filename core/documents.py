@@ -1,42 +1,15 @@
 import re
-from dataclasses import dataclass
 from functools import cached_property
 from dateutil.parser import parse as parse_date
 
-from core import db
+from core.db import patent_db, npl_db
 from core import utils
 
 
-@dataclass
 class Document:
-    _id: str
-    _data: dict = None
-    _config = {
-        "patent": {
-            "publication_id": "publicationNumber",
-            "publication_date": "publicationDate",
-            "filing_date": "filingDate",
-            "priority_date": "priorityDate",
-            "backwards_citations": "backwardCitations",
-            "forwards_citations": "forwardCitations",
-            "www_link": lambda data: utils.get_external_link(
-                data.get("publicationNumber")
-            ),
-            "alias": lambda data: utils.get_faln(data.get("inventors")),
-            "full_text": lambda data: db.get_full_text(data.get('publicationNumber')),
-        },
-        "npl": {
-            "publication_id": lambda data: data.get("doi", "[External link]"),
-            "abstract": "abstract",
-            "www_link": lambda data: data.get("url", data.get("doi")),
-            "inventors": lambda data: data.get("authors", []),
-            "alias": lambda data: utils.get_faln(data.get("authors", [])),
-            "full_text": lambda data: data.get("title")
-                + "\n"
-                + data.get("abstract"),
-            "publication_date": lambda data: f"{data.get('year')}-12-31",
-        },
-    }
+    def __init__(self, doc_id):
+        self._id = doc_id
+        self._proxy = None
 
     @cached_property
     def id(self):
@@ -47,47 +20,116 @@ class Document:
         pattern = r'^[A-Z]{2}'
         return "patent" if re.match(pattern, self._id) else "npl"
 
+    @property
+    def _data(self):
+        """Lazy load the document proxy from the appropriate database"""
+        if self._proxy is None:
+            if self.type == "patent":
+                self._proxy = patent_db.get(self._id)
+            else:
+                self._proxy = npl_db.get(self._id)
+            
+            # If database returns None, raise an error
+            if self._proxy is None:
+                raise ValueError(f"Document {self._id} not found in database")
+        return self._proxy
+    
     @cached_property
     def data(self):
-        if not self._data:
-            self._load()
+        """Alias for backward compatibility - returns the proxy"""
         return self._data
 
-    def _load(self, force=False):
-        if self._data is None or force:
-            self._data = db.get_document(self._id)
-
     def __getattr__(self, key):
-        if not self._data:
-            self._load()
-
-        if key in self._data:
-            return self._data[key]
-
-        if key in self._config[self.type]:
-            if callable(self._config[self.type][key]):
-                return self._config[self.type][key](self._data)
-            return self._data.get(self._config[self.type][key])
-
-        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{key}'")
+        """
+        Fallback for any attribute not explicitly defined.
+        Allows accessing raw data fields directly for backward compatibility.
+        """
+        # Avoid infinite recursion for special attributes
+        if key.startswith('_'):
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{key}'")
+        
+        # Try to get from the data proxy
+        try:
+            return self._data.get(key)
+        except Exception:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{key}'")
+    
+    # Common properties for all documents
+    
+    @cached_property
+    def title(self):
+        return self._data.get("title")
+    
+    @cached_property
+    def abstract(self):
+        return self._data.get("abstract") or self._data.get("paperAbstract")
+    
+    @cached_property
+    def publication_date(self):
+        if self.type == "patent":
+            return self._data.get("publicationDate")
+        else:
+            year = self._data.get("year")
+            return f"{year}-12-31" if year else None
+    
+    @cached_property
+    def publication_id(self):
+        if self.type == "patent":
+            return self._data.get("publicationNumber")
+        else:
+            return self._data.get("doi", "[External link]")
+    
+    @cached_property
+    def inventors(self):
+        if self.type == "patent":
+            return self._data.get("inventors", [])
+        else:
+            return self._data.get("authors", [])
+    
+    @cached_property
+    def www_link(self):
+        if self.type == "patent":
+            return utils.get_external_link(self._data.get("publicationNumber"))
+        else:
+            return self._data.get("url") or self._data.get("doi")
+    
+    @cached_property
+    def alias(self):
+        return utils.get_faln(self.inventors)
+    
+    @cached_property
+    def full_text(self):
+        """Get full text - for patents this combines multiple fields"""
+        if self.type == "patent":
+            abstract = self.abstract or ""
+            # Access to claims and description will trigger S3 load if needed
+            claims_list = self._data.get("claims", [])
+            claims = "\n".join(claims_list) if claims_list else ""
+            desc = self._data.get("description", "")
+            desc = re.sub(r"\n+(?=[^A-Z])", " ", desc)  # collapse multiple line breaks
+            return "\n".join([abstract, claims, desc])
+        else:
+            title = self._data.get("title", "")
+            abstract = self._data.get("abstract", "")
+            return f"{title}\n{abstract}"
 
     @cached_property
-    def owner (self):
+    def owner(self):
         if self.type == 'patent':
-            arr = self.data.get('assignees')
+            arr = self._data.get('assignees')
             if (isinstance(arr, list) and len(arr) and arr[0].strip()):
                 return arr[0]
 
-            arr = self.data.get('applicants')
+            arr = self._data.get('applicants')
             if (isinstance(arr, list) and len(arr) and arr[0].strip()):
                 return arr[0]
 
             return 'Assignee N/A'
 
         elif self.type == 'npl':
-            if not self.data['authors']:
+            if not self._data.get('authors'):
                 return 'Author N/A'
-            names = self.data.get('authors', [])
+            names = self._data.get('authors', [])
             return utils.get_faln(names)
         return None
 
@@ -109,8 +151,8 @@ class Document:
             "id": self._id,
             "type": self.type,
             "publication_id": self.publication_id,
-            "title": self.data.get("title"),
-            "abstract": self.data.get("abstract", self.data.get("paperAbstract")),
+            "title": self.title,
+            "abstract": self.abstract,
             "publication_date": self.publication_date,
             "www_link": self.www_link,
             "owner": self.owner,
@@ -120,8 +162,8 @@ class Document:
         }
         if self.type == "patent":
             data.update({
-                "filing_date": self.filing_date,
-                "priority_date": self.priority_date,
+                "filing_date": self._data.get("filingDate"),
+                "priority_date": self._data.get("priorityDate"),
             })
         return data
 
@@ -131,29 +173,32 @@ class Patent(Document):
     def __init__(self, patent_number):
         super().__init__(patent_number)
 
-    def _load(self, force=False):
-        if not self._data or force:
-            self._data = db.get_patent_data(self._id, only_bib=False)
-
     @cached_property
     def claims(self):
-        return self.data.get("claims", [])
+        """Claims are stored in S3 - will trigger lazy load on first access"""
+        return self._data.get("claims", [])
+    
+    @cached_property
+    def description(self):
+        """Description is stored in S3 - will trigger lazy load on first access"""
+        return self._data.get("description", "")
 
     @cached_property
     def filing_date(self):
-        return self.data.get("filingDate")
+        return self._data.get("filingDate")
+    
+    @cached_property
+    def priority_date(self):
+        return self._data.get("priorityDate")
 
     @cached_property
     def first_claim(self):
         return self.claims[0] if self.claims else None
 
     @cached_property
-    def description(self):
-        return self.data.get("description")
-
-    @cached_property
     def cpcs(self):
-        return self.data.get("cpcs", [])
+        """CPCs are stored in S3 - will trigger lazy load on first access"""
+        return self._data.get("cpcs", [])
 
     @cached_property
     def independent_claims(self):
@@ -163,20 +208,32 @@ class Patent(Document):
     @cached_property
     def art_unit(self):
         try:
-            examiner = self.data["examinersDetails"]["details"][0]
-            return examiner["name"]["department"]
-        except (KeyError, IndexError):
+            examiner = self._data.get("examinersDetails", {})
+            details = examiner.get("details", [])
+            if details:
+                return details[0]["name"]["department"]
+        except (KeyError, IndexError, TypeError):
             return None
+        return None
 
     @cached_property
     def forward_citations(self):
-        patent = db.get_patent_data(self._id, False)
-        return patent.get("forwardCitations", [])
+        """Forward citations are stored in S3 - will trigger lazy load on first access"""
+        return self._data.get("forwardCitations", [])
 
     @cached_property
     def backward_citations(self):
-        patent = db.get_patent_data(self._id, False)
-        return patent.get("backwardCitations", [])
+        """Backward citations are stored in S3 - will trigger lazy load on first access"""
+        return self._data.get("backwardCitations", [])
+    
+    @cached_property
+    def full_text(self):
+        """Override to use patent-specific implementation"""
+        abstract = self.abstract or ""
+        claims = "\n".join(self.claims) if self.claims else ""
+        desc = self.description
+        desc = re.sub(r"\n+(?=[^A-Z])", " ", desc) if desc else ""
+        return "\n".join([abstract, claims, desc])
 
 class Paper(Document):
     pass

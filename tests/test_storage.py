@@ -54,8 +54,8 @@ class TestMongoDBClass(unittest.TestCase):
 		client = MongoClient(url)
 		mongo_coll = MongoCollection(client[db][coll])
 
-		doc = mongo_coll.get({ 'publicationNumber': 'US7654321B2' })
-		self.assertEqual('US7654321B2', doc['publicationNumber'])
+		doc = mongo_coll.get({ 'publicationNumber': 'US11856900B2' })
+		self.assertEqual('US11856900B2', doc['publicationNumber'])
 
 
 if __name__ == '__main__':

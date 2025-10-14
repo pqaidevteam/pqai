@@ -1,63 +1,37 @@
 import unittest
+from core.db import patent_db, npl_db
 
-# Run tests without using GPU
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-os.environ['TEST'] = "1"
+class TestDB(unittest.TestCase):
 
-import sys
-from pathlib import Path
-from dotenv import load_dotenv
-
-TEST_DIR = str(Path(__file__).parent.resolve())
-BASE_DIR = str(Path(__file__).parent.parent.resolve())
-ENV_PATH = "{}/.env".format(BASE_DIR)
-
-load_dotenv(ENV_PATH)
-
-sys.path.append(BASE_DIR)
-
-from core import db
-
-class TestDBModule(unittest.TestCase):
-
-    def test_can_fetch_patent_bibliography(self):
-        bib = db.get_bibliography('US7654321B2')
-        self.assertIsInstance(bib, dict)
-        self.assertIsInstance(bib['title'], str)
-        self.assertIsInstance(bib['abstract'], str)
-        self.assertIsInstance(bib['assignees'], list)
-        self.assertFalse('description' in bib)
-
-    def test_can_fetch_patent_data_full(self):
-        data = db.get_patent_data('US7654321B2')
-        self.assertIsInstance(data['title'], str)
-        self.assertIsInstance(data['abstract'], str)
-        self.assertIsInstance(data['description'], str)
-        self.assertIsInstance(data['assignees'], list)
-
-    def test_get_full_text(self):
-        full_text = db.get_full_text('US7654321B2')
-        self.assertIsInstance(full_text, str)
-
-    def test_get_cpcs(self):
-        cpcs = db.get_cpcs('US7654321B2')
-        self.assertIsInstance(cpcs, list)
-        self.assertGreater(len(cpcs), 0)
-
-    def test_get_claims(self):
-        claims = db.get_claims('US7654321B2')
-        self.assertIsInstance(claims, list)
-        self.assertGreater(len(claims), 0)
-        self.assertIsInstance(claims[0], str)
-
-    def test_get_first_claim(self):
-        clm = db.get_first_claim('US7654321B2')
-        self.assertIsInstance(clm, str)
-
-    def test_get_document(self):
-        doc = db.get_document('US7654321B2')
-        self.assertIsInstance(doc, dict)
+    def test__can_fetch_patent_data(self):
+        pn = "US11856900B2"
+        data = patent_db.get(pn)
+        self.assertIsInstance(data, dict)
+        self.assertEqual(data['publicationNumber'], pn)
+        self.assertTrue(data['title'].startswith("Selective"))
+    
+    def test__can_fetch_non_US_patent_data(self):
+        pn = "KR20240000532A"
+        data = patent_db.get(pn)
+        self.assertIsInstance(data, dict)
+        self.assertEqual(data['publicationNumber'], pn)
+        self.assertTrue(data['title'].startswith("Anti-nectin-4"))
+    
+    def test__can_fetch_npl_data(self):
+        doc_id = "W4390534784"
+        data = npl_db.get(doc_id)
+        self.assertIsInstance(data, dict)
+        self.assertEqual(data['id'], doc_id)
+        self.assertTrue(data['title'].startswith("Characteristics"))
+    
+    def test__can_fetch_multiple_documents(self):
+        doc_ids = ["US11856899B2", "W4390534784", "US11856900B2"]
+        results = patent_db.get(doc_ids)
+        self.assertEqual(len(results), 3)
+        self.assertTrue(all(isinstance(res, dict) for res in results))
+        self.assertEqual(results[0]['publicationNumber'], "US11856899B2")
+        self.assertEqual(results[1]['id'], "W4390534784")
+        self.assertEqual(results[2]['publicationNumber'], "US11856900B2")
 
 
 if __name__ == '__main__':

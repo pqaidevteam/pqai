@@ -83,7 +83,7 @@ class TestFilterArray(unittest.TestCase):
 class TestPublicationDateFilter(unittest.TestCase):
 	
 	def setUp(self):
-		self.doc = Document('US7654321B2')
+		self.doc = Document('US11856900B2')
 
 	def test_after_date_filter_operation(self):
 		self.assertFalse(self.doc_published_after('2010-02-03'))
@@ -126,7 +126,7 @@ class TestPriorityDateFilter(unittest.TestCase):
 class TestKeywordFilter(unittest.TestCase):
 	
 	def setUp(self):
-		self.doc = Document('US7654321B2')
+		self.doc = Document('US11856900B2')
 
 	def test_simplest_keyword_match(self):
 		criterion = KeywordFilter('downhole')

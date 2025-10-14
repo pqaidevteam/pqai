@@ -35,11 +35,11 @@ The endpoints are listed in the [next section](#Endpoints). Each route specifies
 
 It contains two parameters, `pn` and `n`. To make a request, we have to replace them (along with the preceding colons) with their values.
 
-To get drawing #4 of patent no. US7654321B2, the route will become: `/patents/US7654321B2/drawings/4`.
+To get drawing #4 of patent no. US11856900B2, the route will become: `/patents/US11856900B2/drawings/4`.
 
 By adding this route to the PQAI endpoint, which is `http://api.projectpq.ai`, you get the final URL:
 
-https://api.projectpq.ai/patents/US7654321B2/drawings/4
+https://api.projectpq.ai/patents/US11856900B2/drawings/4
 
 (if you open the above route in your browser, you should see the drawing returned by the API - try changing the patent and drawing number to get a hang of it)
 
@@ -47,19 +47,19 @@ https://api.projectpq.ai/patents/US7654321B2/drawings/4
 
 Let's demonstrate with an example. There is another route in PQAI API similar to the one above. It returns thumbnails of drawings:
 
-https://api.projectpq.ai/patents/US7654321B2/thumbnails/4
+https://api.projectpq.ai/patents/US11856900B2/thumbnails/4
 
 This route also accepts query string parameters. They are `w` and `h`, which specify the width and height of the thumbnail to be returned.
 
 Let's try sending the `w` parameter with this route.
 
-https://api.projectpq.ai/patents/US7654321B2/thumbnails/4?w=300
+https://api.projectpq.ai/patents/US11856900B2/thumbnails/4?w=300
 
 Note that query string parameters are sent by specifying their symbol, followed by `=` sign, and then followed by their value, which in this case, was 300.
 
 To send multiple query string parameters, separate them with the `&` symbol, like so:
 
-https://api.projectpq.ai/patents/US7654321B2/thumbnails/4?w=300&h=300
+https://api.projectpq.ai/patents/US11856900B2/thumbnails/4?w=300&h=300
 
 ### How to send requests?
 
@@ -191,7 +191,7 @@ Query string parameters
 
 | Parameter | Value   | Meaning                       | Example                              |
 | --------- | ------- | ----------------------------- | ------------------------------------ |
-| `pn`      | String  | Publication number            | `"US7654321B2"`                      |
+| `pn`      | String  | Publication number            | `"US11856900B2"`                      |
 | `n`       | Integer | No. of results                | `10`                                 |
 | `offset`  | Integer | Pagination offset (0-indexed) | `10` (for skipping first 10 results) |
 | `index`   | String  | CPC subclass                  | `"H04W"` (`"auto"` for auto-select)  |
@@ -239,7 +239,7 @@ Query string parameters
 
 | Parameter | Value   | Meaning       | Example       |
 | --------- | ------- | ------------- | ------------- |
-| `id`      | String  | Document ID   | `US7654321B2` |
+| `id`      | String  | Document ID   | `US11856900B2` |
 
 ###  9. Get an image from a patent (full-size drawing or thumbnail)
 
@@ -253,7 +253,7 @@ Path parameters
 
 | Parameter | Value   | Meaning       | Example       |
 | --------- | ------- | ------------- | ------------- |
-| `pn`      | String  | Patent Number | `US7654321B2` |
+| `pn`      | String  | Patent Number | `US11856900B2` |
 | `n`       | Integer | Drawing index | `3`           |
 
 Query string parameters
@@ -275,7 +275,7 @@ Path parameters
 
 | Parameter | Value   | Meaning       | Example       |
 | --------- | ------- | ------------- | ------------- |
-| `pn`      | String  | Patent Number | `US7654321B2` |
+| `pn`      | String  | Patent Number | `US11856900B2` |
 
 ### 11. Get a patent's data
 
@@ -285,7 +285,7 @@ Path parameters
 
 | Parameter | Value  | Meaning       | Example       |
 | --------- | ------ | ------------- | ------------- |
-| `pn`      | String | Patent Number | `US7654321B2` |
+| `pn`      | String | Patent Number | `US11856900B2` |
 
 ### 12. Get a patent's vector
 
@@ -295,7 +295,7 @@ Path parameters
 
 | Parameter | Value  | Meaning          | Example              |
 | --------- | ------ | ---------------- | -------------------- |
-| `pn`      | String | Patent Number    | `US7654321B2`        |
+| `pn`      | String | Patent Number    | `US11856900B2`        |
 | `field`   | String | Field vectorized | `cpcs` or `abstract` |
 
 

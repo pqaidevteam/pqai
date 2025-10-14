@@ -29,7 +29,7 @@ class TestSnippetExtractor(unittest.TestCase):
     def setUp(self):
         self.query = 'fluid formation sampling'
         self.longquery = 'A method of sampling formation fluids. The method includes lowering a sampling apparatus into a borewell.'
-        self.doc = Document('US7654321B2')
+        self.doc = Document('US11856900B2')
         self.text = self.doc.full_text
 
     def test__can_add_few_words_before_snippet(self):
