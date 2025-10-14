@@ -4,11 +4,7 @@ import math
 import numba
 import re
 import json
-from sklearn.decomposition import TruncatedSVD
 
-from core.utils import is_cpc_code, is_patent_number
-from config.config import models_dir
-from core.db import get_patent_data
 from config.config import models_dir as MODELS_DIR
 
 
