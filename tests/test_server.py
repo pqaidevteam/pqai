@@ -209,12 +209,12 @@ class TestRoutes(unittest.TestCase):
 		self.assertGreater(len(data['vector']), 0)
 
 	def test_list_thumbnails_route(self):
-		response = self.api_get('/patents/US7654321B2/thumbnails/')
+		response = self.api_get('/patents/US7654321B2/thumbnails')
 		self.assertSuccess(response)
 		self.assertEqual(8, len(response.json()['thumbnails']))
 
 	def test_list_drawings_route(self):
-		response = self.api_get('/patents/US7654321B2/drawings/')
+		response = self.api_get('/patents/US7654321B2/drawings')
 		self.assertSuccess(response)
 		self.assertEqual(8, len(response.json()['drawings']))
 

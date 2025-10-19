@@ -10,13 +10,11 @@ from pydantic import BaseModel, ValidationError, Field
 from typing import Optional
 
 from core.vectorizers import SentBERTVectorizer
-from core.index_selection import SubclassBasedIndexSelector
 from core.filters import FilterExtractor
 from core.obvious import Combiner
-from core.indexes import IndexesDirectory
 from core.documents import Document, Patent
 from core.snippet import SnippetExtractor
-from core.reranking import ConceptMatchRanker
+
 from core.encoders import default_boe_encoder, default_embedding_matrix
 from core.results import SearchResult
 import core.remote as remote
@@ -30,9 +28,7 @@ from .errors import (
 from services import vector_search as vector_search_srv
 
 from config.config import (
-    indexes_dir,
     reranker_active,
-    year_wise_indexes,
     allow_outgoing_extension_requests,
     allow_incoming_extension_requests,
     docs_dir
@@ -46,11 +42,11 @@ if not vector_search_srv.ready():
         time.sleep(1)
 
 vectorize_text = SentBERTVectorizer().embed
-available_indexes = IndexesDirectory(indexes_dir)
-select_indexes = SubclassBasedIndexSelector(available_indexes).select
-extract_snippet = SnippetExtractor.extract_snippet
-generate_mapping = SnippetExtractor.map
-reranker = None if not reranker_active else ConceptMatchRanker()
+
+reranker = None
+if reranker_active:
+    from core.reranking import ConceptMatchRanker
+    reranker = ConceptMatchRanker()
 
 PQAI_S3_BUCKET_NAME = os.environ['PQAI_S3_BUCKET_NAME']
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
@@ -64,16 +60,20 @@ s3 = session.resource('s3')
 
 class APIRequest():
     _schema = None
-    
+
     def __init__(self, req_data=None):
         if self._schema:
             try:
                 validated = self._schema(**req_data)
-                self._data = validated.model_dump()
+                self._params = validated.model_dump()
+                for key in self._params:
+                    if not hasattr(self, key):
+                        setattr(self, key, self._params[key])
+
             except ValidationError as e:
                 raise BadRequestError(str(e))
         else:
-            self._data = req_data or {}
+            self._params = req_data or {}
 
     def serve(self):
         try:
@@ -113,74 +113,42 @@ class SearchRequest(APIRequest):
 
     def __init__(self, req_data):
         super().__init__(req_data)
-        self._query = self._data.get('q')
-        self._latent_query = self._data.get('lq')
-
-        self._offset = self._data.get('offset')
-        self._n_results = self._data.get('n')
-        self._n_results += self._offset # for pagination
-
-        self._doctype = self._data.get('type')
-
-        self._filters = FilterExtractor.extract(self._data)
-        self._indexes = self._get_indexes()
+        self.query = self.q
+        self._n_results = self.n + self.offset
+        self._filters = FilterExtractor.extract(self._params)
 
     def _serve(self):
-        raise NotImplementedError()
+        raise NotImplementedError
 
-    def _get_indexes(self):
-        index_ids = list(available_indexes.available())
-
-        if "type" in self._data and (self._data['type'] not in ['any', 'auto']):
-            index_ids = [idx for idx in index_ids if len(idx.split(".")) > 1
-                                                     and idx.split(".")[1] == self._data['type']]
-
-        if not year_wise_indexes:
-            return index_ids
-
-        if not self._data.get('before') and not self._data.get('after'):
-            return index_ids
-
-        if "before" in self._data and re.match(r"\d{4}", self._data['before']):
-            year = int(self._data['before'][:4])
-            index_ids = [idx for idx in index_ids if int(idx.split(".")[0]) <= year]
-
-        if "after" in self._data and re.match(r"^\d{4}", self._data['after']):
-            year = int(self._data['after'][:4])
-            index_ids = [idx for idx in index_ids if int(idx.split(".")[0]) >= year]
-
-        return index_ids
-    
     def _format(self, results):
         arr = []
         for result in results:
             if isinstance(result, SearchResult):
                 self._format_result(result)
                 arr.append(result.json())
-            else:
+            elif hasattr(result, '__iter__'):
                 for r in result:
                     self._format_result(r)
                 arr.append([r.json() for r in result])
         return {
             'results': arr,
-            'query': self._query,
-            'latent_query': self._latent_query
+            'query': self.query,
+            'latent_query': self.lq
         }
-    
+
     def _format_result(self, result):
-        if self._data.get('maps'):
+        if self.maps:
             try:
-                result.mapping = generate_mapping(self._query, result.full_text)
+                result.mapping = SnippetExtractor.map(self.query, result.full_text)
             except Exception:
                 result.mapping = None
-        if self._data.get('snip'):
+        if self.snip:
             try:
-                result.snippet = SnippetExtractor.extract_snippet(self._query, result.full_text)
+                result.snippet = SnippetExtractor.extract_snippet(self.query, result.full_text)
             except Exception:
                 result.snippet = None
         if result.type == 'patent':
             result.image = f'https://api.projectpq.ai/patents/{result.id}/thumbnails/1'
-
 
 class SearchRequest102(SearchRequest):
 
@@ -189,13 +157,13 @@ class SearchRequest102(SearchRequest):
         if self._n_results < 100:
             results = self._rerank(results)
         results = results[:self._n_results]
-        return results[self._offset:]
+        return results[self.offset:]
 
     def _search(self):
-        query = re.sub(r'\`(\-[\w\*\?]+)\`', '', self._query)
+        query = re.sub(r'\`(\-[\w\*\?]+)\`', '', self.query)
         query = re.sub(r"\`", "", query)
         qvec = vectorize_text("[query] " + query)
-        relevant, irrelevant = self._extract_feedback(self._latent_query)
+        relevant, irrelevant = self._extract_feedback(self.lq)
         if relevant or irrelevant: # user feedback
             qvec = self._update_search_vector(qvec, relevant, irrelevant)
 
@@ -206,7 +174,7 @@ class SearchRequest102(SearchRequest):
             payload = {
                 "vector": qvec.tolist(),
                 "n_results": m,
-                "type": self._doctype
+                "type": self.type
             }
 
             # Run a vector search
@@ -217,7 +185,7 @@ class SearchRequest102(SearchRequest):
 
             if not results:
                 break
-            
+
             # Avoid looking for more results if the last one is a poor match
             if results[-1][2] <= self.MIN_SIMILARITY_THRESHOLD + 0.01:
                 break
@@ -236,24 +204,24 @@ class SearchRequest102(SearchRequest):
             vr = np.array([vectorize_text(Patent(pn).abstract) for pn in relevant])
             vr_mean = np.mean(vr, axis=0)
             qvec = alpha*qvec + beta*vr_mean
-        
+
         if irrelevant:
             vi = np.array([vectorize_text(Patent(pn).abstract) for pn in irrelevant])
             vi_mean = np.mean(vi, axis=0)
             qvec = qvec - gamma*vi_mean
-        
+
         qvec = qvec / np.linalg.norm(qvec)
         return qvec
-    
+
     def _extract_feedback(self, latent_query):
         try:
             lq_data = json.loads(latent_query)
         except Exception:
             return [], []
-        
+
         if not isinstance(lq_data, dict):
             return [], []
-        
+
         relevant = lq_data.get('relevant', [])
         irrelevant = lq_data.get('irrelevant', [])
         return relevant, irrelevant
@@ -262,7 +230,7 @@ class SearchRequest102(SearchRequest):
         if not reranker:
             return results
         result_texts = [r.abstract for r in results]
-        ranks = reranker.rank(self._query, result_texts)
+        ranks = reranker.rank(self.query, result_texts)
         return [results[i] for i in ranks]
 
     def _deduplicate_by_score(self, triplets):
@@ -278,7 +246,7 @@ class SearchRequest102(SearchRequest):
             if  diff_score >= epsilon:
                 output.append(this)
                 continue
-            
+
             # when scores are too close (likely family members), prefer an English-language member
             cc_this = this[0][:2]
             cc_last = last[0][:2]
@@ -296,7 +264,7 @@ class SearchRequest102(SearchRequest):
         return output
 
     def _deduplicate(self, results):
-        relevant, irrelevant = self._extract_feedback(self._latent_query)
+        relevant, irrelevant = self._extract_feedback(self.lq)
         seen = set(relevant + irrelevant)
         results = [r for r in results if r.id not in seen]
 
@@ -314,9 +282,8 @@ class SearchRequest102(SearchRequest):
     def _add_remote_results_to(self, local_results):
         if not allow_outgoing_extension_requests:
             return local_results
-        remote_results = remote.search_extensions(self._data)
+        remote_results = remote.search_extensions(self._params)
         return remote.merge([local_results, remote_results])
-
 
 class SearchRequest103(SearchRequest):
 
@@ -324,26 +291,25 @@ class SearchRequest103(SearchRequest):
         docs = self._get_docs_to_combine()
         self._results102 = docs
         abstracts = [doc.abstract for doc in docs]
-        combiner = Combiner(self._query, abstracts)
+        combiner = Combiner(self.query, abstracts)
         n = max(50, self._n_results) # see SearchRequest102 for why max used
         index_pairs = combiner.get_combinations(n)
         combinations = [(docs[i], docs[j]) for i, j in index_pairs]
         combinations = combinations[:self._n_results]
-        return combinations[self._offset:]
+        return combinations[self.offset:]
 
     def _get_docs_to_combine(self):
-        params = {**self._data, 'n': 100, 'offset': 0, 'snip': 0, 'maps': 0}
+        params = {**self._params, 'n': 100, 'offset': 0, 'snip': 0, 'maps': 0}
         results = SearchRequest102(params).serve()['results']
         return [SearchResult(r['id'], r['index'], r['score']) for r in results]
-
 
 class SearchRequestCombined102and103(SearchRequest103):
 
     def _serve(self):
         results103 = super()._search()
-        results102 = self._results102[:self._n_results][self._offset:]
+        results102 = self._results102[:self._n_results][self.offset:]
         results = self._merge_102_and_103_results(results102, results103)
-        return results[:self._n_results][self._offset:]
+        return results[:self._n_results][self.offset:]
 
     def _merge_102_and_103_results(self, results102, results103):
         results = []
@@ -361,34 +327,31 @@ class SearchRequestCombined102and103(SearchRequest103):
         results += results102[p1:] + results103[p2:]
         return results
 
+class PatentRelatedRequestSchema(BaseModel):
+    pn: str = Field(pattern=r'^[A-Z]{2,4}\d{4,11}[A-Z]\d?$')
 
 class SimilarPatentsRequest(APIRequest):
+    _schema = PatentRelatedRequestSchema
 
     def _serve(self):
         search_request = self._create_text_query_request()
         return SearchRequest102(search_request).serve()
 
     def _create_text_query_request(self):
-        pn = self._data.get('pn')
+        pn = self.pn
         claim = Patent(pn).first_claim
         query = utils.remove_claim_number(claim)
         search_request = {'q': query}
         return search_request
 
-    def _validation_fn(self):
-        if not utils.is_patent_number(self._data.get('pn')):
-            raise BadRequestError(
-                'Request does not contain a valid patent number.')
-
     def _format(self, response):
-        response['query'] = self._data.get('pn')
+        response['query'] = self.pn
         return response
-
 
 class PatentPriorArtRequest(SimilarPatentsRequest):
 
     def _serve(self):
-        pn = self._data.get('pn')
+        pn = self.pn
         try:
             cutoff_date = Patent(pn).filing_date
             search_request = self._create_text_query_request()
@@ -409,7 +372,7 @@ class DocumentRequest(APIRequest):
         self._doc_id = req_data['id']
 
     def _serve(self):
-        doc_id = self._data.get('id')
+        doc_id = self.id
         return Document(doc_id).json()
 
 class PassageRequestSchema(BaseModel):
@@ -421,28 +384,28 @@ class PassageRequest(APIRequest):
 
     def __init__(self, req_data):
         super().__init__(req_data)
-        self._query = req_data.get('q')
+        self.query = req_data.get('q')
         self._doc_id = req_data.get('pn')
         self._doc = Document(self._doc_id)
         self._text = self._doc.full_text
-    
+
     def _format(self, response):
         return {
-            'query': self._data.get('q'),
-            'id': self._data.get('pn'),
+            'query': self.q,
+            'id': self.pn,
             **response
         }
 
 class SnippetRequest(PassageRequest):
 
     def _serve(self):
-        snippet = SnippetExtractor().extract_snippet(self._query, self._text)
+        snippet = SnippetExtractor.extract_snippet(self.query, self._text)
         return {"snippet": snippet}
 
 class MappingRequest(PassageRequest):
 
     def _serve(self):
-        mapping = generate_mapping(self._query, self._text)
+        mapping = SnippetExtractor.map(self.query, self._text)
         return {"mapping": mapping}
 
 class IncomingExtensionRequest(SearchRequest102):
@@ -484,8 +447,8 @@ class PatentDataRequest(APIRequest):
             'citations_backward': self._patent.backward_citations,
             'citations_forward': self._patent.forward_citations
         }
-        if self._data.get('fields'):
-            fields = [f.strip().lower() for f in self._data['fields'].split(',')]
+        if self.fields:
+            fields = [f.strip().lower() for f in self.fields.split(',')]
             patent_data = {k: v for k, v in patent_data.items() if k in fields}
         return patent_data
 
@@ -494,7 +457,6 @@ class DrawingRequestSchema(PatentDataRequestSchema):
     n: Optional[int] = Field(default=1)
     w: Optional[int] = Field(default=None, ge=1, le=800)
     h: Optional[int] = Field(default=None, ge=1, le=800)
-
 
 class DrawingRequest(APIRequest):
     _schema = DrawingRequestSchema
@@ -505,7 +467,7 @@ class DrawingRequest(APIRequest):
         tif_filepath = self._download_from_s3()
         jpg_filepath = self._convert_to_jpg(tif_filepath)
 
-        if self._data.get('h') or self._data.get('w'):
+        if self.h or self.w:
             im = cv2.imread(jpg_filepath)
             im = self._downscale(im)
             cv2.imwrite(jpg_filepath, im)
@@ -513,7 +475,7 @@ class DrawingRequest(APIRequest):
         return jpg_filepath
 
     def _download_from_s3(self):
-        s3_key = self._get_s3_key(self._data.get('pn'), self._data.get('n'))
+        s3_key = self._get_s3_key(self.pn, self.n)
         filename = s3_key.split('/').pop()
         filepath = f'/tmp/{filename}'
         try:
@@ -521,7 +483,7 @@ class DrawingRequest(APIRequest):
             return filepath
         except botocore.exceptions.ClientError:
             raise ResourceNotFoundError('Drawing unavailable.')
-    
+
     def _get_s3_key(self, pn, n):
         if len(pn) > 13:
             return f'images/{pn}-{n}.tif'
@@ -540,7 +502,7 @@ class DrawingRequest(APIRequest):
         im.convert("RGB").save(outfilepath, "JPEG", quality=50)
         os.remove(infilepath)
         return outfilepath
-    
+
     def _downscale(self, im):
         h, w = self._get_out_dims(im)
         im = cv2.resize(im, (w, h), interpolation=cv2.INTER_AREA)
@@ -549,8 +511,8 @@ class DrawingRequest(APIRequest):
     def _get_out_dims(self, im):
         h, w, channels = im.shape
         r = w / h
-        h_ = self._data.get('h')
-        w_ = self._data.get('w')
+        h_ = self.h
+        w_ = self.w
         if isinstance(h_, int):
             width = max(1, int(h_*r))
             return (h_, width)
@@ -559,11 +521,10 @@ class DrawingRequest(APIRequest):
             return (height, w_)
         return (h, w)
 
-
 class ListDrawingsRequest(DrawingRequest):
 
     def _serve(self):
-        s3_key = self._get_s3_key(self._data.get('pn'), '1')
+        s3_key = self._get_s3_key(self.pn, '1')
         prefix = s3_key.split('-')[0]
         indexes = [o.key.split('-')[-1].split('.')[0]
                      for o in self.S3_BUCKET.objects.filter(Prefix=prefix)]
@@ -578,15 +539,8 @@ class ConceptsRequest(APIRequest):
         super().__init__(req_data)
         self._text = req_data['text']
 
-    def _validation_fn(self):
-        if not isinstance(self._data['text'], str):
-            raise BadRequestError('Invalid text.')
-        if not self._data['text'].strip():
-            raise BadRequestError('No text to work with.')
-
     def _serve(self):
         return list(default_boe_encoder.encode(self._text))
-
 
 class AbstractConceptsRequest(PatentDataRequest):
 
@@ -595,14 +549,12 @@ class AbstractConceptsRequest(PatentDataRequest):
         concepts = req.serve()
         return {'concepts': concepts}
 
-
 class DescriptionConceptsRequest(PatentDataRequest):
 
     def _serve(self):
         req = ConceptsRequest({'text': self._patent.description})
         concepts = req.serve()
         return {'concepts': concepts}
-
 
 class PatentAbstractVectorRequest(PatentDataRequest):
 
@@ -613,6 +565,7 @@ class PatentAbstractVectorRequest(PatentDataRequest):
 
 class ConceptRelatedRequestSchema(BaseModel):
     concept: str = Field(min_length=1)
+    n: Optional[int] = Field(default=10, ge=1, le=100)
 
 class ConceptRelatedRequest(APIRequest):
     _schema = ConceptRelatedRequestSchema
@@ -626,25 +579,16 @@ class ConceptRelatedRequest(APIRequest):
             response['concept'] = self._concept
         return response
 
-
 class SimilarConceptsRequest(ConceptRelatedRequest):
-
-    LIMIT = 100 # max similar concepts that can be returned
-
-    def __init__(self, req_data):
-        super().__init__(req_data)
-        self._n = int(self._data.get('n', 10))
-        self._n = min(self._n, self.LIMIT)
 
     def _serve(self):
         if self._concept not in default_embedding_matrix:
             raise ResourceNotFoundError(f'No vector for "{self._concept}"')
 
-        n = 2*self._n  # because some will be filtered out
+        n = 2 * self.n  # because some will be filtered out
         neighbours = default_embedding_matrix.similar_to_item(self._concept, n)
-        neighbours = [e for e in neighbours if self._concept not in e][:self._n]
+        neighbours = [e for e in neighbours if self._concept not in e][:self.n]
         return {'similar': neighbours}
-
 
 class ConceptVectorRequest(ConceptRelatedRequest):
 
@@ -654,7 +598,6 @@ class ConceptVectorRequest(ConceptRelatedRequest):
 
         vector = default_embedding_matrix[self._concept]
         return {'vector': list(vector)}
-
 
 class DocumentationRequest(APIRequest):
     _template_file = f'{docs_dir}template.html'
@@ -677,4 +620,3 @@ class DocumentationRequest(APIRequest):
         exts = ['tables', 'toc', 'smarty', 'codehilite']
         html = markdown.markdown(md, extensions=exts)
         return BeautifulSoup(html, 'html.parser')
-
