@@ -500,10 +500,9 @@ class DrawingRequest(APIRequest):
     _schema = DrawingRequestSchema
 
     S3_BUCKET = s3.Bucket(PQAI_S3_BUCKET_NAME)
-    PN_PATTERN = r'^US(RE)?\d{4,11}[AB]\d?$'
 
     def _serve(self):
-        tif_filepath = self._download_file_from_s3()
+        tif_filepath = self._download_from_s3()
         jpg_filepath = self._convert_to_jpg(tif_filepath)
 
         if self._data.get('h') or self._data.get('w'):
@@ -513,26 +512,34 @@ class DrawingRequest(APIRequest):
 
         return jpg_filepath
 
-    def _download_file_from_s3(self):
-        s3_prefix = self._get_prefix()
-        n = self._data.get('n')
-        s3_suffix = str(n) + '.tif'
-        s3_key = s3_prefix + s3_suffix
-        filename_with_ext = s3_key.split('/')[-1]
-        self._filename = filename_with_ext.split('.')[0]
-        filepath = f'/tmp/{self._filename}.tif'
+    def _download_from_s3(self):
+        s3_key = self._get_s3_key(self._data.get('pn'), self._data.get('n'))
+        filename = s3_key.split('/').pop()
+        filepath = f'/tmp/{filename}'
         try:
             self.S3_BUCKET.download_file(s3_key, filepath)
             return filepath
         except botocore.exceptions.ClientError:
             raise ResourceNotFoundError('Drawing unavailable.')
+    
+    def _get_s3_key(self, pn, n):
+        if len(pn) > 13:
+            return f'images/{pn}-{n}.tif'
+
+        # For granted patents, format for storing drawings:
+        # US7654321B2 -> '07654321-<n>.tif'
+        pattern = r'(.+?)(A|B)\d?'
+        digits = re.match(pattern, pn[2:])[1]    # extract digits
+        if len(digits) == 7:
+            digits = '0' + digits
+        return f'images/{digits}-{n}.tif'
 
     def _convert_to_jpg(self, infilepath):
         im = Image.open(infilepath)
-        filepath = f'/tmp/{self._filename}.jpg'
-        im.convert("RGB").save(filepath, "JPEG", quality=50)
+        outfilepath = infilepath.replace('.tif', '.jpg')
+        im.convert("RGB").save(outfilepath, "JPEG", quality=50)
         os.remove(infilepath)
-        return filepath
+        return outfilepath
     
     def _downscale(self, im):
         h, w = self._get_out_dims(im)
@@ -544,38 +551,20 @@ class DrawingRequest(APIRequest):
         r = w / h
         h_ = self._data.get('h')
         w_ = self._data.get('w')
-        if h_ is None and w_ is None:
-            return (h, w)
-        if isinstance(h_, int) and isinstance(w_, int):
-            return (h_, w_)
-        elif isinstance(h_, int):
+        if isinstance(h_, int):
             width = max(1, int(h_*r))
             return (h_, width)
         elif isinstance(w_, int):
             height = max(1, int(w_/r))
             return (height, w_)
-        else:
-            return (h, w)
-    
-    def _get_prefix(self):
-        number = self._get_8_digits() if self._is_granted_patent() else self._data.get('pn')
-        return f'images/{number}-'
-
-    def _get_8_digits(self):
-        pattern = r'(.+?)(A|B)\d?'
-        digits = re.match(pattern, self._data.get('pn')[2:])[1]    # extract digits
-        if len(digits) == 7:
-            digits = '0' + digits
-        return digits
-    
-    def _is_granted_patent(self):
-        return len(self._data.get('pn')) < 13
+        return (h, w)
 
 
 class ListDrawingsRequest(DrawingRequest):
 
     def _serve(self):
-        prefix = self._get_prefix()
+        s3_key = self._get_s3_key(self._data.get('pn'), '1')
+        prefix = s3_key.split('-')[0]
         indexes = [o.key.split('-')[-1].split('.')[0]
                      for o in self.S3_BUCKET.objects.filter(Prefix=prefix)]
         return {
