@@ -1,6 +1,5 @@
 from .databases import PatentDatabase, NPLDatabase
 from .utils import is_patent_number
-import re
 
 # Singleton instances - RECOMMENDED API
 patent_db = PatentDatabase()

@@ -2,6 +2,7 @@ import os
 import json
 import importlib
 import logging
+import traceback
 
 from functools import partial
 
@@ -86,6 +87,7 @@ async def save_user_feedback(request: Request):
     return JSONResponse(content={"success": True}, status_code=200)
 
 def handle_error(e):
+    traceback.print_exc()
     if isinstance(e, API.ResourceNotFoundError):
         raise HTTPException(status_code=404, detail="Resource not found")
     if isinstance(e, API.BadRequestError):

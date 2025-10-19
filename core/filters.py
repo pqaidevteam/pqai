@@ -179,3 +179,61 @@ class CountryCodeFilter(DocumentFilter):
 		if 'publicationNumber' not in doc:
 			return False
 		return doc['publicationNumber'].startswith(self._country_codes)
+
+class FilterExtractor():
+
+    @classmethod
+    def extract(cls, req_data):
+        filters = FilterArray()
+        date_filter = cls._get_date_filter(req_data)
+        keyword_filters = cls._get_keyword_filters(req_data)
+        country_code_filter = cls._get_country_code_filter(req_data)
+        if date_filter:
+            filters.add(date_filter)
+        if keyword_filters:
+            for fltr in keyword_filters:
+                filters.add(fltr)
+        if country_code_filter:
+            filters.add(country_code_filter)
+        return filters
+	
+    @classmethod
+    def _get_date_filter(cls, req_data):
+        after = req_data.get('after', None)
+        before = req_data.get('before', None)
+        dtype = req_data.get('dtype', 'publication')
+        if after or before:
+            after = None if not bool(after) else after
+            before = None if not bool(before) else before
+            if dtype == 'filing':
+                return FilingDateFilter(after, before)
+            elif dtype == 'publication':
+                return PublicationDateFilter(after, before)
+            elif dtype == 'priority':
+                return PriorityDateFilter(after, before)
+            else:
+                raise ValueError('Invalid date filter type.')
+
+    @classmethod
+    def _get_keyword_filters(cls, req_data):
+        query = req_data.get('q', '')
+        keywords = re.findall(r'\`(\-?[\w\*\?]+)\`', query)
+        if not keywords:
+            return None
+        filters = []
+        for keyword in keywords:
+            if keyword.startswith('-'):
+                filters.append(KeywordFilter(keyword[1:], exclude=True))
+            else:
+                filters.append(KeywordFilter(keyword))
+        return filters
+
+    @classmethod
+    def _get_country_code_filter(self, req_data):
+        cc = req_data.get('cc', None)
+        if cc is None:
+            return
+
+        codes = re.findall(r'\b[A-Z]{2}\b', cc.upper())
+        if codes:
+            return CountryCodeFilter(codes)

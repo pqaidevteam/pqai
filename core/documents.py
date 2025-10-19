@@ -224,7 +224,7 @@ class Patent(Document):
     @cached_property
     def backward_citations(self):
         """Backward citations are stored in S3 - will trigger lazy load on first access"""
-        return self._data.get("backwardCitations", [])
+        return self._data.get("citations", [])
     
     @cached_property
     def full_text(self):
