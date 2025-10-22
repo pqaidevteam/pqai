@@ -24,9 +24,6 @@ class Filter():
 
 class DocumentFilter(Filter):
 	
-	def __init__(self, filter_fn=None):
-		super().__init__(filter_fn)
-	
 	def apply(self, items, n=None):
 		doc_ids = [item[0] for item in items]
 		filtrate, batch_size = [], 128
@@ -50,29 +47,19 @@ class FilterArray(Filter):
 
 	"""A cascade of filters that acts as a single filter
 	"""
-	
+
 	def __init__(self, filters=None):
 		self._filters = [] if not filters else filters
 	
 	def apply(self, items, n=None):
-		if not self._filters:
-			return items if n is None else items[:n]
-		return super().apply(items, n)
-
-	def _filter_fn(self, doc):
+		filtrate = items.copy()
 		for fltr in self._filters:
-			if not fltr._filter_fn(doc):
-				return False
-		return True
+			filtrate = fltr.apply(filtrate)
+		return filtrate[:n]
 
 	def add(self, the_filter):
-		self._raise_if_invalid_filter(the_filter)
+		assert isinstance(the_filter, Filter), 'Only instances of Filter can be added to FilterArray.'
 		self._filters.append(the_filter)
-
-	def _raise_if_invalid_filter(self, fltr):
-		if not isinstance(fltr, Filter):
-			msg = 'Only instances of Filter can be added to FilterArray.'
-			raise Exception(msg)
 
 class DateFilter(DocumentFilter):
 
@@ -111,16 +98,14 @@ class PublicationDateFilter(DateFilter):
 
 class FilingDateFilter(DateFilter):
 	
-	def __init__(self, after=None, before=None):
-		super().__init__(after, before)
-		self._get_date = lambda doc: parse_date(doc['filingDate'])
+	def _get_date(self, doc):
+		return parse_date(doc['filingDate'])
 
 
 class PriorityDateFilter(DateFilter):
 	
-	def __init__(self, after=None, before=None):
-		super().__init__(after, before)
-		self._get_date = lambda doc: parse_date(doc['priorityDate'])
+	def _get_date(self, doc):
+		return parse_date(doc['priorityDate'])
 
 
 class DocTypeFilter(DocumentFilter):

@@ -23,7 +23,7 @@ from config.config import (
     allow_outgoing_extension_requests
 )
 
-from .base import APIRequest, NotAllowedError, ResourceNotFoundError
+from .base import APIRequest, NotAllowedError
 
 reranker = None
 if reranker_active:
@@ -303,7 +303,6 @@ class PatentPriorArtRequest(SimilarPatentsRequest):
             'before': Patent(pn).priority_date,
             'dtype': 'priority'
         }
-        print(search_params)
         return search_params
 
 class IncomingExtensionRequest(SearchRequest102):
