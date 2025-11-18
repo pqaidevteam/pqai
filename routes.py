@@ -68,77 +68,77 @@ routes_config = [
         'method': 'GET',
         'path': '/documents/',
         'handler': API.DocumentRequest,
-        'rateLimit': 10,
+        'rateLimit': 100,
         'protected': True
     },
     {
         'method': 'GET',
         'path': '/patents/{pn}',
         'handler': API.PatentDataRequest,
-        'rateLimit': 10,
+        'rateLimit': 100,
         'protected': True
     },
     {
         'method': 'GET',
         'path': '/patents/{pn}/title',
         'handler': API.TitleRequest,
-        'rateLimit': 10,
+        'rateLimit': 100,
         'protected': True
     },
     {
         'method': 'GET',
         'path': '/patents/{pn}/abstract',
         'handler': API.AbstractRequest,
-        'rateLimit': 10,
+        'rateLimit': 100,
         'protected': True
     },
     {
         'method': 'GET',
         'path': '/patents/{pn}/claims/',
         'handler': API.AllClaimsRequest,
-        'rateLimit': 10,
+        'rateLimit': 100,
         'protected': True
     },
     {
         'method': 'GET',
         'path': '/patents/{pn}/claims/independent',
         'handler': API.IndependentClaimsRequest,
-        'rateLimit': 10,
+        'rateLimit': 100,
         'protected': True
     },
     {
         'method': 'GET',
         'path': '/patents/{pn}/claims/{n}',
         'handler': API.OneClaimRequest,
-        'rateLimit': 10,
+        'rateLimit': 100,
         'protected': True
     },
     {
         'method': 'GET',
         'path': '/patents/{pn}/description',
         'handler': API.PatentDescriptionRequest,
-        'rateLimit': 10,
+        'rateLimit': 100,
         'protected': True
     },
     {
         'method': 'GET',
         'path': '/patents/{pn}/citations',
         'handler': API.CitationsRequest,
-        'rateLimit': 10,
+        'rateLimit': 100,
         'protected': True
     },
     {
         'method': 'GET',
         'path': '/patents/{pn}/citations/backward',
         'handler': API.BackwardCitationsRequest,
-        'rateLimit': 10,
+        'rateLimit': 100,
         'protected': True
     },
     {
         'method': 'GET',
         'path': '/patents/{pn}/citations/forward',
         'handler': API.ForwardCitationsRequest,
-        'rateLimit': 10,
+        'rateLimit': 100,
         'protected': True
     },
     {

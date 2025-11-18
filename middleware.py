@@ -176,6 +176,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
             # Clean up to prevent memory leak
             if not request_times:
-                del self.requests_log[key]
+                del self.request_log[key]
 
         return await call_next(request)
