@@ -80,7 +80,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.0
 PyYAML==6.0.2
 regex==2024.7.24
-requests==2.32.4
+requests==2.33.0
 requests-oauthlib==2.0.0
 rsa==4.9
 s3transfer==0.8.2
