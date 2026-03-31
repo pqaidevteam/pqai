@@ -49,7 +49,7 @@ Markdown==3.8.1
 MarkupSafe==2.1.5
 mpmath==1.3.0
 networkx==3.2.1
-nltk==3.9.3
+nltk==3.9.4
 numba==0.58.1
 numpy==1.26.4
 nvidia-cublas-cu12==12.1.3.1
