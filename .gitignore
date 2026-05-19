@@ -21,6 +21,12 @@ __pycache__
 /.tmuxinator.yml
 /.env
 
+# Local data files
+/*.bson
+/*.json
+/*.tar.gz
+/*.zip
+
 /plugins/custom/
 /.vscode
 

@@ -92,15 +92,46 @@ class AuthMiddleware(BaseHTTPMiddleware):
             )
 
         if token not in self.tokens:
-            if TOKENS_COLL.find_one({"apiKey": token}) is None:
+            user = TOKENS_COLL.find_one({"apiKey": token})
+            if user is None:
                 logger.info("%s - Invalid token", route)
                 return JSONResponse(
                     status_code=401,
                     content={"detail": "Unauthorized"}
                 )
 
+            limit_response = self.check_request_limit(user, token, route)
+            if limit_response:
+                return limit_response
+
         logger.info("%s - Valid token: %s", route, token)
         return await call_next(request)
+
+    @staticmethod
+    def check_request_limit(user: dict, token: str, route: str):
+        request_limit = user.get("requestLimit")
+        if request_limit is None:
+            return None
+
+        period_end = user.get("requestPeriodEnd")
+        if period_end and datetime.now() > period_end:
+            logger.info("%s - Token %s: billing period ended", route, token)
+            return JSONResponse(
+                status_code=402,
+                content={"detail": "Your API access period has ended. Please log into PQAI to refresh your subscription."}
+            )
+
+        request_count = user.get("requestCount", 0)
+        if request_count >= request_limit:
+            logger.info("%s - Token %s: request limit reached (%d/%d)", route, token, request_count, request_limit)
+            return JSONResponse(
+                status_code=402,
+                content={"detail": f"Monthly API limit of {request_limit} requests reached. Please renew your subscription to continue."}
+            )
+
+        TOKENS_COLL.update_one({"apiKey": token}, {"$inc": {"requestCount": 1}})
+        logger.info("%s - Token %s: request %d/%d", route, token, request_count + 1, request_limit)
+        return None
 
     @staticmethod
     def match_route(route: str, routes_config: list):

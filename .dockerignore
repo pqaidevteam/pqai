@@ -9,3 +9,6 @@ user-ratings.tsv
 /indexes
 /models
 /__pycache__
+*.bson
+*.tar.gz
+*.zip
