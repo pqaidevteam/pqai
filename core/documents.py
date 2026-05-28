@@ -56,6 +56,8 @@ class Document:
     def _load(self, force=False):
         if self._data is None or force:
             self._data = db.get_document(self._id)
+            if self._data is None:
+                raise ValueError(f"Document with ID '{self._id}' not found.")
 
     def __getattr__(self, key):
         if not self._data:

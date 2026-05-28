@@ -205,6 +205,8 @@ def get_elements(text):
 
 
 def get_external_link(pn):
+    if pn.startswith('US') and len(pn) == 14:
+        pn = pn[:6] + '0' + pn[6:]
     return f'https://patents.google.com/patent/{pn}/en'
 
 
