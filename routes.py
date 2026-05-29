@@ -6,35 +6,40 @@ routes_config = [
         "path": "/search/102/",
         "handler": API.SearchRequest102,
         'rateLimit': 5,
-        'protected': True
+        'protected': True,
+        'metered': True
     },
     {
         "method": "GET",
         "path": "/search/103/",
         "handler": API.SearchRequest103,
         'rateLimit': 5,
-        'protected': True
+        'protected': True,
+        'metered': True
     },
     {
         "method": "GET",
         "path": "/search/102+103/",
         "handler": API.SearchRequestCombined102and103,
         'rateLimit': 5,
-        'protected': True
+        'protected': True,
+        'metered': True
     },
     {
         "method": "GET",
         "path": "/prior-art/patent/",
         "handler": API.PatentPriorArtRequest,
         'rateLimit': 5,
-        'protected': True
+        'protected': True,
+        'metered': True
     },
     {
         "method": "GET",
         "path": "/similar/",
         "handler": API.SimilarPatentsRequest,
         'rateLimit': 5,
-        'protected': True
+        'protected': True,
+        'metered': True
     },
     {
         "method": "GET",
