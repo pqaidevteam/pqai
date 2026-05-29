@@ -164,12 +164,13 @@ def get_documents(doc_ids):
 
     npl_data = list(NPL_COLL.find({"id": {"$in": npls}}))
 
+    # return document data in the same sequence in which doc_ids were received
     data = []
     for doc_id in doc_ids:
         if re.match(r"^[A-Z]{2}", doc_id):
-            arr = filter(lambda x: x["publicationNumber"] == doc_id, patent_data)
+            arr = list(filter(lambda x: x["publicationNumber"] == doc_id, patent_data))
             if arr:
-                data.append(next(arr))
+                data.append(arr[0])
         else:
             arr = filter(lambda x: x["id"] == doc_id, npl_data)
             data.append(next(arr))
