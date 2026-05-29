@@ -40,6 +40,52 @@ else:
 
 MONGO_CLIENT = MongoClient(MONGO_URI)
 TOKENS_COLL = MONGO_CLIENT["pqai"]["users"]
+USAGE_COLL = MONGO_CLIENT["pqai"]["usage"]
+
+
+class TokenRegistry:
+    DEFAULT_QUOTA = int(os.environ.get('DEFAULT_USAGE_QUOTA', 50))
+    
+    def __init__(self, tokens_file):
+        self.tokens_file = tokens_file
+        self.token_quotas = {}
+        self.load_all_tokens()
+    
+    def load_all_tokens(self):
+        if os.path.isfile(self.tokens_file):
+            with open(self.tokens_file, "r", encoding="utf-8") as f:
+                lines = f.read().strip().splitlines()
+                lines = [l for l in lines if not l.startswith("#") and l.strip()]
+                
+                for line in lines:
+                    parts = re.split(r'\s+', line)
+                    token = parts[0]
+                    if len(parts) >= 2 and parts[1].isdigit():
+                        quota = int(parts[1])
+                    else:
+                        quota = self.DEFAULT_QUOTA
+                    self.token_quotas[token] = quota
+        
+        try:
+            mongo_tokens = TOKENS_COLL.find({"apiKey": {"$exists": True}})
+            for doc in mongo_tokens:
+                token = doc.get("apiKey")
+                if token and token not in self.token_quotas:
+                    quota = doc.get("quota", self.DEFAULT_QUOTA)
+                    self.token_quotas[token] = quota
+            logger.info("Loaded %d tokens with quotas", len(self.token_quotas))
+        except Exception as e:
+            logger.error("Error reading tokens from MongoDB: %s", e)
+    
+    def has_token(self, token):
+        return token in self.token_quotas
+    
+    def get_quota(self, token):
+        return self.token_quotas.get(token)
+
+
+token_registry = TokenRegistry(config.tokens_file)
+
 
 class CustomLogMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -63,11 +109,8 @@ class CustomLogMiddleware(BaseHTTPMiddleware):
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, tokens_file):
+    def __init__(self, app):
         super().__init__(app)
-        self.tokens_file = tokens_file
-        self.tokens = set()
-        self.read_tokens()
 
     async def dispatch(self, request: Request, call_next):
         if not config.token_authentication_active:
@@ -91,13 +134,12 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 content={"detail": "Unauthorized"}
             )
 
-        if token not in self.tokens:
-            if TOKENS_COLL.find_one({"apiKey": token}) is None:
-                logger.info("%s - Invalid token", route)
-                return JSONResponse(
-                    status_code=401,
-                    content={"detail": "Unauthorized"}
-                )
+        if not token_registry.has_token(token):
+            logger.info("%s - Invalid token", route)
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Unauthorized"}
+            )
 
         logger.info("%s - Valid token: %s", route, token)
         return await call_next(request)
@@ -112,6 +154,12 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     @staticmethod
     async def extract_token(req: Request):
+        auth_header = req.headers.get("Authorization")
+        if auth_header:
+            if auth_header.startswith("Bearer "):
+                return auth_header[7:].strip()
+            return auth_header.strip()
+        
         method = req.method
         if method == "GET":
             return req.query_params.get("token")
@@ -123,15 +171,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 logger.error("Error extracting token from POST body: %s", e)
                 return None
         return None
-
-    def read_tokens(self):
-        if not os.path.isfile(self.tokens_file):
-            return
-        with open(self.tokens_file, "r", encoding="utf-8") as f:
-            lines = f.read().strip().splitlines()
-            lines = [l for l in lines if not l.startswith("#") and l.strip()]
-            tokens = [re.split(r'\s+', l)[0] for l in lines]
-            self.tokens.update(tokens)
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -153,7 +192,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if limit == -1:
             return await call_next(request)
         
+        # Use token if available, otherwise use IP address to enforce rate limits
         client_id = await AuthMiddleware.extract_token(request)
+        if client_id is None:
+            client_id = request.client.host
         
         current_time = time.monotonic()
         key = (client_id, route)
@@ -179,3 +221,70 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 del self.request_log[key]
 
         return await call_next(request)
+
+
+class QuotaMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app):
+        super().__init__(app)
+        self.lock = asyncio.Lock()
+    
+    async def dispatch(self, request: Request, call_next):
+        if not config.token_authentication_active:
+            return await call_next(request)
+        
+        route = request.url.path
+        
+        # Check if this route is metered (requests counted against quota)
+        route_config = AuthMiddleware.match_route(route, routes_config)
+        if not route_config or not route_config.get('metered', False):
+            return await call_next(request)
+        
+        token = await AuthMiddleware.extract_token(request)
+        if token is None:
+            return await call_next(request)
+        
+        token_quota = token_registry.get_quota(token)
+        if token_quota is None:
+            return await call_next(request)
+        
+        current_time = datetime.now()
+        current_month_start = datetime(current_time.year, current_time.month, 1)
+        
+        async with self.lock:
+            current_usage = USAGE_COLL.count_documents({
+                "apiKey": token,
+                "timestamp": {"$gte": current_month_start}
+            })
+            
+            if current_usage >= token_quota:
+                logger.info(
+                    "%s - Quota exceeded for token %s (%d/%d requests used)",
+                    route, token, current_usage, token_quota
+                )
+                return JSONResponse(
+                    status_code=429,
+                    content={
+                        "detail": "Monthly search quota exceeded",
+                        "quota_limit": token_quota,
+                        "quota_used": current_usage,
+                        "quota_reset": "Monthly on the 1st"
+                    }
+                )
+        
+        response = await call_next(request)
+        
+        if 200 <= response.status_code < 300: # only successful requests count against quota
+            async with self.lock:
+                USAGE_COLL.insert_one({
+                    "apiKey": token,
+                    "timestamp": current_time,
+                    "route": route,
+                    "status": response.status_code
+                })
+                
+                logger.info(
+                    "%s - Quota counted for token %s: %d/%d requests used (status: %d)",
+                    route, token, current_usage + 1, token_quota, response.status_code
+                )
+        
+        return response

@@ -32,7 +32,7 @@ else:
     MONGO_URI = f"mongodb://{MONGO_HOST}:{MONGO_PORT}"
 
 MONGO_CLIENT = MongoClient(MONGO_URI)
-PAT_COLL = MONGO_CLIENT[MONGO_DBNAME][MONGO_PAT_COLL]
+PAT_COLLS = [MONGO_CLIENT[MONGO_DBNAME][coll_name] for coll_name in MONGO_PAT_COLL.split(",")]
 NPL_COLL = MONGO_CLIENT[MONGO_DBNAME][MONGO_NPL_COLL]
 
 MAIN_PQAI_SERVER_API = os.environ["MAIN_PQAI_SERVER_API"]
@@ -62,8 +62,12 @@ def get_patent_data(pn, only_bib=False):
 def get_patent_data_from_mongo_db(pn):
     """Retrieve patent's bibliography from Mongo DB"""
     pn = normalize_patent_number_for_mongodb(pn)
-    patent = PAT_COLL.find_one({"publicationNumber": pn})
-    return patent
+    for coll in PAT_COLLS:
+        patent = coll.find_one({"publicationNumber": pn})
+        if patent:
+            return patent
+        print(f"Patent {pn} not found in collection {coll.name}.")
+    return None
 
 
 def get_patent_data_from_s3(pn):
@@ -140,7 +144,6 @@ def get_document(doc_id):
         return doc
 
 def get_documents(doc_ids):
-    """Efficiently get multiple documents by their identifiers"""
     pns = []
     npls = []
     for doc_id in doc_ids:
@@ -149,18 +152,28 @@ def get_documents(doc_ids):
         else:
             npls.append(doc_id)
     pns = [normalize_patent_number_for_mongodb(pn) for pn in pns]
-    patent_query = {"publicationNumber": {"$in": pns}}
-    npl_query = {"id": {"$in": npls}}
-    patent_data = list(PAT_COLL.find(patent_query))
 
-    npl_data = list(NPL_COLL.find(npl_query))
-    # arrange in original sequence
+    patent_data = []
+    for coll in PAT_COLLS:
+        patents = list(coll.find({"publicationNumber": {"$in": pns}}))
+        patent_data.extend(patents)
+        remaining = set(pns) - {patent["publicationNumber"] for patent in patents}
+        pns = list(remaining)
+        if not pns:
+            break
+
+    npl_data = list(NPL_COLL.find({"id": {"$in": npls}}))
+
+    # return document data in the same sequence in which doc_ids were received
     data = []
     for doc_id in doc_ids:
         if re.match(r"^[A-Z]{2}", doc_id):
-            data.append(next(filter(lambda x: x["publicationNumber"] == doc_id, patent_data)))
+            arr = list(filter(lambda x: x["publicationNumber"] == doc_id, patent_data))
+            if arr:
+                data.append(arr[0])
         else:
-            data.append(next(filter(lambda x: x["id"] == doc_id, npl_data)))
+            arr = filter(lambda x: x["id"] == doc_id, npl_data)
+            data.append(next(arr))
     return data
 
 def normalize_patent_number_for_mongodb(pn):

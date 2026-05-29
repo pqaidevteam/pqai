@@ -13,7 +13,7 @@ from starlette.routing import Route
 from config import config
 from routes import routes_config
 import core.api as API
-from middleware import CustomLogMiddleware, AuthMiddleware, RateLimitMiddleware
+from middleware import CustomLogMiddleware, AuthMiddleware, RateLimitMiddleware, QuotaMiddleware
 
 if config.gpu_disabled:
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -35,7 +35,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(CustomLogMiddleware)
-app.add_middleware(AuthMiddleware, tokens_file=config.tokens_file)
+app.add_middleware(AuthMiddleware)
+app.add_middleware(QuotaMiddleware)
 app.add_middleware(RateLimitMiddleware, default_limit=10, window=10)
 
 

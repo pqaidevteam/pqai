@@ -399,12 +399,15 @@ class SearchRequest102(SearchRequest):
         deduplicated = []
         titles = set()
         for result in results:
-            if result.title is None: # defects in the database
+            try:
+                if result.title is None: # defects in the database
+                    continue
+                if result.title.lower() in titles:
+                    continue
+                deduplicated.append(result)
+                titles.add(result.title.lower())
+            except ValueError: # result's data missing in the database
                 continue
-            if result.title.lower() in titles:
-                continue
-            deduplicated.append(result)
-            titles.add(result.title.lower())
         return deduplicated
 
     def _add_remote_results_to(self, local_results):
