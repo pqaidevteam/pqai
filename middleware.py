@@ -154,6 +154,12 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     @staticmethod
     async def extract_token(req: Request):
+        auth_header = req.headers.get("Authorization")
+        if auth_header:
+            if auth_header.startswith("Bearer "):
+                return auth_header[7:].strip()
+            return auth_header.strip()
+        
         method = req.method
         if method == "GET":
             return req.query_params.get("token")
@@ -186,7 +192,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if limit == -1:
             return await call_next(request)
         
+        # Use token if available, otherwise use IP address to enforce rate limits
         client_id = await AuthMiddleware.extract_token(request)
+        if client_id is None:
+            client_id = request.client.host
         
         current_time = time.monotonic()
         key = (client_id, route)
