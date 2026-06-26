@@ -90,7 +90,7 @@ token_registry = TokenRegistry(config.tokens_file)
 class CustomLogMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         ip = request.client.host
-        route = request.url.path
+        route = request.scope["path"]
 
         t0 = datetime.now()
         response = await call_next(request)
@@ -116,11 +116,15 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if not config.token_authentication_active:
             return await call_next(request)
 
-        route = request.url.path
+        route = request.scope["path"]
 
         route_config = self.match_route(route, routes_config)
         if not route_config:
-            return await call_next(request)
+            logger.warning("%s - Unmatched route rejected", route)
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Unauthorized"}
+            )
         
         is_protected = route_config.get("protected", True)
         if not is_protected:
@@ -182,7 +186,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.lock = asyncio.Lock()
 
     async def dispatch(self, request: Request, call_next):
-        route = request.url.path
+        route = request.scope["path"]
         route_config = next((r for r in routes_config if r["path"] == route), None)
 
         if route_config is None:
@@ -232,7 +236,7 @@ class QuotaMiddleware(BaseHTTPMiddleware):
         if not config.token_authentication_active:
             return await call_next(request)
         
-        route = request.url.path
+        route = request.scope["path"]
         
         # Check if this route is metered (requests counted against quota)
         route_config = AuthMiddleware.match_route(route, routes_config)
