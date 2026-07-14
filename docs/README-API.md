@@ -14,9 +14,7 @@ API access is provided as a part of PQAI+ subscription. Visit this page for more
 
 Once you have an active subscription, you will see an API access token on your [account page](http://localhost:8555/account).
 
-For academic and non-commercial usage, you can request a free API token by emailing [sam@projectpq.ai](mailto:sam@projectpq.ai). While requesting access, please provide a brief about your use case. We will send you an API token via email.
-
-Once you haven an access token, you can begin using with the API. Some programming experience is needed to make use of this API.
+With the access token, you can begin using with the API. Some programming experience is needed to make use of this API.
 
 ## How to use the API?
 
