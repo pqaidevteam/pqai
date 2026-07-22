@@ -3,6 +3,7 @@
 [![Linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/PyCQA/pylint)
 [![Docker build: automated](https://img.shields.io/badge/docker%20build-automated-066da5)](https://www.docker.com/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/pqaidevteam/pqai)
 
 # PQAI: Patent Quality Artificial Intelligence
 
