@@ -44,44 +44,75 @@ USAGE_COLL = MONGO_CLIENT["pqai"]["usage"]
 
 
 class TokenRegistry:
+    """
+    Tokens from the tokens file are loaded once at startup. Tokens stored in
+    MongoDB (`users.apiKey`) are looked up on demand and cached for a few
+    minutes, so new sign-ups work immediately and quota changes (e.g. plan
+    upgrades) take effect without restarting the server.
+    """
     DEFAULT_QUOTA = int(os.environ.get('DEFAULT_USAGE_QUOTA', 50))
-    
+    CACHE_TTL = int(os.environ.get('TOKEN_CACHE_TTL', 300))  # seconds
+    MISS_TTL = 60  # unknown tokens are re-checked after this many seconds
+    MAX_CACHE_SIZE = 10000
+
     def __init__(self, tokens_file):
         self.tokens_file = tokens_file
-        self.token_quotas = {}
-        self.load_all_tokens()
-    
-    def load_all_tokens(self):
-        if os.path.isfile(self.tokens_file):
-            with open(self.tokens_file, "r", encoding="utf-8") as f:
-                lines = f.read().strip().splitlines()
-                lines = [l for l in lines if not l.startswith("#") and l.strip()]
-                
-                for line in lines:
-                    parts = re.split(r'\s+', line)
-                    token = parts[0]
-                    if len(parts) >= 2 and parts[1].isdigit():
-                        quota = int(parts[1])
-                    else:
-                        quota = self.DEFAULT_QUOTA
-                    self.token_quotas[token] = quota
-        
+        self.file_quotas = {}
+        self.cache = {}  # token -> (quota or None if unknown, expiry time)
+        self.load_file_tokens()
+
+    def load_file_tokens(self):
+        if not self.tokens_file or not os.path.isfile(self.tokens_file):
+            return
+        with open(self.tokens_file, "r", encoding="utf-8") as f:
+            lines = f.read().strip().splitlines()
+            lines = [l for l in lines if not l.startswith("#") and l.strip()]
+
+            for line in lines:
+                parts = re.split(r'\s+', line)
+                token = parts[0]
+                if len(parts) >= 2 and parts[1].isdigit():
+                    quota = int(parts[1])
+                else:
+                    quota = self.DEFAULT_QUOTA
+                self.file_quotas[token] = quota
+        logger.info("Loaded %d tokens from tokens file", len(self.file_quotas))
+
+    def lookup(self, token):
+        """Returns the token's monthly quota, or None if the token is unknown."""
+        if token in self.file_quotas:
+            return self.file_quotas[token]
+
+        now = time.monotonic()
+        cached = self.cache.get(token)
+        if cached and cached[1] > now:
+            return cached[0]
+
         try:
-            mongo_tokens = TOKENS_COLL.find({"apiKey": {"$exists": True}})
-            for doc in mongo_tokens:
-                token = doc.get("apiKey")
-                if token and token not in self.token_quotas:
-                    quota = doc.get("quota", self.DEFAULT_QUOTA)
-                    self.token_quotas[token] = quota
-            logger.info("Loaded %d tokens with quotas", len(self.token_quotas))
+            doc = TOKENS_COLL.find_one({"apiKey": token}, {"quota": 1})
         except Exception as e:
-            logger.error("Error reading tokens from MongoDB: %s", e)
-    
+            logger.error("Error reading token from MongoDB: %s", e)
+            return cached[0] if cached else None  # serve stale entry if any
+
+        if doc is None:
+            quota, ttl = None, self.MISS_TTL
+        else:
+            quota = doc.get("quota")
+            quota = quota if isinstance(quota, int) else self.DEFAULT_QUOTA
+            ttl = self.CACHE_TTL
+
+        if len(self.cache) >= self.MAX_CACHE_SIZE:
+            self.cache = {t: v for t, v in self.cache.items() if v[1] > now}
+            if len(self.cache) >= self.MAX_CACHE_SIZE:
+                self.cache.clear()
+        self.cache[token] = (quota, now + ttl)
+        return quota
+
     def has_token(self, token):
-        return token in self.token_quotas
-    
+        return self.lookup(token) is not None
+
     def get_quota(self, token):
-        return self.token_quotas.get(token)
+        return self.lookup(token)
 
 
 token_registry = TokenRegistry(config.tokens_file)
